@@ -19,7 +19,6 @@ import { Wrench } from "lucide-react";
 import { Users } from "lucide-react";
 import { Building2 } from "lucide-react";
 import { UserCheck } from "lucide-react";
-import { BrainCircuit } from "lucide-react";
 import { Network } from "lucide-react";
 
 export default function DashboardPage() {
