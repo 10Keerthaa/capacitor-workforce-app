@@ -17,14 +17,16 @@ import { Package } from "lucide-react";
 import { HardHat } from "lucide-react";
 import { Wrench } from "lucide-react";
 import { Users } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'petty_cash' | 'procurement' | 'work_output' | 'tools' | 'manpower'>('petty_cash');
+  const [activeTab, setActiveTab] = useState<'petty_cash' | 'procurement' | 'work_output' | 'tools' | 'manpower' | 'camp_boss'>('petty_cash');
   const [claims, setClaims] = useState<any[]>([]);
   const [procurements, setProcurements] = useState<any[]>([]);
   const [workOutputs, setWorkOutputs] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
   const [manpowerLogs, setManpowerLogs] = useState<any[]>([]);
+  const [campBossLogs, setCampBossLogs] = useState<any[]>([]);
   const [isAuditing, setIsAuditing] = useState(false);
 
   const fetchData = async () => {
@@ -57,6 +59,12 @@ export default function DashboardPage() {
       .select("*")
       .order("id", { ascending: false });
     if (manpowerData) setManpowerLogs(manpowerData);
+
+    const { data: campBossData } = await supabase
+      .from("camp_boss")
+      .select("*")
+      .order("id", { ascending: false });
+    if (campBossData) setCampBossLogs(campBossData);
   };
 
   useEffect(() => {
@@ -98,12 +106,20 @@ export default function DashboardPage() {
       })
       .subscribe();
 
+    const channel6 = supabase
+      .channel('schema-db-changes6')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'camp_boss' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
     return () => { 
       supabase.removeChannel(channel1);
       supabase.removeChannel(channel2);
       supabase.removeChannel(channel3);
       supabase.removeChannel(channel4);
       supabase.removeChannel(channel5);
+      supabase.removeChannel(channel6);
     }
   }, []);
 
@@ -233,6 +249,27 @@ export default function DashboardPage() {
           console.error("Agent failed for ID", item.id, error);
         }
       }
+    } else if (activeTab === 'camp_boss') {
+      const pendingCampBoss = campBossLogs.filter(c => !c.ai_absenteeism_risk);
+      for (const item of pendingCampBoss) {
+        try {
+          await fetch("/api/agents/camp-boss", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: item.id,
+              employeeId: item.employeeId || "Unknown",
+              employeeName: item.employeeName || "Unknown",
+              campLocation: item.campLocation || "Unknown",
+              roomNumber: item.roomNumber || "Unknown",
+              status: item.status || "Unknown",
+              remarks: item.remarks || "No remarks",
+            }),
+          });
+        } catch (error) {
+          console.error("Agent failed for ID", item.id, error);
+        }
+      }
     }
     
     await fetchData();
@@ -312,6 +349,12 @@ export default function DashboardPage() {
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'manpower' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Workforce (Manpower)
+            </button>
+            <button 
+              onClick={() => setActiveTab('camp_boss')}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'camp_boss' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+            >
+              Camps (Camp Boss)
             </button>
           </div>
         </div>
@@ -784,6 +827,95 @@ export default function DashboardPage() {
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'daily_manpower')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Approve Plan</button>
                           <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'daily_manpower')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Action Needed</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* --- CAMP BOSS TAB --- */}
+            {activeTab === 'camp_boss' && campBossLogs.length === 0 && (
+              <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.02]">
+                <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-slate-300">No Camp Logs Found</h3>
+                <p className="text-slate-500">Submit a camp attendance log to see it here.</p>
+              </div>
+            )}
+
+            {activeTab === 'camp_boss' && campBossLogs.map((item) => (
+              <div key={item.id} className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden">
+                {/* Highlight glow */}
+                {item.ai_absenteeism_risk === 'High Risk' && <div className="absolute left-0 top-0 w-1 h-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]" />}
+                {item.ai_absenteeism_risk === 'Low Risk' && <div className="absolute left-0 top-0 w-1 h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]" />}
+                {!item.ai_absenteeism_risk && <div className="absolute left-0 top-0 w-1 h-full bg-slate-700" />}
+
+                {/* Left: Raw Data */}
+                <div className="flex-1 w-full space-y-4">
+                  <div className="flex flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0">
+                        <Building2 className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white text-lg truncate">{item.employeeName}</h3>
+                        <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
+                          <Activity className="w-3 h-3 shrink-0" /> ID: <span className="truncate">{item.employeeId}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-2xl font-bold text-white tracking-tight">{item.status}</p>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Status</p>
+                    </div>
+                  </div>
+                  <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full flex justify-between">
+                    <p className="text-slate-300 text-sm flex-1">Camp: <span className="text-white font-medium">{item.campLocation}</span></p>
+                    <p className="text-slate-300 text-sm">Room: <span className="text-white font-medium">{item.roomNumber}</span></p>
+                  </div>
+                  <div className="bg-white/[0.02] rounded-xl p-3 border border-white/5 w-full">
+                     <p className="text-slate-400 text-sm italic">"{item.remarks || 'No remarks provided'}"</p>
+                  </div>
+                </div>
+
+                {/* Right: AI Intelligence Block */}
+                <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
+                  {!item.ai_absenteeism_risk ? (
+                    <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
+                      <Clock className="w-8 h-8 animate-pulse text-slate-600" />
+                      <p className="text-sm font-medium">Awaiting Autonomous Audit</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 relative z-10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
+                        <div className="flex gap-2">
+                          {item.ai_replacement_action?.includes('Request') && <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Find Replacement</span>}
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.ai_absenteeism_risk === 'High Risk' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : item.ai_absenteeism_risk === 'Medium Risk' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-teal-500/10 text-teal-400 border-teal-500/20'}`}>{item.ai_absenteeism_risk}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        {item.ai_absenteeism_risk === 'High Risk' ? <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" /> : <CheckCircle2 className="w-6 h-6 text-teal-500 shrink-0 mt-0.5" />}
+                        <div>
+                          <p className={`font-bold text-lg leading-none mb-2 ${item.ai_absenteeism_risk === 'High Risk' ? 'text-rose-400' : 'text-teal-400'}`}>
+                            {item.ai_anomaly_detected}
+                          </p>
+                          <p className="text-slate-300 text-sm leading-relaxed">{item.ai_reasoning}</p>
+                        </div>
+                      </div>
+
+                      {/* HUMAN IN THE LOOP BUTTONS */}
+                      {item.manager_status ? (
+                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                         </div>
+                      ) : (
+                        <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
+                          <button onClick={() => handleManagerDecision(item.id, 'Approved', 'camp_boss')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Acknowledge</button>
+                          <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'camp_boss')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Action Needed</button>
                         </div>
                       )}
                     </div>
