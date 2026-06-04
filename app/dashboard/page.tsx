@@ -106,11 +106,11 @@ export default function DashboardPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id: item.id,
-              item_name: item.itemName || "Unknown Item",
-              quantity: item.quantity || "Unknown",
+              mr_no: item.mrNo || "Unknown",
+              supplier: item.supplierName || "Unknown",
+              unit_price: item.unitPrice || 0,
               site: item.projectName || "Unknown",
-              required_date: item.requiredDate || "ASAP",
-              notes: item.notes || "No notes",
+              remarks: item.remarks || "No remarks",
             }),
           });
         } catch (error) {
@@ -335,19 +335,19 @@ export default function DashboardPage() {
                         <Package className="w-5 h-5 text-slate-400" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-white text-lg truncate">{item.itemName || `MR #${item.mrNo}`}</h3>
+                        <h3 className="font-semibold text-white text-lg truncate">{item.supplierName ? `${item.supplierName} (MR #${item.mrNo})` : `MR #${item.mrNo}`}</h3>
                         <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
-                          <User className="w-3 h-3 shrink-0" /> <span className="truncate">{item.employeeId || 'Unknown'}</span>
+                          <User className="w-3 h-3 shrink-0" /> <span className="truncate">{item.requestedBy || item.employeeId || 'Unknown'}</span>
                         </p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-2xl font-bold text-white tracking-tight">{item.quantity || '0'}</p>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Qty</p>
+                      <p className="text-2xl font-bold text-white tracking-tight">${item.unitPrice || '0.00'}</p>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Unit Price</p>
                     </div>
                   </div>
                   <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full">
-                    <p className="text-slate-300 text-sm leading-relaxed break-words">{item.notes || "No additional notes provided."}</p>
+                    <p className="text-slate-300 text-sm leading-relaxed break-words">{item.remarks ? `Remarks: ${item.remarks}` : "No remarks provided."}</p>
                   </div>
                 </div>
 

@@ -7,16 +7,16 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw procurement request data from the Android app
-    const { id, item_name, quantity, site, required_date, notes } = data;
+    const { id, mr_no, supplier, unit_price, site, remarks } = data;
 
     // 1. Build the intelligence prompt for Gemini
     const prompt = `
       You are analyzing a new Material Request (MR).
-      Item Requested: ${item_name || 'Unknown'}
-      Quantity: ${quantity || 'Unknown'}
+      MR Number: ${mr_no || 'Unknown'}
+      Supplier: ${supplier || 'Unknown'}
+      Unit Price: $${unit_price || '0.00'}
       Construction Site: ${site || 'Unknown'}
-      Required By Date: ${required_date || 'Unknown'}
-      Additional Notes: ${notes || 'None'}
+      Remarks/Details: ${remarks || 'None'}
 
       Evaluate the priority and risk of this request. Predict if this could cause a stock shortfall or budget issue.
       Output ONLY a valid JSON object matching this schema exactly:
