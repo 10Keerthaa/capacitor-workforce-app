@@ -402,50 +402,50 @@ export default function DashboardPage() {
           <div className="flex gap-4 border-b border-white/10 pb-4 overflow-x-auto custom-scrollbar">
             <button 
               onClick={() => setActiveTab('supervisor')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'supervisor' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${activeTab === 'supervisor' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               <Network className="w-4 h-4" /> Command Center
             </button>
             <div className="w-px h-10 bg-white/10 mx-2 self-center rounded-full shrink-0" />
             <button 
               onClick={() => setActiveTab('petty_cash')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'petty_cash' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'petty_cash' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Finance (Petty Cash)
             </button>
             <button 
               onClick={() => setActiveTab('procurement')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'procurement' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'procurement' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Operations (Procurement)
             </button>
             <button 
               onClick={() => setActiveTab('work_output')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'work_output' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'work_output' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Operations (Work Output)
             </button>
             <button 
               onClick={() => setActiveTab('tools')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'tools' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'tools' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Assets (Tools)
             </button>
             <button 
               onClick={() => setActiveTab('manpower')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'manpower' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'manpower' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Workforce (Manpower)
             </button>
             <button 
               onClick={() => setActiveTab('camp_boss')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'camp_boss' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'camp_boss' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Camps (Camp Boss)
             </button>
             <button 
               onClick={() => setActiveTab('onboarding')}
-              className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'onboarding' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'onboarding' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               HR (Onboarding)
             </button>
