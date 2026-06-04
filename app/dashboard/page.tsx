@@ -308,8 +308,6 @@ export default function DashboardPage() {
                       <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-rose-500/10 blur-3xl pointer-events-none" />
                     )}
                   </div>
-
-                </div>
                 </div>
             ))}
 
