@@ -86,14 +86,14 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-slate-200 font-sans selection:bg-teal-500/30 overflow-x-auto">
-      {/* Container forced to Desktop Width */}
-      <div className="min-w-[1200px]">
+      {/* Responsive Container */}
+      <div className="w-full overflow-x-hidden">
         {/* Premium Header */}
         <div className="relative overflow-hidden border-b border-white/5 bg-black/40 backdrop-blur-3xl pt-12 pb-8">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-teal-500/20 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full md:w-[800px] h-[300px] bg-teal-500/20 blur-[120px] rounded-full pointer-events-none" />
           
-          <div className="max-w-7xl mx-auto px-8 relative z-10 flex flex-row justify-between items-end gap-6">
-            <div className="flex-1 w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div className="flex-1 w-full pt-4 md:pt-0">
               <div className="flex items-center gap-3 mb-2">
                 <BrainCircuit className="w-8 h-8 text-teal-400 shrink-0" />
                 <h1 className="text-4xl font-extrabold tracking-tight text-white">
@@ -126,7 +126,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
           <div className="grid grid-cols-1 gap-6">
             {claims.length === 0 ? (
               <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.02]">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
               claims.map((claim) => (
                 <div 
                   key={claim.id} 
-                  className="group relative flex flex-row items-center justify-between p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden"
+                  className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden"
                 >
                   {/* Highlight glow for flagged items */}
                   {claim.ai_recommendation === 'Reject' && (
@@ -176,7 +176,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Right: AI Intelligence Block */}
-                  <div className="w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
+                  <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
                     {!claim.ai_recommendation ? (
                       <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
                         <Clock className="w-8 h-8 animate-pulse text-slate-600" />
