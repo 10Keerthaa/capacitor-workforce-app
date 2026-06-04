@@ -19,9 +19,11 @@ import { Wrench } from "lucide-react";
 import { Users } from "lucide-react";
 import { Building2 } from "lucide-react";
 import { UserCheck } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
+import { Network } from "lucide-react";
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'petty_cash' | 'procurement' | 'work_output' | 'tools' | 'manpower' | 'camp_boss' | 'onboarding'>('petty_cash');
+  const [activeTab, setActiveTab] = useState<'supervisor' | 'petty_cash' | 'procurement' | 'work_output' | 'tools' | 'manpower' | 'camp_boss' | 'onboarding'>('supervisor');
   const [claims, setClaims] = useState<any[]>([]);
   const [procurements, setProcurements] = useState<any[]>([]);
   const [workOutputs, setWorkOutputs] = useState<any[]>([]);
@@ -29,6 +31,7 @@ export default function DashboardPage() {
   const [manpowerLogs, setManpowerLogs] = useState<any[]>([]);
   const [campBossLogs, setCampBossLogs] = useState<any[]>([]);
   const [onboardingLogs, setOnboardingLogs] = useState<any[]>([]);
+  const [supervisorReports, setSupervisorReports] = useState<any[]>([]);
   const [isAuditing, setIsAuditing] = useState(false);
 
   const fetchData = async () => {
@@ -73,6 +76,12 @@ export default function DashboardPage() {
       .select("*")
       .order("id", { ascending: false });
     if (onboardingData) setOnboardingLogs(onboardingData);
+
+    const { data: supervisorData } = await supabase
+      .from("supervisor_reports")
+      .select("*")
+      .order("id", { ascending: false });
+    if (supervisorData) setSupervisorReports(supervisorData);
   };
 
   useEffect(() => {
@@ -128,6 +137,13 @@ export default function DashboardPage() {
       })
       .subscribe();
 
+    const channel8 = supabase
+      .channel('schema-db-changes8')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supervisor_reports' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
     return () => { 
       supabase.removeChannel(channel1);
       supabase.removeChannel(channel2);
@@ -136,6 +152,7 @@ export default function DashboardPage() {
       supabase.removeChannel(channel5);
       supabase.removeChannel(channel6);
       supabase.removeChannel(channel7);
+      supabase.removeChannel(channel8);
     }
   }, []);
 
@@ -158,7 +175,29 @@ export default function DashboardPage() {
   const runAgentOnPending = async () => {
     setIsAuditing(true);
     
-    if (activeTab === 'petty_cash') {
+    if (activeTab === 'supervisor') {
+      const highRiskFinances = claims.filter(c => c.ai_fraud_risk === 'High').length + " High Risk Claims";
+      const criticalProcurements = procurements.filter(p => p.ai_priority === 'Critical').length + " Critical Material Shortages";
+      const productivityBottlenecks = workOutputs.filter(w => w.ai_bottleneck_identified === 'High Risk').length + " Site Bottlenecks";
+      const absenteeismAlerts = campBossLogs.filter(c => c.ai_absenteeism_risk === 'High Risk').length + " High Absenteeism Warnings";
+      const complianceGaps = onboardingLogs.filter(o => o.ai_compliance_gap && !o.ai_compliance_gap.includes('Fully')).length + " HR Compliance Gaps";
+
+      try {
+        await fetch("/api/agents/supervisor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            highRiskFinances,
+            criticalProcurements,
+            productivityBottlenecks,
+            absenteeismAlerts,
+            complianceGaps
+          }),
+        });
+      } catch (err) {
+        console.error("Supervisor failed", err);
+      }
+    } else if (activeTab === 'petty_cash') {
       const pendingClaims = claims.filter(c => !c.ai_recommendation);
       for (const claim of pendingClaims) {
         try {
@@ -344,6 +383,11 @@ export default function DashboardPage() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Auditing Data...
                 </span>
+              ) : activeTab === 'supervisor' ? (
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <BrainCircuit className="w-4 h-4 group-hover:animate-pulse" />
+                  Generate Master Report
+                </span>
               ) : (
                 <span className="flex items-center gap-2 whitespace-nowrap">
                   <Sparkles className="w-4 h-4 group-hover:animate-pulse" />
@@ -356,7 +400,14 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-8">
-          <div className="flex gap-4 border-b border-white/10 pb-4">
+          <div className="flex gap-4 border-b border-white/10 pb-4 overflow-x-auto custom-scrollbar">
+            <button 
+              onClick={() => setActiveTab('supervisor')}
+              className={`px-6 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'supervisor' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
+            >
+              <Network className="w-4 h-4" /> Command Center
+            </button>
+            <div className="w-px h-10 bg-white/10 mx-2 self-center rounded-full shrink-0" />
             <button 
               onClick={() => setActiveTab('petty_cash')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all ${activeTab === 'petty_cash' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
@@ -405,6 +456,69 @@ export default function DashboardPage() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
           <div className="grid grid-cols-1 gap-6">
+
+            {/* --- COMMAND CENTER TAB --- */}
+            {activeTab === 'supervisor' && supervisorReports.length === 0 && (
+              <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.02]">
+                <Network className="w-16 h-16 text-indigo-500/50 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-slate-300">Command Center Offline</h3>
+                <p className="text-slate-500 mt-2 max-w-md mx-auto">Click "Generate Master Report" to trigger the Supervisor Agent. It will analyze all alerts from the 7 sub-agents simultaneously.</p>
+              </div>
+            )}
+
+            {activeTab === 'supervisor' && supervisorReports.map((report) => (
+              <div key={report.id} className="relative p-1 rounded-3xl bg-gradient-to-br from-indigo-500/30 via-purple-500/10 to-transparent shadow-2xl mb-8">
+                <div className="bg-slate-900/90 backdrop-blur-xl rounded-[23px] p-6 sm:p-8 relative overflow-hidden">
+                  {/* Decorative */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+                  
+                  <div className="relative z-10 flex flex-col lg:flex-row gap-8">
+                    {/* Left: Status & Impact */}
+                    <div className="lg:w-1/3 flex flex-col justify-between space-y-6 border-r border-white/10 pr-8">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <BrainCircuit className="w-8 h-8 text-indigo-400" />
+                          <h2 className="text-2xl font-bold text-white tracking-tight">Supervisor Report</h2>
+                        </div>
+                        <p className="text-slate-400 text-sm">Generated: {new Date(report.created_at).toLocaleString()}</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                           <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Company Status</p>
+                           <p className={`text-xl font-black ${report.system_status === 'CRITICAL' ? 'text-rose-500' : report.system_status === 'WARNING' ? 'text-amber-500' : 'text-teal-500'}`}>{report.system_status}</p>
+                        </div>
+                        <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                           <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Financial Impact</p>
+                           <p className={`text-xl font-black ${report.financial_impact_risk === 'High Risk' ? 'text-rose-500' : report.financial_impact_risk === 'Medium Risk' ? 'text-amber-500' : 'text-teal-500'}`}>{report.financial_impact_risk}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: AI Intelligence */}
+                    <div className="lg:w-2/3 space-y-8">
+                      <div>
+                         <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Key Bottleneck</h3>
+                         <p className="text-slate-300 text-lg leading-relaxed bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl">
+                           {report.key_bottleneck}
+                         </p>
+                      </div>
+
+                      <div>
+                         <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
+                         <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
+                           <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
+                             {report.orchestrated_action_plan}
+                           </p>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
             {activeTab === 'petty_cash' && claims.length === 0 && (
               <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.02]">
                 <Receipt className="w-12 h-12 text-slate-600 mx-auto mb-4" />
