@@ -16,7 +16,7 @@ const responseSchema: Schema = {
     },
     orchestrated_action_plan: {
       type: Type.STRING,
-      description: "A detailed 3-step action plan. You MUST separate each step with a newline character (\\n). Example: '1. First step...\\n2. Second step...'",
+      description: "A detailed, step-by-step action plan containing all necessary steps required to resolve the bottleneck. You MUST separate each step with a newline character (\\n). Example: '1. First step...\\n2. Second step...'",
     },
     financial_impact_risk: {
       type: Type.STRING,
