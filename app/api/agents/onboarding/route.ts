@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ai, AGENT_INSTRUCTIONS } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
 import { Type, Schema } from '@google/genai';
+import { sendTestTelegramMessage } from '@/lib/telegram';
 
 const responseSchema: Schema = {
   type: Type.OBJECT,
@@ -22,8 +23,16 @@ const responseSchema: Schema = {
       type: Type.STRING,
       description: "A 1-2 sentence explanation of your analysis.",
     },
+    ai_email_draft: {
+      type: Type.STRING,
+      description: "If an action requires emailing the employee (e.g. for missing docs or visa expiry), draft the email message here. Otherwise, leave empty.",
+    },
+    ai_email_subject: {
+      type: Type.STRING,
+      description: "Subject of the email draft, if applicable.",
+    }
   },
-  required: ["ai_document_validation", "ai_compliance_gap", "ai_hr_action", "ai_reasoning"],
+  required: ["ai_document_validation", "ai_compliance_gap", "ai_hr_action", "ai_reasoning", "ai_email_draft", "ai_email_subject"],
 };
 
 export async function POST(req: Request) {
@@ -105,6 +114,17 @@ export async function POST(req: Request) {
     if (error) {
       console.error("Database update failed.", error);
       throw error;
+    }
+
+    // --- TELEGRAM INTERCEPTOR TRIGGER ---
+    if (aiAnalysis.ai_email_draft && aiAnalysis.ai_email_draft.length > 5) {
+      // Simulate an email to the employee
+      const recipient = data.employeeEmail || `${employeeName?.toLowerCase().replace(/\s+/g, '.') || 'employee'}@example.com`;
+      await sendTestTelegramMessage(
+        recipient, 
+        aiAnalysis.ai_email_subject || "HR Alert: Document Action Required", 
+        aiAnalysis.ai_email_draft
+      );
     }
 
     return NextResponse.json({ success: true, ai_analysis: aiAnalysis });

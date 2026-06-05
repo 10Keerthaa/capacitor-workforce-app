@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ai, AGENT_INSTRUCTIONS } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
 import { Type, Schema } from '@google/genai';
+import { sendTestTelegramMessage } from '@/lib/telegram';
 
 const responseSchema: Schema = {
   type: Type.OBJECT,
@@ -22,8 +23,16 @@ const responseSchema: Schema = {
       type: Type.STRING,
       description: "A 1-2 sentence explanation of your analysis.",
     },
+    ai_worker_sms_draft: {
+      type: Type.STRING,
+      description: "A short, friendly SMS message to send directly to the worker regarding their status. Translate this message into either Hindi or English based on their name. Default to Hindi.",
+    },
+    ai_worker_sms_language: {
+      type: Type.STRING,
+      description: "The language you translated the SMS into ('Hindi' or 'English').",
+    }
   },
-  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning"],
+  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language"],
 };
 
 export async function POST(req: Request) {
@@ -45,6 +54,12 @@ export async function POST(req: Request) {
       Analyze the worker's status and remarks to predict absenteeism risk.
       If the worker is sick or absent, determine if a replacement is needed on site.
       Detect any anomalies (e.g., if remarks suggest a contagious illness spreading).
+      
+      CRITICAL: Draft an SMS to send to the worker. 
+      - If they are sick: "Get well soon, please visit the camp clinic."
+      - If they are absent without reason: "Please report to the site immediately or contact the Camp Boss."
+      TRANSLATE this SMS. You must ONLY use Hindi or English. If you are unsure, default to Hindi.
+      
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 
@@ -78,6 +93,17 @@ export async function POST(req: Request) {
     if (error) {
       console.error("Database update failed.", error);
       throw error;
+    }
+
+    // --- TELEGRAM INTERCEPTOR TRIGGER ---
+    if (aiAnalysis.ai_worker_sms_draft && aiAnalysis.ai_worker_sms_draft.length > 3) {
+      // Simulate sending an SMS to the worker's phone
+      const phoneToUse = data.employeePhone || "+971-50-0000000";
+      await sendTestTelegramMessage(
+        phoneToUse, 
+        `Camp Boss SMS Alert (${aiAnalysis.ai_worker_sms_language})`, 
+        aiAnalysis.ai_worker_sms_draft
+      );
     }
 
     return NextResponse.json({ success: true, ai_analysis: aiAnalysis });
