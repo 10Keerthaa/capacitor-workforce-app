@@ -1,40 +1,41 @@
 import { NextResponse } from 'next/server';
 import { ai, AGENT_INSTRUCTIONS } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
-import PDFDocument from 'pdfkit';
+import { jsPDF } from 'jspdf';
 import { sendTestTelegramDocument } from '@/lib/telegram';
 
 // Helper to generate a PDF in-memory as a Buffer
 function createPdfBuffer(mr_no: string, supplier: string, site: string, remarks: string, itemDescription: string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50 });
-    const chunks: Buffer[] = [];
-    doc.on('data', (chunk) => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-
+  return new Promise((resolve) => {
+    const doc = new jsPDF();
+    
     // Draw the PDF
-    doc.fontSize(24).font('Helvetica-Bold').text('Request For Quotation (RFQ)', { align: 'center' });
-    doc.moveDown(2);
+    doc.setFontSize(22);
+    doc.text('Request For Quotation (RFQ)', 105, 20, { align: 'center' });
     
-    doc.fontSize(12).font('Helvetica-Bold').text('RFQ Reference: ', { continued: true }).font('Helvetica').text(`RFQ-${mr_no}`);
-    doc.font('Helvetica-Bold').text('Date: ', { continued: true }).font('Helvetica').text(new Date().toLocaleDateString());
-    doc.moveDown();
+    doc.setFontSize(12);
+    doc.text(`RFQ Reference: RFQ-${mr_no}`, 20, 40);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
     
-    doc.font('Helvetica-Bold').text('To: ', { continued: true }).font('Helvetica').text(supplier);
-    doc.font('Helvetica-Bold').text('Delivery Site: ', { continued: true }).font('Helvetica').text(site);
-    doc.moveDown(2);
+    doc.text(`To: ${supplier}`, 20, 70);
+    doc.text(`Delivery Site: ${site}`, 20, 80);
     
-    doc.font('Helvetica-Bold').text('Material Specifications:');
-    doc.font('Helvetica').text(itemDescription || remarks || 'General Construction Materials');
-    doc.moveDown(2);
+    doc.setFontSize(14);
+    doc.text('Material Specifications:', 20, 100);
     
-    doc.text('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.');
-    doc.moveDown(3);
+    doc.setFontSize(12);
+    // Wrap text so it doesn't run off the page
+    const splitMaterialText = doc.splitTextToSize(itemDescription || remarks || 'General Construction Materials', 170);
+    doc.text(splitMaterialText, 20, 110);
     
-    doc.font('Helvetica-Oblique').text('Authorized by: 10xWorkforce AI Procurement Agent', { align: 'right' });
+    const footerText = doc.splitTextToSize('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.', 170);
+    doc.text(footerText, 20, 160);
     
-    doc.end();
+    doc.setFontSize(10);
+    doc.text('Authorized by: 10xWorkforce AI Procurement Agent', 190, 280, { align: 'right' });
+    
+    const arrayBuffer = doc.output('arraybuffer');
+    resolve(Buffer.from(arrayBuffer));
   });
 }
 
