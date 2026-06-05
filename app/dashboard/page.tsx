@@ -508,7 +508,7 @@ export default function DashboardPage() {
                          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
                          <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
                            <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
-                             {report.orchestrated_action_plan}
+                             {report.orchestrated_action_plan?.replace(/(?:\r\n|\r|\n)?(\d+\.)/g, '\n\n$1').trim()}
                            </p>
                          </div>
                       </div>
