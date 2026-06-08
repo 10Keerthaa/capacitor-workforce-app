@@ -3,110 +3,106 @@
 import { useState } from "react";
 
 export default function TestAgentPage() {
-  const [amount, setAmount] = useState("500");
-  const [description, setDescription] = useState("Lunch for myself");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("procurement");
 
-  const runAgent = async () => {
-    setLoading(true);
-    setResult(null);
-
+  const runProcurementAgent = async () => {
+    setLoading(true); setResult(null);
     try {
-      const response = await fetch("/api/agents/petty-cash", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch("/api/agents/procurement", {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employee_name: "Test Worker",
-          amount: amount,
-          description: description,
-          site: "Site A",
+          id: 1, mr_no: "MR-999", supplier: "BuildMart Materials", unit_price: "5000", site: "Downtown Tower", remarks: "Need 500 bags of cement urgently for the foundation."
         }),
       });
+      const data = await response.json(); setResult(data.ai_analysis || data);
+    } catch (error) { setResult({ error: "Failed to run agent" }); } finally { setLoading(false); }
+  };
 
-      const data = await response.json();
-      setResult(data.agent_analysis);
-    } catch (error) {
-      console.error(error);
-      setResult({ error: "Failed to run agent" });
-    } finally {
-      setLoading(false);
-    }
+  const runCampBossAgent = async () => {
+    setLoading(true); setResult(null);
+    try {
+      const response = await fetch("/api/agents/camp-boss", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: 1, employeeId: "EMP-102", employeeName: "Rahul Sharma", employeePhone: "+971501234567", campLocation: "Camp Alpha", roomNumber: "102A", status: "Absent", remarks: "Reported fever and bad cough."
+        }),
+      });
+      const data = await response.json(); setResult(data.ai_analysis || data);
+    } catch (error) { setResult({ error: "Failed to run agent" }); } finally { setLoading(false); }
+  };
+
+  const runOnboardingAgent = async () => {
+    setLoading(true); setResult(null);
+    try {
+      const response = await fetch("/api/agents/onboarding", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: 1, employeeName: "John Doe", employeeEmail: "test@example.com", nationality: "British", trade: "Engineer", passportExpiry: "1700000000", visaExpiry: "1600000000" // Expired epochs
+        }),
+      });
+      const data = await response.json(); setResult(data.ai_analysis || data);
+    } catch (error) { setResult({ error: "Failed to run agent" }); } finally { setLoading(false); }
   };
 
   return (
     <div className="min-h-screen bg-gray-950 p-10 text-white font-sans">
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            Petty Cash Agent Simulator
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+            AI Agent Test Dashboard
           </h1>
           <p className="text-gray-400 mt-2">
-            Submit a fake expense below to see how the AI Brain analyzes it.
+            Click an agent below to simulate running it. This will trigger the AI and send the live Telegram alert!
           </p>
         </div>
 
-        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Expense Amount ($)</label>
-            <input
-              type="text"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500"
-              rows={3}
-            />
-          </div>
-          
-          <button
-            onClick={runAgent}
-            disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50"
-          >
-            {loading ? "Agent is Thinking..." : "Run AI Analysis"}
-          </button>
+        <div className="flex gap-4">
+          <button onClick={() => setActiveTab('procurement')} className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'procurement' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'}`}>Procurement Agent (PDF)</button>
+          <button onClick={() => setActiveTab('campboss')} className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'campboss' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'}`}>Camp Boss Agent (SMS)</button>
+          <button onClick={() => setActiveTab('onboarding')} className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'onboarding' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'}`}>HR Onboarding Agent (Email)</button>
+        </div>
+
+        <div className="bg-gray-900 p-8 rounded-xl border border-gray-800">
+          {activeTab === 'procurement' && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-white mb-2">Simulate: Material Request</h2>
+              <p className="text-gray-400"><strong>Scenario:</strong> A site engineer requested 500 bags of cement from BuildMart Materials for the Downtown Tower project.</p>
+              <button onClick={runProcurementAgent} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg transition-all disabled:opacity-50 mt-4 text-lg">
+                {loading ? "Agent is Generating PDF..." : "Run Procurement Agent"}
+              </button>
+            </div>
+          )}
+          {activeTab === 'campboss' && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-white mb-2">Simulate: Worker Attendance</h2>
+              <p className="text-gray-400"><strong>Scenario:</strong> Worker Rahul Sharma is marked as 'Absent' today with remarks: 'Reported fever and bad cough'.</p>
+              <button onClick={runCampBossAgent} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg transition-all disabled:opacity-50 mt-4 text-lg">
+                {loading ? "Agent is Translating..." : "Run Camp Boss Agent"}
+              </button>
+            </div>
+          )}
+          {activeTab === 'onboarding' && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-white mb-2">Simulate: New Hire Scan</h2>
+              <p className="text-gray-400"><strong>Scenario:</strong> HR uploaded documents for John Doe. The system detects his visa expired.</p>
+              <button onClick={runOnboardingAgent} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg transition-all disabled:opacity-50 mt-4 text-lg">
+                {loading ? "Agent is Drafting Email..." : "Run HR Agent"}
+              </button>
+            </div>
+          )}
         </div>
 
         {result && (
-          <div className="bg-gray-900 p-6 rounded-xl border border-emerald-900/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-            <h2 className="text-xl font-semibold text-emerald-400 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              Agent Decision
+          <div className="bg-gray-900 p-6 rounded-xl border border-blue-900/50 shadow-[0_0_20px_rgba(37,99,235,0.15)]">
+            <h2 className="text-xl font-semibold text-blue-400 mb-4 flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              Agent Decision Complete! Check Telegram!
             </h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-gray-950 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Category</p>
-                <p className="font-medium">{result.category}</p>
-              </div>
-              <div className="bg-gray-950 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Fraud Risk</p>
-                <p className={`font-medium ${result.fraud_risk === 'High' ? 'text-red-400' : result.fraud_risk === 'Medium' ? 'text-yellow-400' : 'text-green-400'}`}>
-                  {result.fraud_risk}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-950 p-4 rounded-lg border border-gray-800 space-y-2">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Recommendation</p>
-                <p className={`font-bold ${result.recommendation === 'Approve' ? 'text-green-400' : result.recommendation === 'Reject' ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {result.recommendation}
-                </p>
-              </div>
-              <div className="pt-2 border-t border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Reason</p>
-                <p className="text-gray-300 italic">"{result.reason}"</p>
-              </div>
-            </div>
+            <pre className="bg-gray-950 p-4 rounded-lg text-sm text-gray-300 overflow-x-auto border border-gray-800">
+              {JSON.stringify(result, null, 2)}
+            </pre>
           </div>
         )}
       </div>
