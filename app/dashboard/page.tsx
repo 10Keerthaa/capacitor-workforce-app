@@ -575,15 +575,22 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-4 relative z-10">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-4">
                           <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                            claim.ai_fraud_risk === 'High' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
-                            claim.ai_fraud_risk === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                            'bg-teal-500/10 text-teal-400 border-teal-500/20'
-                          }`}>
-                            {claim.ai_fraud_risk} Risk
-                          </span>
+                          <div className="flex gap-2">
+                            {claim.ai_category && (
+                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                {claim.ai_category}
+                              </span>
+                            )}
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                              claim.ai_fraud_risk === 'High' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
+                              claim.ai_fraud_risk === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                              'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                            }`}>
+                              {claim.ai_fraud_risk} Risk
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex items-start gap-3">
