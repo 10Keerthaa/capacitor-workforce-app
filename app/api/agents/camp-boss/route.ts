@@ -25,11 +25,11 @@ const responseSchema: Schema = {
     },
     ai_worker_sms_draft: {
       type: Type.STRING,
-      description: "A short, friendly SMS message to send directly to the worker regarding their status. Translate this message into either Hindi or English based on their name. Default to Hindi.",
+      description: "A short, friendly SMS message to send directly to the worker regarding their status. You MUST provide the message in BOTH English AND Hindi in the same text string.",
     },
     ai_worker_sms_language: {
       type: Type.STRING,
-      description: "The language you translated the SMS into ('Hindi' or 'English').",
+      description: "The language you translated the SMS into (Should be 'Bilingual: English & Hindi').",
     }
   },
   required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language"],
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       CRITICAL: Draft an SMS to send to the worker. 
       - If they are sick: "Get well soon, please visit the camp clinic."
       - If they are absent without reason: "Please report to the site immediately or contact the Camp Boss."
-      TRANSLATE this SMS. You must ONLY use Hindi or English. If you are unsure, default to Hindi.
+      TRANSLATE this SMS. You must provide the message in BOTH English AND Hindi in the same SMS text (e.g., 'English text. / Hindi text.').
       
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
