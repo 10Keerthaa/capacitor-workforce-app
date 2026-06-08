@@ -31,14 +31,15 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw tools management data
-    const { id, tag_name, qty, item_name, brand, custody_task, status, warranty_details, purchase_date, photo_url } = data;
+    const { id, tag_name, qty, returned_qty, item_name, brand, custody_task, status, warranty_details, purchase_date, photo_url } = data;
 
     // 1. Build the intelligence prompt
     const prompt = `
       You are an Asset Controller Agent analyzing tool inventory.
       Item: ${brand || 'Unknown'} ${item_name || 'Unknown'}
       Tag: ${tag_name || 'Unknown'}
-      Expected Qty: ${qty || 0}
+      Original Qty Checked Out: ${qty || 0}
+      Qty Worker Claims to Return: ${returned_qty !== undefined ? returned_qty : 'Not provided'}
       Current Custody/Task: ${custody_task || 'Unassigned'}
       Condition Status: ${status || 'Unknown'}
       Warranty Details: ${warranty_details || 'Unknown'}
@@ -46,7 +47,8 @@ export async function POST(req: Request) {
 
       Analyze if this tool is at risk of being lost/hoarded based on custody.
       Check if the tool is broken but under warranty.
-      If a photo is provided, visually verify if the tools match the expected quantity or look damaged.
+      If a photo is provided, visually verify if the tools match the 'Qty Worker Claims to Return'.
+      Compare the 'Qty Worker Claims to Return' against the 'Original Qty Checked Out'. If they don't match, or if the photo does not match, flag a High Risk of tool loss!
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 
