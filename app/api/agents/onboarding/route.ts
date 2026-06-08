@@ -30,9 +30,13 @@ const responseSchema: Schema = {
     ai_email_subject: {
       type: Type.STRING,
       description: "Subject of the email draft, if applicable.",
+    },
+    ai_sla_status: {
+      type: Type.STRING,
+      description: "Must be 'SLA Breached' if application is older than 3 days, or 'SLA Met'.",
     }
   },
-  required: ["ai_document_validation", "ai_compliance_gap", "ai_hr_action", "ai_reasoning", "ai_email_draft", "ai_email_subject"],
+  required: ["ai_document_validation", "ai_compliance_gap", "ai_hr_action", "ai_reasoning", "ai_email_draft", "ai_email_subject", "ai_sla_status"],
 };
 
 export async function POST(req: Request) {
@@ -40,7 +44,10 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw onboarding data
-    const { id, employeeName, nationality, trade, passportExpiry, visaExpiry, passportScanUrisJson } = data;
+    const { id, employeeName, nationality, trade, passportExpiry, visaExpiry, passportScanUrisJson, date } = data;
+    
+    // Calculate current date for SLA
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
     // 1. Build the intelligence prompt
     const prompt = `
@@ -50,10 +57,15 @@ export async function POST(req: Request) {
       Trade: ${trade || 'Unknown'}
       Passport Expiry (Epoch): ${passportExpiry || 'Not provided'}
       Visa Expiry (Epoch): ${visaExpiry || 'Not provided'}
+      Application Date: ${date || 'Not provided'}
+      Today's Date: ${currentDate}
 
       Analyze the document expiry dates against the current date.
       Identify any compliance gaps (like missing expiry dates or upcoming expirations).
       If a passport scan is provided, visually verify if it looks valid.
+      
+      SLA RULE: The company allows a maximum of 3 days to complete onboarding. Compare the 'Application Date' to 'Today's Date'. If it has been more than 3 days, output 'SLA Breached'. Otherwise output 'SLA Met'.
+      
       Recommend the next action for HR.
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
@@ -107,7 +119,8 @@ export async function POST(req: Request) {
         ai_document_validation: aiAnalysis.ai_document_validation,
         ai_compliance_gap: aiAnalysis.ai_compliance_gap,
         ai_hr_action: aiAnalysis.ai_hr_action,
-        ai_reasoning: aiAnalysis.ai_reasoning
+        ai_reasoning: aiAnalysis.ai_reasoning,
+        ai_sla_status: aiAnalysis.ai_sla_status
       })
       .eq('id', id);
 
