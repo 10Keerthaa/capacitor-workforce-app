@@ -713,6 +713,13 @@ export default function DashboardPage() {
                         <div>
                           <p className={`font-bold text-lg leading-none mb-2 ${item.ai_recommendation === 'Approve' ? 'text-teal-400' : 'text-rose-400'}`}>{item.ai_recommendation}</p>
                           <p className="text-slate-300 text-sm leading-relaxed">{item.ai_reason}</p>
+                          {item.ai_recommended_vendor && (
+                            <div className="mt-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-2">
+                              <p className="text-indigo-300 text-xs font-medium flex items-center gap-1">
+                                💡 <span className="font-bold">AI Recommended Vendor:</span> {item.ai_recommended_vendor}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
 

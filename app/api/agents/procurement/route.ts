@@ -62,7 +62,8 @@ export async function POST(req: Request) {
         "ai_priority": "Critical" | "Normal",
         "ai_recommendation": "Approve" | "Reject",
         "ai_reason": "A 1-sentence explanation of your reasoning as a Procurement Officer.",
-        "ai_email_draft": "If Approved, draft a professional email to the vendor asking for a quote. If Rejected, leave empty."
+        "ai_email_draft": "If Approved, draft a professional email to the vendor asking for a quote. If Rejected, leave empty.",
+        "ai_recommended_vendor": "Suggest a highly realistic, cheaper alternative dummy vendor name based on the requested materials."
       }
     `;
 
@@ -89,7 +90,8 @@ export async function POST(req: Request) {
         ai_risk_level: aiAnalysis.ai_risk_level,
         ai_priority: aiAnalysis.ai_priority,
         ai_recommendation: aiAnalysis.ai_recommendation,
-        ai_reason: aiAnalysis.ai_reason
+        ai_reason: aiAnalysis.ai_reason,
+        ai_recommended_vendor: aiAnalysis.ai_recommended_vendor
       })
       .eq('id', id);
 
