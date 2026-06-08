@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import { sendTestTelegramDocument } from '@/lib/telegram';
 
 // Helper to generate a PDF in-memory as a Buffer
-function createPdfBuffer(mr_no: string, supplier: string, site: string, remarks: string, itemDescription: string): Promise<Buffer> {
+function createPdfBuffer(mr_no: string, supplier: string, site: string, specifications: string): Promise<Buffer> {
   return new Promise((resolve) => {
     const doc = new jsPDF();
     
@@ -25,7 +25,7 @@ function createPdfBuffer(mr_no: string, supplier: string, site: string, remarks:
     
     doc.setFontSize(12);
     // Wrap text so it doesn't run off the page
-    const splitMaterialText = doc.splitTextToSize(itemDescription || remarks || 'General Construction Materials', 170);
+    const splitMaterialText = doc.splitTextToSize(specifications || 'General Construction Materials', 170);
     doc.text(splitMaterialText, 20, 110);
     
     const footerText = doc.splitTextToSize('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.', 170);
@@ -63,7 +63,8 @@ export async function POST(req: Request) {
         "ai_recommendation": "Approve" | "Reject",
         "ai_reason": "A 1-sentence explanation of your reasoning as a Procurement Officer.",
         "ai_email_draft": "If Approved, draft a professional email to the vendor asking for a quote. If Rejected, leave empty.",
-        "ai_recommended_vendor": "Suggest a highly realistic, cheaper alternative dummy vendor name based on the requested materials."
+        "ai_recommended_vendor": "Suggest a highly realistic, cheaper alternative dummy vendor name based on the requested materials.",
+        "ai_professional_rfq_specifications": "Take the user's short remarks and expand them into a highly detailed, professional 3-to-5 point technical specification list for the RFQ PDF."
       }
     `;
 
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
     if (aiAnalysis.ai_recommendation === 'Approve' && aiAnalysis.ai_email_draft) {
       const safeSupplier = supplier || 'UnknownVendor';
       const safeMrNo = mr_no || Math.floor(Math.random() * 1000).toString();
-      const pdfBuffer = await createPdfBuffer(safeMrNo, safeSupplier, site || 'Unknown', remarks || '', data.item_description || '');
+      const pdfBuffer = await createPdfBuffer(safeMrNo, safeSupplier, site || 'Unknown', aiAnalysis.ai_professional_rfq_specifications || remarks || '');
       const vendorEmail = `sales@${safeSupplier.toLowerCase().replace(/\s+/g, '')}.com`;
       
       await sendTestTelegramDocument(
