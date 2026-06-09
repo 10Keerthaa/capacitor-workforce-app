@@ -33,5 +33,5 @@ This checklist tracks the remaining AI logic required to make the Next.js backen
 - [ ] **Real SMS Gateway:** Swap out the Telegram test pipeline for a real SMS service (like Twilio) to text workers.
 
 ## 🧠 09. Multi-Agent Orchestrator (Supervisor)
-- [ ] **Autonomous Data Fetching:** Update the Supervisor Agent to actively query all 8 Supabase tables for "High Risk" and "Pending" alerts simultaneously.
-- [ ] **Cross-Correlate Alerts:** Program the AI to connect the dots (e.g., matching a Procurement Delay to a Daily Manpower Shortage on the same site).
+- [x] **Autonomous Data Fetching:** Update the Supervisor Agent to actively query all 8 Supabase tables for "High Risk" and "Pending" alerts simultaneously.
+- [x] **Cross-Correlate Alerts:** Program the AI to connect the dots (e.g., matching a Procurement Delay to a Daily Manpower Shortage on the same site).
