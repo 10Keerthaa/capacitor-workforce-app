@@ -30,8 +30,10 @@ This checklist tracks the remaining AI logic required to make the Next.js backen
 - [x] **Predict workforce demand:** Forecast labor needs based on project schedules.
 
 ## 🏕️ 07. Camp Boss
+- [x] **Multi-Lingual Care SMS:** Dynamically query employee nationality and translate the SMS into their native language, separated by newlines.
 - [ ] **Real SMS Gateway:** Swap out the Telegram test pipeline for a real SMS service (like Twilio) to text workers.
 
 ## 🧠 09. Multi-Agent Orchestrator (Supervisor)
 - [x] **Autonomous Data Fetching:** Update the Supervisor Agent to actively query all 8 Supabase tables for "High Risk" and "Pending" alerts simultaneously.
 - [x] **Cross-Correlate Alerts:** Program the AI to connect the dots (e.g., matching a Procurement Delay to a Daily Manpower Shortage on the same site).
+- [ ] **Automated Scheduling (Cron):** Configure a daily background timer (e.g. Render Cron) to trigger the Orchestrator at midnight without human intervention.

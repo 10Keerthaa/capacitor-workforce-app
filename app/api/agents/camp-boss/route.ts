@@ -25,11 +25,11 @@ const responseSchema: Schema = {
     },
     ai_worker_sms_draft: {
       type: Type.STRING,
-      description: "A short, friendly SMS message to send directly to the worker regarding their status. You MUST provide the message in BOTH English AND Hindi in the same text string.",
+      description: "A short, friendly SMS message to send directly to the worker regarding their status. You MUST provide the message in BOTH English AND their native language in the same text string.",
     },
     ai_worker_sms_language: {
       type: Type.STRING,
-      description: "The language you translated the SMS into (Should be 'Bilingual: English & Hindi').",
+      description: "The language you translated the SMS into based on their nationality (e.g., 'Bilingual: English & Tagalog').",
     }
   },
   required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language"],
@@ -42,10 +42,25 @@ export async function POST(req: Request) {
     // Extract the raw camp boss data
     const { id, employeeId, employeeName, campLocation, roomNumber, status, remarks, date } = data;
 
-    // 1. Build the intelligence prompt
+    // 1. Fetch Company Rulebook (Master Tables)
+    let employeeNationality = 'Unknown';
+    if (employeeName && employeeName !== 'Unknown') {
+      const { data: empData } = await supabase
+        .from('employees')
+        .select('nationality')
+        .eq('full_name', employeeName)
+        .single();
+
+      if (empData && empData.nationality) {
+        employeeNationality = empData.nationality;
+      }
+    }
+
+    // 2. Build the intelligence prompt
     const prompt = `
       You are a Workforce Agent (Camp Boss) analyzing labor camp attendance.
       Employee: ${employeeName || 'Unknown'} (${employeeId || 'Unknown'})
+      Nationality: ${employeeNationality}
       Camp Location: ${campLocation || 'Unknown'}
       Room Number: ${roomNumber || 'Unknown'}
       Status: ${status || 'Unknown'}
@@ -55,10 +70,10 @@ export async function POST(req: Request) {
       If the worker is sick or absent, determine if a replacement is needed on site.
       Detect any anomalies (e.g., if remarks suggest a contagious illness spreading).
       
-      CRITICAL: Draft an SMS to send to the worker. 
+      CRITICAL: Draft a Care SMS to send to the worker. 
       - If they are sick: "Get well soon, please visit the camp clinic."
       - If they are absent without reason: "Please report to the site immediately or contact the Camp Boss."
-      TRANSLATE this SMS. You must provide the message in BOTH English AND Hindi in the same SMS text (e.g., 'English text. / Hindi text.').
+      TRANSLATE this SMS. You must provide the message in BOTH English AND the native language of their Nationality (${employeeNationality}). You MUST separate the English message and the native translation with a double newline (\\n\\n) so they appear on completely separate lines.
       
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
