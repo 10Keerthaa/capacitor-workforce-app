@@ -173,6 +173,7 @@ export default function DashboardPage() {
   // Run the agent on ALL pending claims automatically
   const runAgentOnPending = async () => {
     setIsAuditing(true);
+    let hasAlerted = false; // Prevent multiple alerts in loops
     
     if (activeTab === 'supervisor') {
       const highRiskFinances = claims.filter(c => c.ai_fraud_risk === 'High').length + " High Risk Claims";
@@ -182,7 +183,7 @@ export default function DashboardPage() {
       const complianceGaps = onboardingLogs.filter(o => o.ai_compliance_gap && !o.ai_compliance_gap.includes('Fully')).length + " HR Compliance Gaps";
 
       try {
-        await fetch("/api/agents/supervisor", {
+        const res = await fetch("/api/agents/supervisor", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -193,14 +194,16 @@ export default function DashboardPage() {
             complianceGaps
           }),
         });
+        if (!res.ok) throw new Error("API returned " + res.status);
       } catch (err) {
         console.error("Supervisor failed", err);
+        if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
       }
     } else if (activeTab === 'petty_cash') {
       const pendingClaims = claims.filter(c => !c.ai_recommendation);
       for (const claim of pendingClaims) {
         try {
-          await fetch("/api/agents/petty-cash", {
+          const res = await fetch("/api/agents/petty-cash", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -211,15 +214,17 @@ export default function DashboardPage() {
               site: claim.projectName || "Unknown",
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", claim.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'procurement') {
       const pendingProcurements = procurements.filter(p => !p.ai_recommendation);
       for (const item of pendingProcurements) {
         try {
-          await fetch("/api/agents/procurement", {
+          const res = await fetch("/api/agents/procurement", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -231,15 +236,17 @@ export default function DashboardPage() {
               remarks: item.remarks || "No remarks",
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'work_output') {
       const pendingWork = workOutputs.filter(w => !w.ai_productivity_trend);
       for (const item of pendingWork) {
         try {
-          await fetch("/api/agents/work-output", {
+          const res = await fetch("/api/agents/work-output", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -252,15 +259,17 @@ export default function DashboardPage() {
               site: item.projectName || "Unknown",
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'tools') {
       const pendingTools = tools.filter(t => !t.ai_recommendation);
       for (const item of pendingTools) {
         try {
-          await fetch("/api/agents/tools", {
+          const res = await fetch("/api/agents/tools", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -276,15 +285,17 @@ export default function DashboardPage() {
               photo_url: item.toolbox_photo_url || null,
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'manpower') {
       const pendingManpower = manpowerLogs.filter(m => !m.ai_overtime_risk);
       for (const item of pendingManpower) {
         try {
-          await fetch("/api/agents/manpower", {
+          const res = await fetch("/api/agents/manpower", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -299,15 +310,17 @@ export default function DashboardPage() {
               otherStaff: item.otherStaff || "Unknown",
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'camp_boss') {
       const pendingCampBoss = campBossLogs.filter(c => !c.ai_absenteeism_risk);
       for (const item of pendingCampBoss) {
         try {
-          await fetch("/api/agents/camp-boss", {
+          const res = await fetch("/api/agents/camp-boss", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -320,15 +333,17 @@ export default function DashboardPage() {
               remarks: item.remarks || "No remarks",
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     } else if (activeTab === 'onboarding') {
       const pendingOnboarding = onboardingLogs.filter(o => !o.ai_document_validation);
       for (const item of pendingOnboarding) {
         try {
-          await fetch("/api/agents/onboarding", {
+          const res = await fetch("/api/agents/onboarding", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -341,8 +356,10 @@ export default function DashboardPage() {
               passportScanUrisJson: item.passportScanUrisJson || null,
             }),
           });
+          if (!res.ok) throw new Error("API returned " + res.status);
         } catch (error) {
           console.error("Agent failed for ID", item.id, error);
+          if (!hasAlerted) { alert("AI servers are currently busy. Please try again in a moment."); hasAlerted = true; }
         }
       }
     }
