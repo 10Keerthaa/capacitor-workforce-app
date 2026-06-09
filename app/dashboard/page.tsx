@@ -926,8 +926,8 @@ export default function DashboardPage() {
                          </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
-                          <button onClick={() => handleManagerDecision(item.id, 'Approved', 'tools_mgmt')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Resolve</button>
-                          <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'tools_mgmt')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Action Needed</button>
+                          <button onClick={() => handleManagerDecision(item.id, 'Approved', 'tools_mgmt')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Acknowledge</button>
+                          <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'tools_mgmt')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Investigate</button>
                         </div>
                       )}
                     </div>
