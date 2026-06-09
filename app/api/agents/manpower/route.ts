@@ -31,21 +31,60 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw daily manpower data
-    const { id, siteNo, siteName, location, startTime, endTime, engineer, foreman, otherStaff, date } = data;
+    const id = data.id;
+    const site_code = data.projectCode || data.siteNo || 'Unknown';
+    const site_name = data.projectName || data.siteName || 'Unknown';
+    const engineer_name = data.engineerName || data.engineer || 'Unknown';
+    const foreman_name = data.foremanName || data.foreman || 'Unknown';
+    const other_staff = data.otherStaffCount || data.otherStaff || '0';
+    const task_title = data.title || 'General Works';
+    const startTime = data.startTime || 'Unknown';
+    const endTime = data.endTime || 'Unknown';
+    const location = data.location || 'Unknown';
 
-    // 1. Build the intelligence prompt
+    // 1. Fetch Company Rulebook (Master Tables)
+    let requiredWorkerCount = 0;
+    const { data: siteMaster } = await supabase
+      .from('sites')
+      .select('required_worker_count')
+      .eq('site_code', site_code)
+      .single();
+
+    if (siteMaster && siteMaster.required_worker_count) {
+      requiredWorkerCount = siteMaster.required_worker_count;
+    }
+
+    let foremanSkill = 'Unknown';
+    const { data: foremanData } = await supabase
+      .from('employees')
+      .select('trade_skill')
+      .eq('full_name', foreman_name)
+      .single();
+      
+    if (foremanData) {
+      foremanSkill = foremanData.trade_skill || 'Unknown';
+    }
+
+    // 2. Build the intelligence prompt
     const prompt = `
       You are a Daily Manpower AI Agent analyzing construction workforce logs.
-      Site: ${siteNo || 'Unknown'} - ${siteName || 'Unknown'} (${location || 'Unknown'})
-      Shift Start: ${startTime || 'Unknown'}
-      Shift End: ${endTime || 'Unknown'}
-      Engineer: ${engineer || 'None'}
-      Foreman: ${foreman || 'None'}
-      Other Staff: ${otherStaff || '0'}
+      
+      --- MANPOWER ALLOCATION FORM ---
+      Task Title: ${task_title}
+      Site: ${site_code} - ${site_name} (${location})
+      Shift: ${startTime} to ${endTime}
+      Assigned Foreman: ${foreman_name}
+      Other Staff Allocated: ${other_staff}
 
-      Analyze if the duration between Start and End time indicates extreme overtime.
-      Analyze if the ratio of leadership (Engineer/Foreman) to 'Other Staff' is safe and efficient.
-      If overtime is extremely high and staff numbers are large, recommend subcontracting.
+      --- COMPANY RULEBOOK (Supabase Data) ---
+      1. Site Demand: ${site_name} officially requires ${requiredWorkerCount} total workers to operate efficiently.
+      2. Foreman Skill: According to the employee database, ${foreman_name}'s official trade is "${foremanSkill}".
+
+      --- YOUR TASKS ---
+      1. Match skills to tasks/sites: Check if the Assigned Foreman's official trade (${foremanSkill}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation.
+      2. Predict workforce demand & Auto-allocate: Compare the 'Other Staff Allocated' against the official 'Site Demand' (${requiredWorkerCount}). If they are severely understaffed, you MUST 'Recommend Subcontracting' and actively suggest how many subcontractors are needed in the reasoning.
+      3. Optimize overtime: Check if the Shift duration is dangerously long (e.g. over 12 hours).
+      
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 

@@ -45,25 +45,74 @@ export async function POST(req: Request) {
     
     // Extract the raw procurement request data from the Android app
     const { id, mr_no, supplier, unit_price, site, remarks } = data;
+    
+    // Extract new fields from the Quick Fill / Android update
+    const material_name = data.materialName || data.material_name || data.title || 'Unknown Material';
+    const quantity = data.quantity || 'Unknown';
+    const required_date = data.requiredDate || data.required_date || 'Unknown';
+    const projectName = data.projectName || site || 'Unknown';
 
-    // 1. Build the intelligence prompt for Gemini
+    // 1. Fetch "Rulebook" from materials_master
+    let approvedVendor = 'Unknown (No Master Record)';
+    let standardPrice = 'Unknown';
+    const { data: materialMaster } = await supabase
+      .from('materials_master')
+      .select('approved_vendor, standard_price')
+      .eq('material_name', material_name)
+      .single();
+
+    if (materialMaster) {
+      approvedVendor = materialMaster.approved_vendor || approvedVendor;
+      standardPrice = materialMaster.standard_price?.toString() || standardPrice;
+    }
+
+    // 2. Fetch Historical Context for Stock Shortage Prediction
+    let historyText = "No recent orders recorded for this site.";
+    const { data: recentOrders } = await supabase
+      .from('mr_procurement')
+      .select('created_at')
+      .eq('site', projectName)
+      .neq('id', id || -1)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (recentOrders && recentOrders.length > 0) {
+      historyText = `This site has submitted ${recentOrders.length} MRs recently. Last order was on: ${new Date(recentOrders[0].created_at).toLocaleDateString()}`;
+    }
+
+    // 3. Build the intelligence prompt for Gemini
     const prompt = `
-      You are analyzing a new Material Request (MR).
+      You are an expert AI Procurement Manager.
+      Analyze this new Material Request (MR):
+      
+      --- REQUEST DETAILS ---
       MR Number: ${mr_no || 'Unknown'}
-      Supplier: ${supplier || 'Unknown'}
-      Unit Price: $${unit_price || '0.00'}
-      Construction Site: ${site || 'Unknown'}
+      Construction Site: ${projectName}
+      Material Requested: ${material_name}
+      Quantity: ${quantity}
+      Required Date: ${required_date}
+      Requested Supplier: ${supplier || 'Unknown'}
+      Requested Unit Price: $${unit_price || '0.00'}
       Remarks/Details: ${remarks || 'None'}
 
-      Evaluate the priority and risk of this request. Predict if this could cause a stock shortfall or budget issue.
+      --- MASTER DATABASE RULES & HISTORY ---
+      Official Approved Vendor for this Material: ${approvedVendor}
+      Standard Approved Price: $${standardPrice}
+      Site Order History: ${historyText}
+
+      --- YOUR TASKS ---
+      1. Recommend Vendors: If the 'Requested Supplier' does not match the 'Official Approved Vendor', you must reject the request and recommend the official vendor.
+      2. Compare Pricing Trends: Compare the 'Requested Unit Price' against the 'Standard Approved Price'. Flag high risk if it is significantly more expensive.
+      3. Predict Stock Shortages: Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage or if the delivery date is unrealistic.
+
       Output ONLY a valid JSON object matching this schema exactly:
       {
         "ai_risk_level": "High" | "Medium" | "Low",
         "ai_priority": "Critical" | "Normal",
         "ai_recommendation": "Approve" | "Reject",
-        "ai_reason": "A 1-sentence explanation of your reasoning as a Procurement Officer.",
+        "ai_reason": "A 1-2 sentence explanation of your reasoning covering Vendor, Price, and Shortage prediction.",
         "ai_email_draft": "If Approved, draft a professional email to the vendor asking for a quote. If Rejected, leave empty.",
-        "ai_recommended_vendor": "Suggest a highly realistic, cheaper alternative dummy vendor name based on the requested materials.",
+        "ai_recommended_vendor": "State the Official Approved Vendor from the rules above.",
         "ai_professional_rfq_specifications": "Take the user's short remarks and expand them into a highly detailed, professional 3-to-5 point technical specification list for the RFQ PDF."
       }
     `;

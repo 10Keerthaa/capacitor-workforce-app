@@ -9,8 +9,8 @@ export async function POST(request: Request) {
   try {
     // 1. Get the new petty cash claim from the request body
     const claimData = await request.json();
-    const siteName = claimData.site || 'Unknown';
-    const employeeName = claimData.employee_name || 'Unknown';
+    const siteName = claimData.projectName || claimData.site || 'Unknown';
+    const employeeName = claimData.pettyCashHolder || claimData.employee_name || 'Unknown';
 
     // 2. FETCH CONTEXT FROM DATABASE (For Duplicates & Budgeting)
     
@@ -18,28 +18,40 @@ export async function POST(request: Request) {
     let recentClaimsText = "No recent claims found.";
     const { data: recentClaims } = await supabase
       .from('petty_cash')
-      .select('amount, description, created_at')
+      .select('amount, totalAmount, description, created_at')
       .eq('pettyCashHolder', employeeName)
       .neq('id', claimData.id) // Exclude current
       .order('created_at', { ascending: false })
       .limit(3);
 
     if (recentClaims && recentClaims.length > 0) {
-      recentClaimsText = recentClaims.map(c => `- $${c.amount} for "${c.description}"`).join('\n');
+      recentClaimsText = recentClaims.map(c => `- $${c.totalAmount || c.amount} for "${c.description}"`).join('\n');
     }
 
-    // B. Calculate budget overruns (Mock monthly budget of $5000 per site)
+    // B. Calculate budget overruns using Dynamic Budget from Master Table
     let totalSpentThisMonth = 0;
     const { data: siteClaims } = await supabase
       .from('petty_cash')
-      .select('amount')
+      .select('amount, totalAmount')
       .eq('projectName', siteName)
       .eq('status', 'approved');
 
     if (siteClaims) {
-      totalSpentThisMonth = siteClaims.reduce((sum, claim) => sum + (Number(claim.amount) || 0), 0);
+      totalSpentThisMonth = siteClaims.reduce((sum, claim) => sum + (Number(claim.totalAmount) || Number(claim.amount) || 0), 0);
     }
-    const budgetLimit = 5000;
+
+    // Fetch dynamic budget from sites master table
+    let budgetLimit = 5000; // Default fallback
+    const { data: siteMaster } = await supabase
+      .from('sites')
+      .select('total_budget')
+      .eq('site_name', siteName)
+      .single();
+      
+    if (siteMaster && siteMaster.total_budget) {
+        budgetLimit = siteMaster.total_budget;
+    }
+    
     const remainingBudget = budgetLimit - totalSpentThisMonth;
 
     // 3. We use Gemini 3.5 Flash with FULL Context
