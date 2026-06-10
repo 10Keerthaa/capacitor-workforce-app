@@ -500,7 +500,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex justify-between items-start mb-2">
                           <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                            {new Date(report.created_at).toLocaleDateString()}
+                            Report of {new Date(report.created_at).toLocaleDateString()}
                           </span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${report.system_status === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' : report.system_status === 'WARNING' ? 'bg-amber-500/20 text-amber-400' : 'bg-teal-500/20 text-teal-400'}`}>
                             {report.system_status}
