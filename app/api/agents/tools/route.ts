@@ -31,7 +31,22 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw tools management data
-    const { id, tag_name, qty, returned_qty, item_name, brand, custody_task, status, warranty_details, purchase_date, photo_url } = data;
+    const { id, tag_name, qty, returned_qty, item_name, brand, custody_task, status, warranty_details, purchase_date, photo_url, employee_name } = data;
+
+    // 1. Fetch Worker History (Monitor Tool Usage Patterns)
+    let workerHistoryContext = "No prior history of tool loss or discrepancies for this worker.";
+    if (employee_name) {
+      const { data: pastLosses } = await supabase
+        .from('tools_mgmt')
+        .select('id')
+        .eq('employee_name', employee_name)
+        .eq('ai_loss_risk', 'High Risk')
+        .neq('id', id || -1); // Exclude the current record
+        
+      if (pastLosses && pastLosses.length > 0) {
+        workerHistoryContext = `CRITICAL WARNING: This worker (${employee_name}) has a history of losing tools! They have been flagged for 'High Risk' of tool loss ${pastLosses.length} times previously.`;
+      }
+    }
 
     // 1. Build the intelligence prompt
     const prompt = `
@@ -49,6 +64,11 @@ export async function POST(req: Request) {
       Check if the tool is broken but under warranty.
       If a photo is provided, visually verify if the tools match the 'Qty Worker Claims to Return'.
       Compare the 'Qty Worker Claims to Return' against the 'Original Qty Checked Out'. If they don't match, or if the photo does not match, flag a High Risk of tool loss!
+      
+      --- WORKER HISTORY (THEFT DETECTIVE) ---
+      ${workerHistoryContext}
+      If the worker has a previous history of tool loss (Critical Warning), you MUST escalate the ai_loss_risk to 'High Risk' and explicitly recommend an immediate theft investigation in your reasoning.
+
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 

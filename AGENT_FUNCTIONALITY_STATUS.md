@@ -32,7 +32,7 @@
 | **Vehicle Management**       | *Eliminated from Scope*               | ⚪ N/A       | Module completely removed from project scope                             |
 | **Tools Management**         | Detect missing tools                  | ✅ Completed | CV visually verifies returned tools against photos                       |
 | **Tools Management**         | Predict tool demand                   | 🔴 Pending   | Needs upcoming task schedule logic to forecast tools                     |
-| **Tools Management**         | Monitor tool usage patterns           | 🔴 Pending   | Requires background cron jobs to monitor long-term                       |
+| **Tools Management**         | Monitor tool usage patterns           | ✅ Completed | AI queries worker history for patterns of tool loss                      |
 | **Tools Management**         | Flag unusual tool movement            | 🔴 Pending   | Same as above (needs long-term tracking)                                 |
 | **Tools Management**         | Track warranty expiry                 | ✅ Completed | Evaluates warranty status against purchase date                          |
 | **Tools Management**         | Detect unsafe usage                   | 🔴 Pending   | Requires live video/CCTV streams, not static photos                      |
