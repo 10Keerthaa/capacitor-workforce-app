@@ -30,9 +30,13 @@ const responseSchema: Schema = {
     ai_worker_sms_language: {
       type: Type.STRING,
       description: "The language you translated the SMS into based on their nationality (e.g., 'Bilingual: English & Tagalog').",
+    },
+    ai_camp_utilization: {
+      type: Type.STRING,
+      description: "Must be 'Over Capacity Risk' (if occupancy is >90% of capacity) or 'Safe'.",
     }
   },
-  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language"],
+  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language", "ai_camp_utilization"],
 };
 
 export async function POST(req: Request) {
@@ -56,6 +60,26 @@ export async function POST(req: Request) {
       }
     }
 
+    // Fetch Camp Utilization Data
+    let totalCapacity = 100; // Fallback
+    let currentOccupancy = 0; // Fallback
+
+    if (campLocation && campLocation !== 'Unknown') {
+      const { data: campData } = await supabase
+        .from('camps')
+        .select('total_capacity, current_occupancy')
+        .eq('camp_name', campLocation)
+        .single();
+
+      if (campData) {
+        totalCapacity = campData.total_capacity || 100;
+        currentOccupancy = campData.current_occupancy || 0;
+      } else {
+        // Fallback demo simulation if master table is empty for this camp
+        currentOccupancy = 92; // High utilization for demo
+      }
+    }
+
     // 2. Build the intelligence prompt
     const prompt = `
       You are a Workforce Agent (Camp Boss) analyzing labor camp attendance.
@@ -66,9 +90,14 @@ export async function POST(req: Request) {
       Status: ${status || 'Unknown'}
       Remarks: ${remarks || 'None'}
 
+      --- CAMP UTILIZATION DATA ---
+      Total Bed Capacity: ${totalCapacity}
+      Current Occupancy: ${currentOccupancy}
+
       Analyze the worker's status and remarks to predict absenteeism risk.
       If the worker is sick or absent, determine if a replacement is needed on site.
       Detect any anomalies (e.g., if remarks suggest a contagious illness spreading).
+      Calculate the Camp Utilization percentage (Current Occupancy / Total Capacity). If it is over 90%, flag 'Over Capacity Risk', otherwise 'Safe'.
       
       CRITICAL: Draft a Care SMS to send to the worker. 
       - If they are sick: "Get well soon, please visit the camp clinic."
@@ -101,7 +130,8 @@ export async function POST(req: Request) {
         ai_absenteeism_risk: aiAnalysis.ai_absenteeism_risk,
         ai_replacement_action: aiAnalysis.ai_replacement_action,
         ai_anomaly_detected: aiAnalysis.ai_anomaly_detected,
-        ai_reasoning: aiAnalysis.ai_reasoning
+        ai_reasoning: aiAnalysis.ai_reasoning,
+        ai_camp_utilization: aiAnalysis.ai_camp_utilization
       })
       .eq('id', id);
 
