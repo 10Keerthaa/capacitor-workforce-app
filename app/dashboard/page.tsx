@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [campBossLogs, setCampBossLogs] = useState<any[]>([]);
   const [onboardingLogs, setOnboardingLogs] = useState<any[]>([]);
   const [supervisorReports, setSupervisorReports] = useState<any[]>([]);
-  const [expandedReportIds, setExpandedReportIds] = useState<any[]>([]);
+  const [selectedReportId, setSelectedReportId] = useState<any>(null);
   const [isAuditing, setIsAuditing] = useState(false);
 
   const fetchData = async () => {
@@ -485,94 +485,95 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {activeTab === 'supervisor' && supervisorReports.map((report, index) => {
-              const isLatest = index === 0;
-              const isExpanded = isLatest || expandedReportIds.includes(report.id);
-              
-              return (
-              <div key={report.id} className="relative p-1 rounded-3xl bg-gradient-to-br from-indigo-500/30 via-purple-500/10 to-transparent shadow-2xl mb-8 transition-all duration-300">
-                <div className="bg-slate-900/90 backdrop-blur-xl rounded-[23px] p-6 sm:p-8 relative overflow-hidden">
-                  {/* Decorative */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
-                  
-                  <div className="relative z-10 flex flex-col gap-6">
-                    {/* Header / Collapsible Trigger */}
-                    <div 
-                      className={`flex items-center justify-between transition-all ${!isLatest ? 'cursor-pointer group opacity-80 hover:opacity-100' : ''}`}
-                      onClick={() => {
-                        if (!isLatest) {
-                          if (expandedReportIds.includes(report.id)) {
-                            setExpandedReportIds(expandedReportIds.filter(id => id !== report.id));
-                          } else {
-                            setExpandedReportIds([...expandedReportIds, report.id]);
-                          }
-                        }
-                      }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <BrainCircuit className={`w-8 h-8 ${isLatest ? 'text-indigo-400' : 'text-slate-500'}`} />
-                        <div>
-                          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Supervisor Report</h2>
-                          <p className="text-slate-400 text-sm">Generated: {new Date(report.created_at).toLocaleString()}</p>
+            {activeTab === 'supervisor' && supervisorReports.length > 0 && (
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                {/* Left: Master List (Sidebar) */}
+                <div className="w-full lg:w-1/3 flex flex-col gap-3 max-h-[800px] overflow-y-auto custom-scrollbar pr-2">
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 px-2">Report Archive</h3>
+                  {supervisorReports.map((report) => {
+                    const isSelected = selectedReportId ? report.id === selectedReportId : supervisorReports[0].id === report.id;
+                    return (
+                      <div 
+                        key={report.id}
+                        onClick={() => setSelectedReportId(report.id)}
+                        className={`p-5 rounded-2xl cursor-pointer transition-all border ${isSelected ? 'bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                            {new Date(report.created_at).toLocaleDateString()}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${report.system_status === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' : report.system_status === 'WARNING' ? 'bg-amber-500/20 text-amber-400' : 'bg-teal-500/20 text-teal-400'}`}>
+                            {report.system_status}
+                          </span>
+                        </div>
+                        <p className={`text-xs ${isSelected ? 'text-indigo-300' : 'text-slate-500'} truncate`}>
+                          {new Date(report.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Right: Detail View (Full Report) */}
+                <div className="w-full lg:w-2/3 sticky top-4">
+                  {(() => {
+                    const currentReport = selectedReportId ? supervisorReports.find(r => r.id === selectedReportId) : supervisorReports[0];
+                    if (!currentReport) return null;
+                    return (
+                      <div className="relative p-1 rounded-3xl bg-gradient-to-br from-indigo-500/30 via-purple-500/10 to-transparent shadow-2xl transition-all duration-300">
+                        <div className="bg-slate-900/90 backdrop-blur-xl rounded-[23px] p-6 sm:p-8 relative overflow-hidden">
+                          {/* Decorative */}
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                          
+                          <div className="relative z-10 flex flex-col gap-8">
+                            {/* Header */}
+                            <div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <BrainCircuit className="w-8 h-8 text-indigo-400" />
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Supervisor Report</h2>
+                              </div>
+                              <p className="text-slate-400 text-sm">Generated: {new Date(currentReport.created_at).toLocaleString()}</p>
+                            </div>
+
+                            {/* Status & Impact */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                                 <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Company Status</p>
+                                 <p className={`text-xl font-black ${currentReport.system_status === 'CRITICAL' ? 'text-rose-500' : currentReport.system_status === 'WARNING' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.system_status}</p>
+                              </div>
+                              <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                                 <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Financial Impact</p>
+                                 <p className={`text-xl font-black ${currentReport.financial_impact_risk === 'High Risk' ? 'text-rose-500' : currentReport.financial_impact_risk === 'Medium Risk' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.financial_impact_risk}</p>
+                              </div>
+                            </div>
+
+                            {/* AI Intelligence */}
+                            <div className="space-y-6">
+                              <div>
+                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Key Bottleneck</h3>
+                                 <p className="text-slate-300 text-lg leading-relaxed bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl">
+                                   {currentReport.key_bottleneck}
+                                 </p>
+                              </div>
+
+                              <div>
+                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
+                                 <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
+                                   <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
+                                     {currentReport.orchestrated_action_plan?.replace(/(?:\r\n|\r|\n)?(\d+\.)/g, '\n\n$1').trim()}
+                                   </p>
+                                 </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-4">
-                        {!isExpanded && (
-                          <div className="hidden sm:flex gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${report.system_status === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' : report.system_status === 'WARNING' ? 'bg-amber-500/20 text-amber-400' : 'bg-teal-500/20 text-teal-400'}`}>
-                              {report.system_status}
-                            </span>
-                          </div>
-                        )}
-                        {!isLatest && (
-                          <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                            {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Expandable Content */}
-                    {isExpanded && (
-                      <div className="flex flex-col lg:flex-row gap-8 pt-4 border-t border-white/10 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
-                        {/* Left: Status & Impact */}
-                        <div className="lg:w-1/3 flex flex-col space-y-4 border-r border-white/10 pr-8">
-                          <div className="bg-black/40 rounded-xl p-4 border border-white/5">
-                             <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Company Status</p>
-                             <p className={`text-xl font-black ${report.system_status === 'CRITICAL' ? 'text-rose-500' : report.system_status === 'WARNING' ? 'text-amber-500' : 'text-teal-500'}`}>{report.system_status}</p>
-                          </div>
-                          <div className="bg-black/40 rounded-xl p-4 border border-white/5">
-                             <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Financial Impact</p>
-                             <p className={`text-xl font-black ${report.financial_impact_risk === 'High Risk' ? 'text-rose-500' : report.financial_impact_risk === 'Medium Risk' ? 'text-amber-500' : 'text-teal-500'}`}>{report.financial_impact_risk}</p>
-                          </div>
-                        </div>
-
-                        {/* Right: AI Intelligence */}
-                        <div className="lg:w-2/3 space-y-8">
-                          <div>
-                             <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Key Bottleneck</h3>
-                             <p className="text-slate-300 text-lg leading-relaxed bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl">
-                               {report.key_bottleneck}
-                             </p>
-                          </div>
-
-                          <div>
-                             <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
-                             <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
-                               <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
-                                 {report.orchestrated_action_plan?.replace(/(?:\r\n|\r|\n)?(\d+\.)/g, '\n\n$1').trim()}
-                               </p>
-                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
               </div>
-            )})}
+            )}
 
             {activeTab === 'petty_cash' && claims.length === 0 && (
               <div className="text-center py-20 border border-white/5 rounded-3xl bg-white/[0.02]">
