@@ -99,27 +99,24 @@ export async function POST(req: Request) {
       Material Requested: ${material_name}
       Quantity: ${quantity}
       Required Date: ${required_date}
-      Requested Supplier: ${supplier || 'Unknown'}
-      Requested Unit Price: $${unit_price || '0.00'}
       Remarks/Details: ${remarks || 'None'}
 
       --- MASTER DATABASE RULES & HISTORY ---
-      Official Approved Vendor for this Material: ${approvedVendor}
-      Standard Approved Price: $${standardPrice}
+      Auto-Assigned Vendor: ${approvedVendor}
+      Auto-Assigned Price: $${standardPrice}
       Site Order History: ${historyText}
 
       --- YOUR TASKS ---
-      1. Recommend Vendors: If the 'Requested Supplier' does not match the 'Official Approved Vendor', you must reject the request and recommend the official vendor.
-      2. Compare Pricing Trends: Compare the 'Requested Unit Price' against the 'Standard Approved Price'. Flag high risk if it is significantly more expensive.
-      3. Predict Stock Shortages: Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage or if the delivery date is unrealistic.
+      1. Vendor & Price Setup: We have automatically assigned this material request to our official vendor (${approvedVendor}) at our standard price ($${standardPrice}). You must automatically Approve this request unless it seems like a duplicate or massive stock hoarding.
+      2. Predict Stock Shortages: Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage or if the delivery date is unrealistic. If it is an emergency, flag as Critical.
 
       Output ONLY a valid JSON object matching this schema exactly:
       {
         "ai_risk_level": "High" | "Medium" | "Low",
         "ai_priority": "Critical" | "Normal",
         "ai_recommendation": "Approve" | "Reject",
-        "ai_reason": "A 1-2 sentence explanation of your reasoning covering Vendor, Price, and Shortage prediction.",
-        "ai_email_draft": "If Approved, draft a professional email to the vendor asking for a quote. If Rejected, leave empty.",
+        "ai_reason": "A 1-2 sentence explanation covering the auto-assigned vendor and any shortage prediction.",
+        "ai_email_draft": "Draft a professional email to the vendor asking for a quote. Mention the auto-assigned price.",
         "ai_recommended_vendor": "State the Official Approved Vendor from the rules above.",
         "ai_professional_rfq_specifications": "Take the user's short remarks and expand them into a highly detailed, professional 3-to-5 point technical specification list for the RFQ PDF."
       }
@@ -145,6 +142,8 @@ export async function POST(req: Request) {
     const { error } = await supabase
       .from('mr_procurement') 
       .update({
+        supplierName: approvedVendor,
+        unitPrice: parseFloat(standardPrice) || 0.00,
         ai_risk_level: aiAnalysis.ai_risk_level,
         ai_priority: aiAnalysis.ai_priority,
         ai_recommendation: aiAnalysis.ai_recommendation,
@@ -160,7 +159,7 @@ export async function POST(req: Request) {
 
     // --- TELEGRAM PDF INTERCEPTOR ---
     if (aiAnalysis.ai_recommendation === 'Approve' && aiAnalysis.ai_email_draft) {
-      const safeSupplier = supplier || 'UnknownVendor';
+      const safeSupplier = approvedVendor || 'UnknownVendor';
       const safeMrNo = mr_no || Math.floor(Math.random() * 1000).toString();
       const pdfBuffer = await createPdfBuffer(safeMrNo, safeSupplier, project_name, project_code, site_name, aiAnalysis.ai_professional_rfq_specifications || remarks || '');
       const vendorEmail = `sales@${safeSupplier.toLowerCase().replace(/\s+/g, '')}.com`;
