@@ -36,7 +36,9 @@ export async function POST(req: Request) {
     const site_name = data.projectName || data.siteName || 'Unknown';
     const engineer_name = data.engineerName || data.engineer || 'Unknown';
     const foreman_name = data.foremanName || data.foreman || 'Unknown';
-    const other_staff = data.otherStaffCount || data.otherStaff || '0';
+    const driver = data.driver || 'None';
+    const other_staff = data.otherStaff || data.otherStaffName || 'None';
+    const other_staff_trade = data.otherStaffTrade || data.otherStaffTradeSkill || 'Unknown';
     const task_title = data.title || 'General Works';
     const startTime = data.startTime || 'Unknown';
     const endTime = data.endTime || 'Unknown';
@@ -73,16 +75,19 @@ export async function POST(req: Request) {
       Task Title: ${task_title}
       Site: ${site_code} - ${site_name} (${location})
       Shift: ${startTime} to ${endTime}
-      Assigned Foreman: ${foreman_name}
-      Other Staff Allocated: ${other_staff}
+      Team Allocated: 
+        - Engineer: ${engineer_name}
+        - Foreman: ${foreman_name}
+        - Driver: ${driver}
+        - Other Staff: ${other_staff} (Trade: ${other_staff_trade})
 
       --- COMPANY RULEBOOK (Supabase Data) ---
       1. Site Demand: ${site_name} officially requires ${requiredWorkerCount} total workers to operate efficiently.
       2. Foreman Skill: According to the employee database, ${foreman_name}'s official trade is "${foremanSkill}".
 
       --- YOUR TASKS ---
-      1. Match skills to tasks/sites: Check if the Assigned Foreman's official trade (${foremanSkill}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation.
-      2. Predict workforce demand & Auto-allocate: Compare the 'Other Staff Allocated' against the official 'Site Demand' (${requiredWorkerCount}). If they are severely understaffed, you MUST 'Recommend Subcontracting' and actively suggest how many subcontractors are needed in the reasoning.
+      1. Match skills to tasks/sites: Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation. You may also check if the Foreman's skill (${foremanSkill}) aligns.
+      2. Predict workforce demand & Auto-allocate: If the team is severely understaffed compared to the official 'Site Demand' (${requiredWorkerCount}), you MUST 'Recommend Subcontracting' and actively suggest how many subcontractors are needed in the reasoning.
       3. Optimize overtime: Check if the Shift duration is dangerously long (e.g. over 12 hours).
       
       Output ONLY a valid JSON object matching the exact schema provided.
