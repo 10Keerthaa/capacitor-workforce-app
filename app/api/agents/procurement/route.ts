@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import { sendTestTelegramDocument } from '@/lib/telegram';
 
 // Helper to generate a PDF in-memory as a Buffer
-function createPdfBuffer(mr_no: string, supplier: string, site: string, specifications: string): Promise<Buffer> {
+function createPdfBuffer(mr_no: string, supplier: string, project_name: string, project_code: string, site_name: string, specifications: string): Promise<Buffer> {
   return new Promise((resolve) => {
     const doc = new jsPDF();
     
@@ -18,18 +18,19 @@ function createPdfBuffer(mr_no: string, supplier: string, site: string, specific
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
     
     doc.text(`To: ${supplier}`, 20, 70);
-    doc.text(`Delivery Site: ${site}`, 20, 80);
+    doc.text(`Project: ${project_name} (Code: ${project_code})`, 20, 80);
+    doc.text(`Delivery Site: ${site_name}`, 20, 90);
     
     doc.setFontSize(14);
-    doc.text('Material Specifications:', 20, 100);
+    doc.text('Material Specifications:', 20, 110);
     
     doc.setFontSize(12);
     // Wrap text so it doesn't run off the page
     const splitMaterialText = doc.splitTextToSize(specifications || 'General Construction Materials', 170);
-    doc.text(splitMaterialText, 20, 110);
+    doc.text(splitMaterialText, 20, 120);
     
     const footerText = doc.splitTextToSize('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.', 170);
-    doc.text(footerText, 20, 160);
+    doc.text(footerText, 20, 170);
     
     doc.setFontSize(10);
     doc.text('Authorized by: 10xWorkforce AI Procurement Agent', 190, 280, { align: 'right' });
@@ -44,26 +45,32 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw procurement request data from the Android app
-    const { id, mr_no, supplier, unit_price, site, remarks } = data;
+    const { id, remarks } = data;
     
-    // Extract new fields from the Quick Fill / Android update
+    // Extract new fields from the Quick Fill / Android update mapping exact columns
+    const mr_no = data.mrNo || data.mr_no || 'Unknown';
+    const supplier = data.supplierName || data.supplier || 'Unknown';
+    const unit_price = data.unitPrice || data.unit_price || '0.00';
+    const project_name = data.projectName || data.site || 'Unknown';
+    const project_code = data.projectCode || data.project_code || 'Unknown';
+    const site_name = data.siteName || data.site_name || 'Unknown';
+    const site_code = data.siteCode || data.site_code || 'Unknown';
     const material_name = data.materialName || data.material_name || data.title || 'Unknown Material';
     const quantity = data.quantity || 'Unknown';
     const required_date = data.requiredDate || data.required_date || 'Unknown';
-    const projectName = data.projectName || site || 'Unknown';
 
     // 1. Fetch "Rulebook" from materials_master
     let approvedVendor = 'Unknown (No Master Record)';
     let standardPrice = 'Unknown';
     const { data: materialMaster } = await supabase
       .from('materials_master')
-      .select('approved_vendor, standard_price')
+      .select('approved_vendor, standard_unit_price')
       .eq('material_name', material_name)
       .single();
 
     if (materialMaster) {
       approvedVendor = materialMaster.approved_vendor || approvedVendor;
-      standardPrice = materialMaster.standard_price?.toString() || standardPrice;
+      standardPrice = materialMaster.standard_unit_price?.toString() || standardPrice;
     }
 
     // 2. Fetch Historical Context for Stock Shortage Prediction
@@ -71,7 +78,7 @@ export async function POST(req: Request) {
     const { data: recentOrders } = await supabase
       .from('mr_procurement')
       .select('created_at')
-      .eq('site', projectName)
+      .eq('projectName', project_name)
       .neq('id', id || -1)
       .order('created_at', { ascending: false })
       .limit(3);
@@ -87,7 +94,8 @@ export async function POST(req: Request) {
       
       --- REQUEST DETAILS ---
       MR Number: ${mr_no || 'Unknown'}
-      Construction Site: ${projectName}
+      Project: ${project_name} (Code: ${project_code})
+      Delivery Site: ${site_name} (Code: ${site_code})
       Material Requested: ${material_name}
       Quantity: ${quantity}
       Required Date: ${required_date}
@@ -154,7 +162,7 @@ export async function POST(req: Request) {
     if (aiAnalysis.ai_recommendation === 'Approve' && aiAnalysis.ai_email_draft) {
       const safeSupplier = supplier || 'UnknownVendor';
       const safeMrNo = mr_no || Math.floor(Math.random() * 1000).toString();
-      const pdfBuffer = await createPdfBuffer(safeMrNo, safeSupplier, site || 'Unknown', aiAnalysis.ai_professional_rfq_specifications || remarks || '');
+      const pdfBuffer = await createPdfBuffer(safeMrNo, safeSupplier, project_name, project_code, site_name, aiAnalysis.ai_professional_rfq_specifications || remarks || '');
       const vendorEmail = `sales@${safeSupplier.toLowerCase().replace(/\s+/g, '')}.com`;
       
       await sendTestTelegramDocument(

@@ -37,3 +37,4 @@ This checklist tracks the remaining AI logic required to make the Next.js backen
 - [x] **Autonomous Data Fetching:** Update the Supervisor Agent to actively query all 8 Supabase tables for "High Risk" and "Pending" alerts simultaneously.
 - [x] **Cross-Correlate Alerts:** Program the AI to connect the dots (e.g., matching a Procurement Delay to a Daily Manpower Shortage on the same site).
 - [ ] **Automated Scheduling (Cron):** Configure a daily background timer (e.g. Render Cron) to trigger the Orchestrator at midnight without human intervention.
+- [ ] **Proactive Database Webhooks (Future Architecture):** Instead of manual clicks or scheduled crons, configure Supabase Database Webhooks to act as "Tripwires". If a sub-agent logs a 'High Risk' event, Supabase automatically fires a webhook to trigger the Orchestrator API instantly, making the Command Center 100% real-time and autonomous.
