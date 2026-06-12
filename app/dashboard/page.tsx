@@ -292,7 +292,7 @@ export default function DashboardPage() {
               status: item.status || "Unknown",
               warranty_details: item.warrantyDetails || "Unknown",
               purchase_date: item.purchaseDate || 0,
-              photo_url: item.return_photo_url || item.toolbox_photo_url || null,
+              photo_url: item.return_photo_url || item.checkout_photo_url || null,
             }),
           });
           if (!res.ok) throw new Error("API returned " + res.status);
@@ -910,8 +910,8 @@ export default function DashboardPage() {
                   <div className="flex flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0 overflow-hidden">
-                        {item.toolbox_photo_url ? (
-                          <img src={item.toolbox_photo_url} alt="Tool" className="w-full h-full object-cover" />
+                        {item.checkout_photo_url ? (
+                          <img src={item.checkout_photo_url} alt="Tool" className="w-full h-full object-cover" />
                         ) : (
                           <Wrench className="w-5 h-5 text-slate-400" />
                         )}
@@ -930,7 +930,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full flex justify-between">
                     <p className="text-slate-300 text-sm leading-relaxed break-words flex-1">Status: {item.status || "Unknown"}</p>
-                    {item.toolbox_photo_url && (
+                    {item.checkout_photo_url && (
                        <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded border border-blue-500/30 flex items-center gap-1">
                           CV Active
                        </span>
