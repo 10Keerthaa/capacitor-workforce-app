@@ -18,16 +18,15 @@ export async function POST(request: Request) {
     let recentClaimsText = "No recent claims found.";
     const { data: recentClaims } = await supabase
       .from('petty_cash')
-      .select('amount, totalAmount, description, created_at')
+      .select('amount, totalAmount, description, date')
       .eq('pettyCashHolder', employeeName)
       .neq('id', claimData.id) // Exclude current
-      .order('created_at', { ascending: false })
+      .order('date', { ascending: false })
       .limit(3);
 
     if (recentClaims && recentClaims.length > 0) {
       recentClaimsText = recentClaims.map(c => {
-        const dateStr = new Date(c.created_at).toLocaleString();
-        return `- [Submitted on ${dateStr}] $${c.totalAmount || c.amount} for "${c.description}"`;
+        return `- [Submitted on Date: ${c.date}] $${c.totalAmount || c.amount} for "${c.description}"`;
       }).join('\n');
     }
 
@@ -64,6 +63,7 @@ export async function POST(request: Request) {
       
       --- CURRENT CLAIM ---
       Employee: ${employeeName}
+      Date: ${claimData.date || 'Unknown Date'}
       Amount: $${claimData.amount}
       Description: "${claimData.description}"
       Project/Site: ${siteName}
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       2. Detect duplicate/abnormal claims (Compare with their recent claims context above).
       3. Predict budget overruns (Warn if this pushes the remaining budget below $0 or dangerously close).
       4. Flag fraud patterns (e.g., is $500 for a pen abnormal? Is this amount suspiciously similar to a recent claim?).
-      CRITICAL RULE FOR DUPLICATES: If the Description and Amount are EXACTLY IDENTICAL to a claim submitted on the very same day (check the timestamps!), you MUST reject it as an accidental duplicate submission.
+      CRITICAL RULE FOR DUPLICATES: If the Description and Amount are EXACTLY IDENTICAL to a claim submitted on the very same date (check the Date!), you MUST reject it as an accidental duplicate submission.
       5. Recommend Approval, Rejection, or Escalation based on all the above.
 
       Provide a short 1-2 sentence reason for your recommendation.

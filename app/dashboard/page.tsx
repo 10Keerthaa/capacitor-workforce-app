@@ -215,6 +215,7 @@ export default function DashboardPage() {
               amount: claim.amount || 0,
               description: claim.description || "No description",
               site: claim.projectName || "Unknown",
+              date: claim.date || new Date().toISOString().split('T')[0],
             }),
           });
           if (!res.ok) throw new Error("API returned " + res.status);
