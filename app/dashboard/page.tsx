@@ -233,6 +233,7 @@ export default function DashboardPage() {
             body: JSON.stringify({
               id: item.id,
               mr_no: item.mrNo || "Unknown",
+              materialName: item.materialName || item.title || "Unknown",
               supplier: item.supplierName || "Unknown",
               unit_price: item.unitPrice || 0,
               site: item.projectName || "Unknown",
