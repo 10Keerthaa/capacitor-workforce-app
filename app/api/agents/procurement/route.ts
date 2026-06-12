@@ -29,11 +29,14 @@ function createPdfBuffer(mr_no: string, supplier: string, project_name: string, 
     const splitMaterialText = doc.splitTextToSize(specifications || 'General Construction Materials', 170);
     doc.text(splitMaterialText, 20, 120);
     
+    // Calculate dynamic Y position to avoid overlapping text
+    const nextY = 120 + (splitMaterialText.length * 6) + 10;
+    
     const footerText = doc.splitTextToSize('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.', 170);
-    doc.text(footerText, 20, 170);
+    doc.text(footerText, 20, nextY);
     
     doc.setFontSize(10);
-    doc.text('Authorized by: 10xWorkforce AI Procurement Agent', 190, 280, { align: 'right' });
+    doc.text('Authorized by: 10xWorkforce AI Procurement Agent', 190, nextY + 30, { align: 'right' });
     
     const arrayBuffer = doc.output('arraybuffer');
     resolve(Buffer.from(arrayBuffer));
@@ -116,7 +119,7 @@ export async function POST(req: Request) {
         "ai_priority": "Critical" | "Normal",
         "ai_recommendation": "Approve" | "Reject",
         "ai_reason": "A 1-2 sentence explanation covering the auto-assigned vendor and any shortage prediction.",
-        "ai_email_draft": "Draft a professional email to the vendor asking for a quote. Mention the auto-assigned price.",
+        "ai_email_draft": "Draft a very brief, professional 1-2 sentence email introduction asking for a quote. Do NOT list the material specifications in the email body, just tell them to review the attached PDF RFQ document.",
         "ai_recommended_vendor": "State the Official Approved Vendor from the rules above.",
         "ai_professional_rfq_specifications": "Take the user's short remarks and expand them into a highly detailed, professional 3-to-5 point technical specification list for the RFQ PDF."
       }
