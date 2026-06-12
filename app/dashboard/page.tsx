@@ -239,6 +239,9 @@ export default function DashboardPage() {
               unit_price: item.unitPrice || 0,
               site: item.projectName || "Unknown",
               remarks: item.remarks || "No remarks",
+              quantity: item.quantity || "Unknown",
+              requiredDate: item.requiredDate || "Unknown",
+              date: item.date || "Unknown",
             }),
           });
           if (!res.ok) throw new Error("API returned " + res.status);
