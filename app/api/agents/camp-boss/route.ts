@@ -48,15 +48,20 @@ export async function POST(req: Request) {
 
     // 1. Fetch Company Rulebook (Master Tables)
     let employeeNationality = 'Unknown';
+    let employeeTrade = 'Unknown';
+    let assignedSite = 'Unknown';
+
     if (employeeName && employeeName !== 'Unknown') {
       const { data: empData } = await supabase
         .from('employees')
-        .select('nationality')
+        .select('*')
         .eq('full_name', employeeName)
         .single();
 
-      if (empData && empData.nationality) {
-        employeeNationality = empData.nationality;
+      if (empData) {
+        employeeNationality = empData.nationality || 'Unknown';
+        employeeTrade = empData.trade_skill || empData.designation || 'Unknown';
+        assignedSite = empData.current_site || empData.site_assigned || 'Unknown';
       }
     }
 
@@ -84,6 +89,8 @@ export async function POST(req: Request) {
     const prompt = `
       You are a Workforce Agent (Camp Boss) analyzing labor camp attendance.
       Employee: ${employeeName || 'Unknown'} (${employeeId || 'Unknown'})
+      Trade/Skill: ${employeeTrade}
+      Assigned Site: ${assignedSite}
       Nationality: ${employeeNationality}
       Camp Location: ${campLocation || 'Unknown'}
       Room Number: ${roomNumber || 'Unknown'}
@@ -94,8 +101,11 @@ export async function POST(req: Request) {
       Total Bed Capacity: ${totalCapacity}
       Current Occupancy: ${currentOccupancy}
 
+      --- SITE DEADLINE & PRIORITY RULES ---
+      If the Assigned Site is a High-Priority project or has a tight deadline, AND the worker holds a critical Trade/Skill, you MUST escalate the action to 'Request Immediate Replacement' to prevent project delays regardless of the illness severity.
+
       Analyze the worker's status and remarks to predict absenteeism risk.
-      If the worker is sick or absent, determine if a replacement is needed on site.
+      If the worker is sick or absent, determine if a replacement is needed on site based on their role and priority.
       Detect any anomalies (e.g., if remarks suggest a contagious illness spreading).
       Calculate the Camp Utilization percentage (Current Occupancy / Total Capacity). If it is over 90%, flag 'Over Capacity Risk', otherwise 'Safe'.
       
