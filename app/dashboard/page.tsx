@@ -284,13 +284,15 @@ export default function DashboardPage() {
               id: item.id,
               tag_name: item.tagName || "Unknown",
               qty: item.qty || 0,
+              returned_qty: item.returned_qty,
+              employee_name: item.custodyTask || "Unknown",
               item_name: item.itemName || "Unknown",
               brand: item.brand || "Unknown",
               custody_task: item.custodyTask || "Unknown",
               status: item.status || "Unknown",
               warranty_details: item.warrantyDetails || "Unknown",
               purchase_date: item.purchaseDate || 0,
-              photo_url: item.toolbox_photo_url || null,
+              photo_url: item.return_photo_url || item.toolbox_photo_url || null,
             }),
           });
           if (!res.ok) throw new Error("API returned " + res.status);
