@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const { exec } = require('child_process');
 
 // Start Next.js dev server
-const nextProcess = spawn('npx', ['next', 'dev', '-p', '3001'], {
+const nextProcess = spawn('npx', ['next', 'dev', '-p', '3005'], {
   stdio: ['inherit', 'pipe', 'pipe'],
   shell: true,
 });

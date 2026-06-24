@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const driver = data.driver || 'None';
     const other_staff = data.otherStaff || data.otherStaffName || 'None';
     const other_staff_trade = data.otherStaffTrade || data.otherStaffTradeSkill || 'Unknown';
-    const task_title = data.taskTitle || 'General Works';
+    const task_title = data.title || 'General Works';
     const startTime = data.startTime || 'Unknown';
     const endTime = data.endTime || 'Unknown';
     const location = data.location || 'Unknown';
@@ -48,23 +48,23 @@ export async function POST(req: Request) {
     let requiredWorkerCount = 0;
     const { data: siteMaster } = await supabase
       .from('sites')
-      .select('required_manpower')
+      .select('required_worker_count')
       .eq('site_code', site_code)
       .single();
 
-    if (siteMaster && siteMaster.required_manpower) {
-      requiredWorkerCount = siteMaster.required_manpower;
+    if (siteMaster && siteMaster.required_worker_count) {
+      requiredWorkerCount = siteMaster.required_worker_count;
     }
 
     let foremanSkill = 'Unknown';
     const { data: foremanData } = await supabase
-      .from('master_employees')
-      .select('trade')
-      .eq('employee_name', foreman_name)
+      .from('employees')
+      .select('trade_skill')
+      .eq('full_name', foreman_name)
       .single();
       
     if (foremanData) {
-      foremanSkill = foremanData.trade || 'Unknown';
+      foremanSkill = foremanData.trade_skill || 'Unknown';
     }
 
     // 2. Build the intelligence prompt
@@ -113,8 +113,10 @@ export async function POST(req: Request) {
     const { error } = await supabase
       .from('daily_manpower') 
       .update({
-        agent_status: 'pending_manager_review',
-        agent_metadata: aiAnalysis
+        ai_overtime_risk: aiAnalysis.ai_overtime_risk,
+        ai_allocation_efficiency: aiAnalysis.ai_allocation_efficiency,
+        ai_subcontract_recommendation: aiAnalysis.ai_subcontract_recommendation,
+        ai_reasoning: aiAnalysis.ai_reasoning
       })
       .eq('id', id);
 

@@ -137,8 +137,11 @@ export async function POST(req: Request) {
     const { error } = await supabase
       .from('camp_boss') 
       .update({
-        agent_status: 'pending_manager_review',
-        agent_metadata: aiAnalysis
+        ai_absenteeism_risk: aiAnalysis.ai_absenteeism_risk,
+        ai_replacement_action: aiAnalysis.ai_replacement_action,
+        ai_anomaly_detected: aiAnalysis.ai_anomaly_detected,
+        ai_reasoning: aiAnalysis.ai_reasoning,
+        ai_camp_utilization: aiAnalysis.ai_camp_utilization
       })
       .eq('id', id);
 
@@ -148,8 +151,6 @@ export async function POST(req: Request) {
     }
 
     // --- TELEGRAM INTERCEPTOR TRIGGER ---
-    // Disabled temporarily per user request
-    /*
     if (aiAnalysis.ai_worker_sms_draft && aiAnalysis.ai_worker_sms_draft.length > 3) {
       // Simulate sending an SMS to the worker's phone
       const phoneToUse = data.employeePhone || "+971-50-0000000";
@@ -159,7 +160,6 @@ export async function POST(req: Request) {
         aiAnalysis.ai_worker_sms_draft
       );
     }
-    */
 
     return NextResponse.json({ success: true, ai_analysis: aiAnalysis });
   } catch (error: any) {

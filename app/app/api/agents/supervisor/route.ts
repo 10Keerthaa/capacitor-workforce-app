@@ -31,17 +31,35 @@ export async function POST(req: Request) {
     const data = await req.json(); // We still accept the request, but we ignore the frontend's blind summary
 
     // 1. Autonomous Data Sweep (The CEO checking the database directly)
-    const { data: rawFinances } = await supabase.from('petty_cash').select('projectName, amount, description, agent_metadata');
-    const finances = (rawFinances || []).filter(f => f.agent_metadata?.fraud_risk === 'High');
+    // Establish a 7-day rolling window to only catch recent, active fires
+    const lastWeek = new Date();
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const timeLimit = lastWeek.toISOString().split('T')[0];
 
-    const { data: rawProcurements } = await supabase.from('mr_procurement').select('projectName, supplierName, unitPrice, agent_metadata');
-    const procurements = (rawProcurements || []).filter(p => p.agent_metadata?.ai_risk_level === 'High');
+    // Only pull recent alerts that have NOT been resolved or rejected by a manager
+    const { data: finances } = await supabase
+      .from('petty_cash')
+      .select('projectName, amount, description, ai_fraud_risk')
+      .eq('ai_fraud_risk', 'High')
+      .neq('manager_status', 'Resolved')
+      .neq('manager_status', 'Rejected')
+      .gte('date', timeLimit);
 
-    const { data: rawManpower } = await supabase.from('daily_manpower').select('siteName, taskTitle, foreman, otherStaff, agent_metadata');
-    const manpower = (rawManpower || []).filter(m => m.agent_metadata?.ai_allocation_efficiency === 'Poor Allocation');
+    const { data: procurements } = await supabase
+      .from('mr_procurement')
+      .select('projectName, supplierName, unitPrice, ai_risk_level, ai_reason')
+      .eq('ai_risk_level', 'High')
+      .neq('manager_status', 'Resolved')
+      .neq('manager_status', 'Rejected')
+      .gte('date', timeLimit);
 
-    const { data: rawOperations } = await supabase.from('work_output').select('projectName, trade, workDescription, agent_metadata');
-    const operations = (rawOperations || []).filter(o => o.agent_metadata?.ai_delay_prediction === 'Delay Likely');
+    const { data: manpower } = await supabase
+      .from('daily_manpower')
+      .select('siteName, title, foreman, otherStaff, ai_allocation_efficiency, ai_reasoning')
+      .eq('ai_allocation_efficiency', 'Poor Allocation')
+      .neq('manager_status', 'Resolved')
+      .neq('manager_status', 'Rejected')
+      .gte('date', timeLimit);
 
     const prompt = `
       You are the Master Supervisor AI Orchestrator for a global construction company.
@@ -51,11 +69,10 @@ export async function POST(req: Request) {
       Finance Agent (High Risk Petty Cash): ${JSON.stringify(finances)}
       Procurement Agent (High Risk Supply Chain): ${JSON.stringify(procurements)}
       Workforce Agent (Poor Manpower Allocation): ${JSON.stringify(manpower)}
-      Operations Agent (Delay Likely): ${JSON.stringify(operations)}
 
       Analyze how these issues connect by looking at the Site names (projectName / siteName). 
       For example, if there is a material shortage AND poor manpower allocation at the exact same site, they are highly correlated and causing a severe bottleneck.
-      Determine the overall system status, identify the absolute biggest bottleneck, and create a cross-departmental action plan that includes schedule adjustments based on operations data.
+      Determine the overall system status, identify the absolute biggest bottleneck, and create a cross-departmental action plan.
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 

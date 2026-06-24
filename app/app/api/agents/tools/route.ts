@@ -31,59 +31,34 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw tools management data
-    const { 
-      id, 
-      tagName, 
-      quantity, 
-      returnedQty, 
-      itemName, 
-      brand, 
-      assignedTo, 
-      condition, 
-      warrantyDetails, 
-      purchaseDate, 
-      returnPhotoUrisJson,
-      checkoutPhotoUrisJson
-    } = data;
-
-    // We need a single photo URL for CV if it exists. Prefer return photo, fallback to checkout photo.
-    let photoUrl = null;
-    if (returnPhotoUrisJson && returnPhotoUrisJson.length > 0) {
-      photoUrl = returnPhotoUrisJson[0];
-    } else if (checkoutPhotoUrisJson && checkoutPhotoUrisJson.length > 0) {
-      photoUrl = checkoutPhotoUrisJson[0];
-    }
+    const { id, tag_name, qty, returned_qty, item_name, brand, custody_task, status, warranty_details, purchase_date, photo_url, employee_name } = data;
 
     // 1. Fetch Worker History (Monitor Tool Usage Patterns)
     let workerHistoryContext = "No prior history of tool loss or discrepancies for this worker.";
-    if (assignedTo) {
+    if (employee_name) {
       const { data: pastLosses } = await supabase
-        .from('tools_management')
-        .select('id, agent_metadata')
-        .eq('assignedTo', assignedTo)
+        .from('tools_mgmt')
+        .select('id')
+        .eq('employee_name', employee_name)
+        .eq('ai_loss_risk', 'High Risk')
         .neq('id', id || -1); // Exclude the current record
         
-      let highRiskCount = 0;
-      if (pastLosses) {
-        highRiskCount = pastLosses.filter(row => row.agent_metadata?.ai_loss_risk === 'High Risk').length;
-      }
-
-      if (highRiskCount > 0) {
-        workerHistoryContext = `CRITICAL WARNING: This worker (${assignedTo}) has a history of losing tools! They have been flagged for 'High Risk' of tool loss ${highRiskCount} times previously.`;
+      if (pastLosses && pastLosses.length > 0) {
+        workerHistoryContext = `CRITICAL WARNING: This worker (${employee_name}) has a history of losing tools! They have been flagged for 'High Risk' of tool loss ${pastLosses.length} times previously.`;
       }
     }
 
     // 1. Build the intelligence prompt
     const prompt = `
       You are an Asset Controller Agent analyzing tool inventory.
-      Item: ${brand || 'Unknown'} ${itemName || 'Unknown'}
-      Tag: ${tagName || 'Unknown'}
-      Original Qty Checked Out: ${quantity || 0}
-      Qty Worker Claims to Return: ${returnedQty !== undefined ? returnedQty : 'Not provided'}
-      Current Custody/Task: ${assignedTo || 'Unassigned'}
-      Condition Status: ${condition || 'Unknown'}
-      Warranty Details: ${warrantyDetails || 'Unknown'}
-      Purchase Date (Epoch): ${purchaseDate || 'Unknown'}
+      Item: ${brand || 'Unknown'} ${item_name || 'Unknown'}
+      Tag: ${tag_name || 'Unknown'}
+      Original Qty Checked Out: ${qty || 0}
+      Qty Worker Claims to Return: ${returned_qty !== undefined ? returned_qty : 'Not provided'}
+      Current Custody/Task: ${custody_task || 'Unassigned'}
+      Condition Status: ${status || 'Unknown'}
+      Warranty Details: ${warranty_details || 'Unknown'}
+      Purchase Date (Epoch): ${purchase_date || 'Unknown'}
 
       Analyze if this tool is at risk of being lost/hoarded based on custody.
       Check if the tool is broken but under warranty.
@@ -97,12 +72,12 @@ export async function POST(req: Request) {
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 
-    // 2. Handle Image Computer Vision (CV) if photoUrl exists
+    // 2. Handle Image Computer Vision (CV) if photo_url exists
     let contents: any[] = [{ text: prompt }];
 
-    if (photoUrl && photoUrl.startsWith('http')) {
+    if (photo_url && photo_url.startsWith('http')) {
       try {
-        const imageResponse = await fetch(photoUrl);
+        const imageResponse = await fetch(photo_url);
         const arrayBuffer = await imageResponse.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const base64Image = buffer.toString('base64');
@@ -135,10 +110,12 @@ export async function POST(req: Request) {
 
     // 4. Save the AI intelligence back to the Supabase database
     const { error } = await supabase
-      .from('tools_management') 
+      .from('tools_mgmt') 
       .update({
-        agent_status: 'completed',
-        agent_metadata: aiAnalysis
+        ai_loss_risk: aiAnalysis.ai_loss_risk,
+        ai_warranty_action: aiAnalysis.ai_warranty_action,
+        ai_recommendation: aiAnalysis.ai_recommendation,
+        ai_reasoning: aiAnalysis.ai_reasoning
       })
       .eq('id', id);
 

@@ -116,8 +116,11 @@ export async function POST(req: Request) {
     const { error } = await supabase
       .from('employee_onboarding') 
       .update({
-        agent_status: 'completed',
-        agent_metadata: aiAnalysis
+        ai_document_validation: aiAnalysis.ai_document_validation,
+        ai_compliance_gap: aiAnalysis.ai_compliance_gap,
+        ai_hr_action: aiAnalysis.ai_hr_action,
+        ai_reasoning: aiAnalysis.ai_reasoning,
+        ai_sla_status: aiAnalysis.ai_sla_status
       })
       .eq('id', id);
 

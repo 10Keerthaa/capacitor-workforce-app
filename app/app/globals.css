@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-purple: #9d4edd;
+  --color-neon-teal: #00f5d4;
+  --color-dark-bg: #0b0f19;
+  --color-dark-surface: #1a1f2e;
+  --color-dark-border: #2d3345;
+  --color-light-text: #f8f9fa;
+  --color-muted-text: #9ca3af;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-light-text font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-dark-surface/80 backdrop-blur-md border border-dark-border shadow-xl;
+  }
+}

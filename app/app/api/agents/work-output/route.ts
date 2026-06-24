@@ -65,21 +65,14 @@ export async function POST(req: Request) {
 
     const aiAnalysis = JSON.parse(responseText);
 
-    // Map specific AI keys to the unified dashboard schema
-    const dashboardMetadata = {
-      ...aiAnalysis,
-      category: aiAnalysis.ai_productivity_trend,
-      ai_risk_level: aiAnalysis.ai_delay_prediction === 'Delay Likely' ? 'Critical' : aiAnalysis.ai_delay_prediction === 'Minor Delay' ? 'Medium' : 'Low',
-      fraud_risk: aiAnalysis.ai_bottleneck_identified === 'High Risk' ? 'High' : 'Low',
-      reason: aiAnalysis.ai_reasoning
-    };
-
     // 3. Save the AI intelligence back to the Supabase database
     const { error } = await supabase
       .from('work_output') 
       .update({
-        agent_status: 'pending_manager_review',
-        agent_metadata: dashboardMetadata
+        ai_productivity_trend: aiAnalysis.ai_productivity_trend,
+        ai_bottleneck_identified: aiAnalysis.ai_bottleneck_identified,
+        ai_delay_prediction: aiAnalysis.ai_delay_prediction,
+        ai_reasoning: aiAnalysis.ai_reasoning
       })
       .eq('id', id);
 

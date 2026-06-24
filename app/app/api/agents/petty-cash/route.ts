@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.5-flash',
       contents: prompt,
     });
 
@@ -110,11 +110,12 @@ export async function POST(request: Request) {
 
     // 4. Write the AI's decision back into Supabase!
     if (claimData.id) {
-      // Strict Human-in-the-Loop: AI only provides recommendations to the metadata.
-      // The status always remains pending until the human manager explicitly approves/rejects.
       const { error } = await supabase.from('petty_cash').update({ 
-         agent_status: 'pending_manager_review',
-         agent_metadata: analysis
+         ai_category: analysis.category,
+         ai_fraud_risk: analysis.fraud_risk,
+         ai_recommendation: analysis.recommendation,
+         ai_reason: analysis.reason,
+         // We removed the auto 'status' update to enforce Human-in-the-Loop!
       }).eq('id', claimData.id);
 
       if (error) console.error("Failed to update Supabase:", error);

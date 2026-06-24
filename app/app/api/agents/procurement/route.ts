@@ -1,7 +1,47 @@
 import { NextResponse } from 'next/server';
 import { ai, AGENT_INSTRUCTIONS } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
+import { jsPDF } from 'jspdf';
+import { sendTestTelegramDocument } from '@/lib/telegram';
 
+// Helper to generate a PDF in-memory as a Buffer
+function createPdfBuffer(mr_no: string, supplier: string, project_name: string, project_code: string, site_name: string, specifications: string): Promise<Buffer> {
+  return new Promise((resolve) => {
+    const doc = new jsPDF();
+    
+    // Draw the PDF
+    doc.setFontSize(22);
+    doc.text('Request For Quotation (RFQ)', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text(`RFQ Reference: RFQ-${mr_no}`, 20, 40);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
+    
+    doc.text(`To: ${supplier}`, 20, 70);
+    doc.text(`Project: ${project_name} (Code: ${project_code})`, 20, 80);
+    doc.text(`Delivery Site: ${site_name}`, 20, 90);
+    
+    doc.setFontSize(14);
+    doc.text('Material Specifications:', 20, 110);
+    
+    doc.setFontSize(12);
+    // Wrap text so it doesn't run off the page
+    const splitMaterialText = doc.splitTextToSize(specifications || 'General Construction Materials', 170);
+    doc.text(splitMaterialText, 20, 120);
+    
+    // Calculate dynamic Y position to avoid overlapping text
+    const nextY = 120 + (splitMaterialText.length * 6) + 10;
+    
+    const footerText = doc.splitTextToSize('Please provide your best quotation for the requested materials listed above. Ensure that delivery timelines, payment terms, and validity of the quote are stated clearly in your response.', 170);
+    doc.text(footerText, 20, nextY);
+    
+    doc.setFontSize(10);
+    doc.text('Authorized by: 10xWorkforce AI Procurement Agent', 190, nextY + 30, { align: 'right' });
+    
+    const arrayBuffer = doc.output('arraybuffer');
+    resolve(Buffer.from(arrayBuffer));
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -107,8 +147,11 @@ export async function POST(req: Request) {
       .update({
         supplierName: approvedVendor,
         unitPrice: parseFloat(standardPrice) || 0.00,
-        agent_status: 'pending_manager_review',
-        agent_metadata: aiAnalysis
+        ai_risk_level: aiAnalysis.ai_risk_level,
+        ai_priority: aiAnalysis.ai_priority,
+        ai_recommendation: aiAnalysis.ai_recommendation,
+        ai_reason: aiAnalysis.ai_reason,
+        ai_recommended_vendor: aiAnalysis.ai_recommended_vendor
       })
       .eq('id', id);
 
@@ -117,7 +160,7 @@ export async function POST(req: Request) {
       throw error;
     }
 
-
+    // Autonomous email sending removed. Email is now triggered only upon manual human manager approval.
 
     return NextResponse.json({ success: true, ai_analysis: aiAnalysis });
   } catch (error: any) {

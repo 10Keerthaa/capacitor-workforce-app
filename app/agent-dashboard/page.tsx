@@ -1,0 +1,643 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Activity, BrainCircuit, AlertTriangle, CheckCircle, 
+  Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
+  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter
+} from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+
+export default function AgenticDashboard() {
+  const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [supervisorReport, setSupervisorReport] = useState<any>(null);
+  const [reportHistory, setReportHistory] = useState<any[]>([]);
+  const [isSweeping, setIsSweeping] = useState(false);
+  
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [agentData, setAgentData] = useState<any[]>([]);
+  const [stats, setStats] = useState({ active: 0, processed: 0, approvals: 0, confidence: 94.2 });
+
+  // Worker Data State
+  const [workersList, setWorkersList] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchDashboardData = async () => {
+    const tables = [
+      { name: 'petty_cash', agent: 'Finance Agent', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+      { name: 'mr_procurement', agent: 'Procurement Agent', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+      { name: 'daily_manpower', agent: 'Manpower Agent', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+      { name: 'work_output', agent: 'Operations Agent', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+      { name: 'camp_boss', agent: 'Workforce Agent', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+      { name: 'tools_management', agent: 'Asset Agent', color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
+      { name: 'employee_onboarding', agent: 'Onboarding Agent', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+    ];
+
+    let allPending: any[] = [];
+    let allLogs: any[] = [];
+    let totalProcessed = 0;
+    let dynamicAgents: any[] = [];
+
+    await Promise.all(tables.map(async (t) => {
+      // Get Pending Approvals
+      const { data: pending } = await supabase
+        .from(t.name)
+        .select('*')
+        .eq('agent_status', 'pending_manager_review')
+        .order('id', { ascending: false })
+        .limit(3);
+      
+      if (pending) {
+        pending.forEach(p => {
+          let description = p.projectName || p.siteName || p.supplierName || `ID: ${p.id}`;
+          let details = p.agent_metadata?.ai_reasoning || p.agent_metadata?.reason || 'High risk detected by AI. Review required.';
+          allPending.push({ id: p.id, sourceTable: t.name, agentName: t.agent, color: t.color, description, details, sortId: p.id });
+        });
+      }
+
+      // Get Logs / Load
+      const { data: recent, count } = await supabase
+        .from(t.name)
+        .select('*', { count: 'exact' })
+        .order('id', { ascending: false })
+        .limit(3);
+
+      if (recent) {
+        recent.forEach(r => {
+          let action = `Processed new record for ${r.projectName || r.siteName || r.trade || r.id}`;
+          allLogs.push({
+            id: r.id,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            fullTime: r.id,
+            agent: t.agent,
+            action: action,
+            type: r.agent_status === 'pending_manager_review' ? 'warning' : 'success'
+          });
+        });
+      }
+
+      totalProcessed += (count || 0);
+      const load = Math.min(Math.floor(((count || 0) / 10) * 100) + Math.floor(Math.random() * 20), 100);
+      const status = load > 50 ? 'active' : load > 10 ? 'waiting' : 'idle';
+
+      dynamicAgents.push({ id: t.name, name: t.agent, role: t.name.replace('_', ' ').toUpperCase(), status, load, color: t.color, bg: t.bg, border: t.border });
+    }));
+
+    allPending.sort((a, b) => b.sortId - a.sortId);
+    allLogs.sort((a, b) => b.fullTime - a.fullTime);
+
+    setPendingApprovals(allPending);
+    setRecentLogs(allLogs.slice(0, 10));
+    setAgentData(dynamicAgents);
+    setStats({
+      active: dynamicAgents.filter(a => a.status === 'active').length,
+      processed: totalProcessed,
+      approvals: allPending.length,
+      confidence: 94.2
+    });
+
+    // Fetch Workers Data
+    const { data: masterWorkers } = await supabase.from('master_employees').select('*');
+    const { data: manpowerLogs } = await supabase.from('daily_manpower')
+      .select('employeeId, siteName, date, fullName')
+      .order('id', { ascending: false })
+      .limit(1000);
+    const { data: campBossLogs } = await supabase.from('camp_boss')
+      .select('employeeId, employeeName, status, date')
+      .order('id', { ascending: false })
+      .limit(1000);
+
+    if (masterWorkers) {
+      const todayDateStr = new Date().toISOString().split('T')[0];
+      
+      const processedWorkers = masterWorkers.map(w => {
+        const campRecordToday = campBossLogs?.find(c => 
+          (c.employeeId === w.employee_id || c.employeeName === w.employee_name) &&
+          (c.date === todayDateStr || c.date?.startsWith(todayDateStr))
+        );
+
+        const assignmentToday = manpowerLogs?.find(m => 
+          (m.employeeId === w.employee_id || m.fullName === w.employee_name) && 
+          (m.date === todayDateStr || m.date?.startsWith(todayDateStr))
+        );
+        
+        const mostRecent = assignmentToday || manpowerLogs?.find(m => 
+          m.employeeId === w.employee_id || m.fullName === w.employee_name
+        );
+
+        let finalStatus = 'Active'; // Default to Active if not in camp boss logs
+        let finalSite = 'Unassigned';
+
+        if (campRecordToday) {
+          // If they have a camp boss record today, they are absent
+          finalStatus = 'Absent';
+          finalSite = 'In Camp (Absent)';
+        } else {
+          // If they are active, we just use daily_manpower to find WHERE they are
+          if (assignmentToday) {
+            finalSite = assignmentToday.siteName;
+          } else if (mostRecent) {
+            finalSite = `Last: ${mostRecent.siteName}`;
+          }
+        }
+
+        return {
+          id: w.employee_id || w.id,
+          name: w.employee_name || 'Unknown Worker',
+          role: w.trade || 'General Worker',
+          status: finalStatus,
+          site: finalSite,
+          contact: 'N/A', // contact not in master_employees
+          joinDate: 'Recent'
+        };
+      });
+      setWorkersList(processedWorkers);
+    }
+  };
+
+  const fetchLatestReport = async () => {
+    const { data } = await supabase
+      .from('supervisor_reports')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (data && data.length > 0) {
+      setReportHistory(data);
+      setSupervisorReport(data[0]);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    fetchLatestReport();
+    fetchDashboardData();
+
+    // Set up Real-Time Dashboard Metrics
+    const tablesToWatch = [
+      'petty_cash', 'mr_procurement', 'daily_manpower', 'work_output', 
+      'camp_boss', 'tools_management', 'employee_onboarding'
+    ];
+
+    const channel = supabase.channel('dashboard-metrics');
+
+    tablesToWatch.forEach(tableName => {
+      channel.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: tableName },
+        () => {
+          // Re-fetch data whenever any of the tables change
+          fetchDashboardData();
+        }
+      );
+    });
+
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const runGlobalSweep = async () => {
+    setIsSweeping(true);
+    try {
+      const res = await fetch('/api/agents/supervisor', { method: 'POST', body: JSON.stringify({}) });
+      if (res.ok) {
+        await fetchLatestReport();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSweeping(false);
+    }
+  };
+
+  const SidebarItem = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
+    <button 
+      onClick={() => setActiveTab(id)}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
+        isSidebarCollapsed ? 'justify-center w-12 mx-auto px-0' : 'w-full'
+      } ${
+        activeTab === id 
+          ? 'bg-blue-400 text-black shadow-[0_0_15px_rgba(96,165,250,0.3)]' 
+          : 'text-gray-400 hover:text-white hover:bg-[#111]'
+      }`}
+      title={isSidebarCollapsed ? label : undefined}
+    >
+      <Icon className="w-5 h-5 shrink-0" />
+      {!isSidebarCollapsed && label}
+    </button>
+  );
+
+  const renderDashboard = () => (
+    <div className="animate-fade-in-up">
+
+      {/* Top Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+        {[
+          { title: 'Total Workers (Present)', value: `${workersList.filter(w => w.status === 'Active').length}/${workersList.length}`, icon: Users, color: 'text-indigo-400', glow: 'bg-indigo-500/5' },
+          { title: 'Tasks Processed', value: stats.processed.toLocaleString(), icon: Activity, color: 'text-emerald-400', glow: 'bg-emerald-500/5' },
+          { title: 'Pending Approvals', value: stats.approvals, icon: AlertTriangle, color: 'text-amber-400', glow: 'bg-amber-500/5' },
+          { title: 'Critical Alerts', value: supervisorReport?.system_status === 'CRITICAL' ? '1 High Risk' : '0 High Risk', icon: ShieldAlert, color: 'text-rose-400', glow: 'bg-rose-500/5' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:bg-[#111] hover:border-[#333] transition-all duration-500">
+            <div className={`absolute -right-10 -top-10 w-32 h-32 ${stat.glow} rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+            <div className="flex justify-between items-start mb-4 relative z-10">
+              <p className="text-gray-500 text-[10px] font-medium tracking-widest uppercase">{stat.title}</p>
+              <stat.icon className={`w-4 h-4 ${stat.color} opacity-80`} />
+            </div>
+            <h3 className="text-4xl font-semibold tracking-tight text-white relative z-10">
+              {stat.value}
+            </h3>
+          </div>
+        ))}
+      </div>
+
+
+      {/* ENTERPRISE COMMAND CENTER GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 relative z-10 mb-10">
+        
+        {/* Left Half: MASTER SUPERVISOR INTELLIGENCE PANEL */}
+        <div className="xl:col-span-2 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden group flex flex-col h-[600px]">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-1000"></div>
+          
+          <div className="flex justify-between items-center mb-6 gap-4 border-b border-[#222] pb-4 relative z-10 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#111] rounded-xl border border-[#333]">
+                <BrainCircuit className="w-4 h-4 text-indigo-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-white tracking-tight">Master Supervisor Core</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {reportHistory.length > 0 && (
+                <select 
+                  className="bg-[#111] border border-[#333] text-gray-300 text-[10px] uppercase tracking-widest font-bold rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer appearance-none"
+                  value={supervisorReport?.id || ''}
+                  onChange={(e) => {
+                    const selected = reportHistory.find(r => r.id === parseInt(e.target.value));
+                    if (selected) setSupervisorReport(selected);
+                  }}
+                >
+                  {reportHistory.map((report, idx) => {
+                    const dateObj = new Date(report.created_at);
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    return (
+                      <option key={report.id} value={report.id}>
+                        {idx === 0 ? `Latest (${formattedDate})` : formattedDate}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+              <button 
+                onClick={runGlobalSweep}
+                disabled={isSweeping}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 disabled:bg-[#222] disabled:text-gray-500 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all"
+              >
+                <RefreshCw className={`w-3 h-3 ${isSweeping ? 'animate-spin' : ''}`} />
+                {isSweeping ? 'Analyzing...' : 'Sweep'}
+              </button>
+            </div>
+          </div>
+
+          {supervisorReport ? (
+            <div className="flex flex-col gap-4 relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
+              {/* Status & Risk */}
+              <div className="grid grid-cols-2 gap-4 shrink-0">
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <p className="text-gray-500 text-[9px] mb-1 uppercase tracking-widest font-medium">System Status</p>
+                  <span className={`text-sm font-semibold tracking-tight ${supervisorReport.system_status === 'CRITICAL' ? 'text-rose-400' : supervisorReport.system_status === 'WARNING' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {supervisorReport.system_status || 'UNKNOWN'}
+                  </span>
+                </div>
+                <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                  <p className="text-gray-500 text-[9px] mb-1 uppercase tracking-widest font-medium">Financial Risk</p>
+                  <span className={`text-sm font-semibold tracking-tight ${supervisorReport.financial_impact_risk === 'High Risk' ? 'text-rose-400' : supervisorReport.financial_impact_risk === 'Medium Risk' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {supervisorReport.financial_impact_risk || 'Unknown'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottleneck */}
+              <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="w-3.5 h-3.5 text-rose-400" />
+                  <p className="text-rose-400 font-bold tracking-tight text-xs uppercase">Key Bottleneck Detected</p>
+                </div>
+                <p className="text-gray-300 leading-relaxed text-xs">{supervisorReport.key_bottleneck}</p>
+              </div>
+
+              {/* Action Plan */}
+              <div className="bg-[#111] border border-[#222] rounded-xl p-5 shrink-0">
+                <div className="flex items-center gap-2 mb-4 border-b border-[#222] pb-3">
+                  <TrendingUp className="w-4 h-4 text-indigo-400" />
+                  <p className="text-gray-300 font-bold tracking-tight text-xs uppercase">Orchestrated Action Plan</p>
+                </div>
+                <div className="text-gray-400 text-xs space-y-3">
+                  {(supervisorReport.orchestrated_action_plan || '')
+                    .replace(/([\.!?])\s*(\d+\.)/g, '$1\n$2')
+                    .replace(/(^|\s)(\d+\.)\s/g, '\n$2 ')
+                    .split('\n')
+                    .map((step: string) => step.trim().replace(/^\d+[\.\)]?\s*/, '').replace(/\*\*/g, ''))
+                    .filter((cleanStep: string) => cleanStep.length > 5)
+                    .map((cleanStep: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-3 bg-[#0a0a0a] p-3 rounded-lg border border-[#222]">
+                        <div className="text-indigo-400 flex-shrink-0 font-bold mt-0.5">
+                          [{idx + 1}]
+                        </div>
+                        <p className="leading-relaxed">{cleanStep}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center flex flex-col items-center justify-center flex-1 bg-[#111] rounded-xl border border-[#222] border-dashed relative z-10 m-2">
+              <BrainCircuit className="w-8 h-8 text-gray-600 mb-3" />
+              <p className="text-gray-400 font-medium text-sm">System is standing by.</p>
+              <p className="text-gray-600 text-xs mt-1">Click "Sweep" to run the analysis.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Half: Stacked Panels (Human in Loop & Live Feed) */}
+        <div className="xl:col-span-2 flex flex-col gap-6 h-[600px]">
+          
+          {/* Top Panel: Approvals */}
+          <div className="flex-1 min-h-0 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden flex flex-col">
+          <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 shrink-0">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+            Human-in-the-Loop
+          </h2>
+          <div className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent flex-1">
+            {pendingApprovals.length > 0 ? pendingApprovals.map((item, idx) => (
+              <div key={idx} className="bg-[#111] border border-[#222] rounded-xl p-4 relative overflow-hidden group">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500/50"></div>
+                <div className="flex justify-between items-start mb-2 pl-3">
+                  <span className={`text-[9px] font-bold tracking-widest uppercase text-rose-400 bg-rose-500/10 px-2 py-1 rounded`}>{item.agentName}</span>
+                  <Clock className="w-3 h-3 text-gray-500"/>
+                </div>
+                <p className="text-xs text-gray-200 font-medium mb-1 pl-3 line-clamp-2">{item.description}</p>
+                <p className="text-[10px] text-gray-500 mb-3 pl-3 line-clamp-2">{item.details}</p>
+                <div className="pl-3">
+                  <Link href={`/modules/${item.sourceTable.replace('_', '-')}`} className="inline-block bg-white hover:bg-gray-200 text-black text-[9px] uppercase tracking-widest font-bold py-1.5 px-3 rounded transition-colors text-center">Review</Link>
+                </div>
+              </div>
+            )) : (
+              <div className="text-center flex flex-col items-center justify-center h-full bg-[#111] rounded-xl border border-[#222] border-dashed">
+                <CheckCircle className="w-6 h-6 text-emerald-500/50 mb-2" />
+                <p className="text-gray-500 font-medium text-[10px] uppercase tracking-widest">No Active Threats</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+          {/* Bottom Panel: Live Feed */}
+          <div className="flex-1 min-h-0 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 to-transparent opacity-50"></div>
+          <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 pl-3 shrink-0">
+            <Activity className="w-3.5 h-3.5 text-indigo-400" />
+            Live Telemetry
+          </h2>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-0 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
+            {recentLogs.map((log, idx) => (
+              <div key={`${log.id}-${idx}`} className="flex gap-2 text-[10px] border-b border-[#1a1a1a] py-3 last:border-0 pl-3 hover:bg-[#111] transition-colors">
+                <div className="mt-0.5 shrink-0">
+                  {log.type === 'success' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></div>}
+                  {log.type === 'warning' && <div className="w-1.5 h-1.5 rounded-full bg-rose-500/80"></div>}
+                  {log.type === 'info' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/80"></div>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-gray-600 font-mono text-[9px] shrink-0">[{log.time}]</span>
+                    <span className={`uppercase tracking-widest font-bold truncate ${log.type === 'warning' ? 'text-rose-400' : 'text-indigo-400'}`}>{log.agent}</span>
+                  </div>
+                  <p className="text-gray-400 line-clamp-2 leading-relaxed">{log.action}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+
+  const renderWorkers = () => {
+    const filteredWorkers = workersList.filter(w => 
+      w.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      w.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="animate-fade-in-up">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tighter text-white">Workers Directory</h1>
+            <p className="text-gray-500 text-sm mt-1">{workersList.length} total workers registered</p>
+          </div>
+        </div>
+
+        <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-[#222] flex items-center gap-4 bg-[#111]">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input 
+                type="text" 
+                placeholder="Search workers by name or skill..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#0a0a0a] border border-[#333] text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-400 transition-colors"
+              />
+            </div>
+            <button className="bg-[#222] hover:bg-[#333] text-gray-300 p-2 rounded-lg transition-colors border border-[#333]">
+              <Filter className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                  <th className="p-4">Employee Name</th>
+                  <th className="p-4">Employee ID</th>
+                  <th className="p-4">Trade / Skill</th>
+                  <th className="p-4">Status (Present/Absent)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222]">
+                {filteredWorkers.map((w, i) => (
+                  <tr key={i} className="hover:bg-[#111] transition-colors group">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
+                          {w.name.split(' ').map((n: string) => n[0]).join('').substring(0,2)}
+                        </div>
+                        <p className="font-semibold text-gray-200">{w.name}</p>
+                      </div>
+                    </td>
+                    <td className="p-4 text-sm text-gray-400 font-medium">
+                      {w.id || 'N/A'}
+                    </td>
+                    <td className="p-4">
+                      <span className="text-xs font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{w.role}</span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${w.status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`}></div>
+                        <span className={`text-xs font-bold ${w.status === 'Active' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {w.status === 'Active' ? 'Present' : 'Absent'}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredWorkers.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-gray-500">No workers found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderReports = () => {
+    const productivityData = [
+      { name: 'Mon', tasks: 45, approvals: 12 },
+      { name: 'Tue', tasks: 52, approvals: 8 },
+      { name: 'Wed', tasks: 38, approvals: 15 },
+      { name: 'Thu', tasks: 65, approvals: 5 },
+      { name: 'Fri', tasks: 48, approvals: 10 },
+      { name: 'Sat', tasks: 25, approvals: 2 },
+      { name: 'Sun', tasks: 15, approvals: 1 },
+    ];
+
+    const agentActivityData = agentData.map(a => ({
+      name: a.name.split(' ')[0],
+      load: a.load
+    }));
+
+    return (
+      <div className="animate-fade-in-up">
+        <div className="mb-8">
+          <h1 className="text-3xl font-black tracking-tighter text-white">System Reports</h1>
+          <p className="text-gray-500 text-sm mt-1">Analytics and historical AI orchestration graphs</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6">
+            <h3 className="text-xs font-bold tracking-widest text-gray-500 uppercase mb-6">Weekly Task Throughput</h3>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={productivityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                  <XAxis dataKey="name" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
+                  <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <Line type="monotone" dataKey="tasks" stroke="#60a5fa" strokeWidth={3} dot={{ fill: '#60a5fa', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#fff' }} />
+                  <Line type="monotone" dataKey="approvals" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', strokeWidth: 2, r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6">
+            <h3 className="text-xs font-bold tracking-widest text-gray-500 uppercase mb-6">Live Agent Load Matrix</h3>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={agentActivityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                  <XAxis dataKey="name" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
+                  <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
+                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <Bar dataKey="load" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <div className="flex h-screen bg-[#000000] text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30">
+      
+      {/* Sidebar */}
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a] border-r border-[#222] flex flex-col z-20 shrink-0 relative`}>
+        {/* Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute -right-3 top-6 bg-[#222] border border-[#333] text-gray-400 hover:text-white rounded-full p-1 z-30 transition-colors"
+        >
+          <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSidebarCollapsed ? '' : 'rotate-180'}`} />
+        </button>
+
+        <div className="p-6 border-b border-[#222] flex flex-col items-center">
+           <Link 
+             href="/" 
+             className={`inline-flex items-center gap-2 mb-4 group ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}
+             title={isSidebarCollapsed ? 'Back to Home' : undefined}
+           >
+             <ChevronRight className="rotate-180 w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
+             {!isSidebarCollapsed && <span className="text-xs font-bold text-gray-500 group-hover:text-white tracking-widest uppercase transition-colors">Home</span>}
+           </Link>
+           
+           <h2 className={`text-xl font-black tracking-tight text-white flex items-center gap-2 ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}>
+             <Network className="text-blue-400 w-6 h-6 shrink-0" />
+             {!isSidebarCollapsed && "COMMAND"}
+           </h2>
+        </div>
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#333]">
+          {!isSidebarCollapsed && <p className="text-[10px] font-bold tracking-widest text-gray-600 uppercase mb-4 ml-2 mt-2">Main Menu</p>}
+          <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
+          <SidebarItem id="workers" label="Workers" icon={Users} />
+          <SidebarItem id="reports" label="Reports" icon={BarChart3} />
+        </div>
+        <div className="p-4 border-t border-[#222]">
+          <div className={`flex items-center gap-3 bg-[#111] border border-[#222] rounded-xl cursor-pointer hover:border-[#333] transition-colors ${isSidebarCollapsed ? 'p-2 justify-center' : 'p-3'}`}>
+             <div className="w-8 h-8 shrink-0 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+               SA
+             </div>
+             {!isSidebarCollapsed && (
+               <div className="overflow-hidden">
+                 <p className="text-xs font-bold text-white truncate">Site Admin</p>
+                 <p className="text-[10px] text-gray-500 truncate">admin@10xworkforce.ai</p>
+               </div>
+             )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto relative bg-[#000000]">
+         {/* Background Mesh fixed behind scrollable content */}
+         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 fixed">
+           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+           <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]"></div>
+         </div>
+         
+         <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-full pb-24">
+            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'workers' && renderWorkers()}
+            {activeTab === 'reports' && renderReports()}
+         </div>
+      </main>
+    </div>
+  );
+}
