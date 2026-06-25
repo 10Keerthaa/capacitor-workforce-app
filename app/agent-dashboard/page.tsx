@@ -214,7 +214,7 @@ export default function AgenticDashboard() {
     };
   }, []);
 
-  const handleDrawerAction = async (id: number, sourceTable: string, action: 'approved' | 'rejected') => {
+  const handleDrawerAction = async (id: number, sourceTable: string, action: 'approved' | 'rejected' | 'processing') => {
     try {
       const { error } = await supabase
         .from(sourceTable)
@@ -704,14 +704,6 @@ export default function AgenticDashboard() {
         onMouseLeave={() => setIsSidebarCollapsed(true)}
         className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a]/90 backdrop-blur-xl border border-[#222] flex flex-col z-50 fixed left-4 top-4 bottom-4 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden`}
       >
-        {/* Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-6 bg-[#222] border border-[#333] text-gray-400 hover:text-white rounded-full p-1 z-30 transition-colors hidden md:block"
-        >
-          <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSidebarCollapsed ? '' : 'rotate-180'}`} />
-        </button>
-
         <div className="p-6 border-b border-[#222] flex flex-col items-center">
            <Link 
              href="/" 
