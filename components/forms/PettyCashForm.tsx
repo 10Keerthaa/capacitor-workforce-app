@@ -62,7 +62,21 @@ export default function PettyCashForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data[0])
-        }).catch(err => console.error("Agent call failed:", err));
+        }).then(async (res) => {
+            if (!res.ok) {
+              await supabase.from('petty_cash').update({
+                agent_status: 'pending_manager_review',
+                agent_metadata: { error: true, reason: '?? System Error: AI Overloaded. Rerouted to Manual Review.' }
+              }).eq('id', data[0].id);
+              alert("? Record Saved.\n\n?? The AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+            }
+          }).catch(async (err) => {
+            console.error("Agent call failed:", err);
+            await supabase.from('petty_cash').update({
+              agent_status: 'pending_manager_review',
+              agent_metadata: { error: true, reason: '?? System Error: AI Connection Failed. Rerouted to Manual Review.' }
+            }).eq('id', data[0].id);
+          });
       }
 
       setFormData({ pettyCashHolder: "", supplierName: "", description: "", projectCode: "", projectName: "", currency: "USD", amount: "", vat: "", totalAmount: "", date: "" });

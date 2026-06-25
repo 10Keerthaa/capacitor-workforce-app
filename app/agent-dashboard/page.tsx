@@ -70,14 +70,17 @@ export default function AgenticDashboard() {
 
       if (recent) {
         recent.forEach(r => {
-          let action = `Processed new record for ${r.projectName || r.siteName || r.trade || r.id}`;
+          // Check for error/timeout reason
+          const isError = r.agent_metadata?.error || (r.agent_metadata?.reason && r.agent_metadata.reason.includes('System Error'));
+          let action = isError ? '⚠️ AI Timeout: Rerouted to Manual Review' : `Processed new record for ${r.projectName || r.siteName || r.trade || r.id}`;
+          
           allLogs.push({
             id: r.id,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             fullTime: r.id,
             agent: t.agent,
             action: action,
-            type: r.agent_status === 'pending_manager_review' ? 'warning' : 'success'
+            type: isError ? 'error' : (r.agent_status === 'pending_manager_review' ? 'warning' : 'success')
           });
         });
       }
@@ -437,6 +440,7 @@ export default function AgenticDashboard() {
                   {log.type === 'success' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></div>}
                   {log.type === 'warning' && <div className="w-1.5 h-1.5 rounded-full bg-rose-500/80"></div>}
                   {log.type === 'info' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/80"></div>}
+                  {log.type === 'error' && <div className="w-1.5 h-1.5 rounded-full bg-orange-500/80 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -659,6 +663,18 @@ export default function AgenticDashboard() {
           </div>
           
           <div className="p-6 border-t border-[#222] bg-[#111] grid grid-cols-2 gap-4">
+            {item.details?.includes('System Error') ? (
+              <button 
+                onClick={() => {
+                  // In a real scenario, this triggers the API route again
+                  alert("Triggering AI Retry for " + item.sourceTable);
+                  handleDrawerAction(item.id, item.sourceTable, 'processing');
+                }} 
+                className="flex items-center justify-center gap-2 py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase col-span-2 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:shadow-[0_0_15px_rgba(249,115,22,0.2)]"
+              >
+                <RefreshCw className="w-4 h-4" /> Retry AI Analysis
+              </button>
+            ) : null}
             <button 
               onClick={() => handleDrawerAction(item.id, item.sourceTable, 'rejected')} 
               className="flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]"

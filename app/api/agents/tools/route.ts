@@ -137,7 +137,7 @@ export async function POST(req: Request) {
     const { error } = await supabase
       .from('tools_management') 
       .update({
-        agent_status: 'completed',
+        agent_status: 'pending_manager_review',
         agent_metadata: aiAnalysis
       })
       .eq('id', id);
