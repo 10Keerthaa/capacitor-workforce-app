@@ -69,8 +69,15 @@ export default function OnboardingForm() {
       } catch (err) {
         console.error("Agent execution failed:", err);
       }
-      alert("Record saved!"); 
-      window.location.reload(); 
+      alert("Record saved! Sent to AI for compliance check."); 
+      setFormData({
+        employeeName: "", nationality: "", countryCode: "", mobileNo: "", trade: "", laborType: "", accommodation: "", passportNo: "", visaStatus: "", employeeStatus: "", onboardingStatus: "", remarks: "", dob: "", dateOfJoining: "", passportExpiry: "", visaExpiry: "", passportInLocker: false
+      });
+      setPassportScanUrisJson([]);
+      setEmployeePhotoUrisJson([]);
+      setConsentFormUrisJson([]);
+      setDrivingLicenseUrisJson([]);
+      setCertificatesJson([]);
     }
     setLoading(false);
   };
