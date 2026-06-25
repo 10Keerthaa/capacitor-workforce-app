@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend } from 'recharts';
 
 export default function AgenticDashboard() {
   const [mounted, setMounted] = useState(false);
@@ -546,59 +546,138 @@ export default function AgenticDashboard() {
   };
 
   const renderReports = () => {
-    const productivityData = [
-      { name: 'Mon', tasks: 45, approvals: 12 },
-      { name: 'Tue', tasks: 52, approvals: 8 },
-      { name: 'Wed', tasks: 38, approvals: 15 },
-      { name: 'Thu', tasks: 65, approvals: 5 },
-      { name: 'Fri', tasks: 48, approvals: 10 },
-      { name: 'Sat', tasks: 25, approvals: 2 },
-      { name: 'Sun', tasks: 15, approvals: 1 },
+    // 1. Labor ROI & Productivity (Camp Boss vs Work Output)
+    const laborRoiData = [
+      { name: '1st', headcount: 45, output: 90 },
+      { name: '8th', headcount: 50, output: 105 },
+      { name: '15th', headcount: 85, output: 120 }, // Law of diminishing returns starts
+      { name: '22nd', headcount: 110, output: 125 }, // Overcrowded site, output flatlines
+      { name: '29th', headcount: 115, output: 122 },
     ];
 
-    const agentActivityData = agentData.map(a => ({
-      name: a.name.split(' ')[0],
-      load: a.load
-    }));
+    // 2. Physical Asset Drain (Tools Management)
+    const assetData = [
+      { name: 'Active Tools', value: 850, color: '#10b981' },
+      { name: 'Damaged', value: 85, color: '#f59e0b' },
+      { name: 'Lost/Stolen', value: 42, color: '#ef4444' },
+    ];
+
+    // 3. Material Hoarding & Fraud (Procurement & Petty Cash)
+    const fraudData = [
+      { site: 'Metro Stn', hoardingRisk: 8, pettyCashAnomalies: 2 },
+      { site: 'City Mall', hoardingRisk: 2, pettyCashAnomalies: 12 },
+      { site: 'Tower B', hoardingRisk: 15, pettyCashAnomalies: 4 },
+      { site: 'Bridge 9', hoardingRisk: 1, pettyCashAnomalies: 1 },
+    ];
+
+    // 4. System-Wide AI Intervention Rate
+    const aiHealthData = [
+      { day: 'Mon', autonomous: 120, blocked: 10 },
+      { day: 'Tue', autonomous: 132, blocked: 15 },
+      { day: 'Wed', autonomous: 101, blocked: 45 }, // Spike in field errors
+      { day: 'Thu', autonomous: 145, blocked: 8 },
+      { day: 'Fri', autonomous: 150, blocked: 5 },
+    ];
 
     return (
       <div className="animate-fade-in-up">
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tighter text-white">System Reports</h1>
-          <p className="text-gray-500 text-sm mt-1">Analytics and historical AI orchestration graphs</p>
+          <h1 className="text-3xl font-black tracking-tighter text-white">Executive BI Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Real-time Agentic Analytics & Operations Health</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6">
-            <h3 className="text-xs font-bold tracking-widest text-gray-500 uppercase mb-6">Weekly Task Throughput</h3>
+          
+          {/* Chart 1: Labor ROI */}
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl">
+            <h3 className="text-xs font-bold tracking-widest text-indigo-400 uppercase mb-2">Labor ROI & Productivity</h3>
+            <p className="text-gray-500 text-xs mb-6">Headcount (Camp Boss) vs. Output (Work Output)</p>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={productivityData}>
+                <AreaChart data={laborRoiData}>
+                  <defs>
+                    <linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                   <XAxis dataKey="name" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
                   <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
                   <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
-                  <Line type="monotone" dataKey="tasks" stroke="#60a5fa" strokeWidth={3} dot={{ fill: '#60a5fa', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#fff' }} />
-                  <Line type="monotone" dataKey="approvals" stroke="#6366f1" strokeWidth={3} dot={{ fill: '#6366f1', strokeWidth: 2, r: 4 }} />
-                </LineChart>
+                  <Area type="monotone" dataKey="output" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorOutput)" name="Concrete Poured (m3)" />
+                  <Line type="monotone" dataKey="headcount" stroke="#f43f5e" strokeWidth={3} dot={{ fill: '#f43f5e', r: 4 }} name="Total Laborers" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6">
-            <h3 className="text-xs font-bold tracking-widest text-gray-500 uppercase mb-6">Live Agent Load Matrix</h3>
+          {/* Chart 2: Material Hoarding & Fraud */}
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl">
+            <h3 className="text-xs font-bold tracking-widest text-orange-400 uppercase mb-2">Material Hoarding & Fraud Radar</h3>
+            <p className="text-gray-500 text-xs mb-6">AI High-Risk Flags: Procurement vs. Petty Cash</p>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={agentActivityData}>
+                <BarChart data={fraudData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                  <XAxis dataKey="name" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
+                  <XAxis dataKey="site" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
                   <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
                   <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
-                  <Bar dataKey="load" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                  <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
+                  <Bar dataKey="hoardingRisk" name="Hoarding Flags (MR)" fill="#f97316" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pettyCashAnomalies" name="Fraud Flags (Cash)" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* Chart 3: Physical Asset Drain */}
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl flex flex-col">
+            <h3 className="text-xs font-bold tracking-widest text-rose-400 uppercase mb-2">Physical Asset Drain</h3>
+            <p className="text-gray-500 text-xs mb-2">Live Inventory Health (Tools Management)</p>
+            <div className="flex-1 w-full min-h-[256px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={assetData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {assetData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px', color: '#888' }}/>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Chart 4: AI Intervention Rate */}
+          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl">
+            <h3 className="text-xs font-bold tracking-widest text-emerald-400 uppercase mb-2">System-Wide AI Health</h3>
+            <p className="text-gray-500 text-xs mb-6">Autonomous Approvals vs. Manager Interventions</p>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={aiHealthData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
+                  <XAxis type="number" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
+                  <YAxis dataKey="day" type="category" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
+                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
+                  <Bar dataKey="autonomous" name="Auto-Approved (Low Risk)" fill="#10b981" stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="blocked" name="AI Blocked (Manager Review)" fill="#3b82f6" stackId="a" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
         </div>
       </div>
     );
