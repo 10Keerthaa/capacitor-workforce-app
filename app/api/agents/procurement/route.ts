@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         "ai_risk_level": "High" | "Medium" | "Low",
         "ai_priority": "Critical" | "Normal",
         "ai_recommendation": "Approve" | "Reject",
-        "ai_reason": "A 1-2 sentence explanation covering the auto-assigned vendor and any shortage prediction.",
+        "ai_reason": "You MUST format the first two lines EXACTLY as follows:\nVendor: [Vendor Name]\nPrice: $[Price]\n\nThen provide a 1-2 sentence explanation of any shortage predictions.",
         "ai_email_draft": "Draft a very brief, professional 1-2 sentence email introduction asking for a quote. Do NOT list the material specifications in the email body, just tell them to review the attached PDF RFQ document.",
         "ai_recommended_vendor": "State the Official Approved Vendor from the rules above.",
         "ai_professional_rfq_specifications": "Take the user's short remarks and expand them into a highly detailed, professional 3-to-5 point technical specification list for the RFQ PDF."

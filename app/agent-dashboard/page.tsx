@@ -635,7 +635,16 @@ export default function AgenticDashboard() {
                 <BrainCircuit className="w-4 h-4 text-rose-400" />
                 <p className="text-[10px] uppercase tracking-widest font-bold text-rose-400">AI Reasoning & Details</p>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed relative z-10">{item.details}</p>
+              <div className="text-sm text-gray-300 leading-relaxed relative z-10 space-y-1">
+                {item.details.split('\n').map((line: string, i: number) => {
+                  const isHighlight = line.includes('Vendor:') || line.includes('Price:');
+                  return (
+                    <span key={i} className={`block ${isHighlight ? 'font-bold text-white' : ''}`}>
+                      {line}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
             
             <div className="bg-[#111] border border-[#222] rounded-xl p-5">
