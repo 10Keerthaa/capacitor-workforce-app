@@ -15,8 +15,8 @@ export default function CampBossForm() {
       employeeName: "Mike Smith",
       campLocation: "City Center Premium Camp",
       roomNumber: "C-10",
-      status: "Absent",
-      remarks: "Did not report to camp. Stuck at Metro Station Alpha trying to restore power."
+      status: "Present",
+      remarks: "All workers present, site running smoothly."
     });
   };
 

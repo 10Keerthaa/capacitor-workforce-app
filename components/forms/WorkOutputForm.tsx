@@ -14,13 +14,13 @@ export default function WorkOutputForm() {
       projectCode: "PRJ-001",
       projectName: "City Infrastructure Revamp",
       technicianId: "EMP-105",
-      technicianName: "Mike Smith",
-      trade: "Welder",
+      technicianName: "Bob Builder",
+      trade: "Concrete Mason",
       foremanId: "EMP-109",
       foremanName: "Tony Stark",
-      workDescription: "Welding support beams. Zero progress due to total power outage and waiting on MR-1005.",
-      unitOfMeasure: "Joints",
-      outputPerDay: "0"
+      workDescription: "Pouring concrete foundation for sector 4. Severely low output observed.",
+      unitOfMeasure: "Cubic Meters",
+      outputPerDay: "2"
     });
   };
 

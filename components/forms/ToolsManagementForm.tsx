@@ -9,19 +9,21 @@ export default function ToolsManagementForm() {
   const [showReturnTab, setShowReturnTab] = useState(false);
   
   // Checkout State
-  const [checkoutData, setCheckoutData] = useState({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "" });
+  const [checkoutData, setCheckoutData] = useState({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
   const handleQuickFill = () => {
     setActiveStep("checkout");
     setCheckoutData({
-      itemName: "Welding Machine",
-      brand: "Lincoln Electric",
-      tagName: "TOOL-WE-01",
-      warrantyDetails: "3 Year Standard",
-      purchaseDate: "2024-01-10",
-      quantity: "2",
-      assignedTo: "Metro Station Alpha - S-005"
+      ...checkoutData,
+      date: new Date().toISOString().split('T')[0],
+      workerName: "John Safe",
+      workerId: "EMP-111",
+      toolId: "T-800",
+      toolName: "Makita Hammer Drill",
+      action: "Check-Out",
+      condition: "Excellent",
+      remarks: "Standard checkout for morning shift."
     });
   };
   

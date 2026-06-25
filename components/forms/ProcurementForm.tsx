@@ -22,8 +22,8 @@ export default function ProcurementForm() {
       siteCode: "S-005",
       siteName: "Metro Station Alpha",
       materialName: "Copper Wiring (100m)",
-      remarks: "Critical: Entire metro platform is without power. Need wiring for emergency generators.",
-      quantity: "50",
+      remarks: "Standard weekly restock for sector 2. No rush.",
+      quantity: "10",
       requestedDate: today,
       requiredDate: today
     });

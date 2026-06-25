@@ -31,9 +31,9 @@ export default function OnboardingForm() {
       onboardingStatus: "Pending Medical",
       remarks: "Urgent NEW hire for Metro Station Alpha night shift welding.",
       dob: "1992-11-05",
-      dateOfJoining: new Date().toISOString().split('T')[0],
+      dateOfJoining: new Date().toISOString().split('T')[0], // SLA Met
       passportExpiry: "2032-11-05",
-      visaExpiry: "2028-11-05",
+      visaExpiry: "2028-11-05", // Fully Compliant
       passportInLocker: false
     });
   };

@@ -15,13 +15,13 @@ export default function PettyCashForm() {
     setFormData({
       pettyCashHolder: "Tony Stark",
       supplierName: "Metro Fuel Services",
-      description: "Emergency diesel fuel for backup generators after total site power failure.",
+      description: "Standard office supplies and coffee for the site management meeting.",
       projectCode: "PRJ-001",
       projectName: "City Infrastructure Revamp",
       currency: "USD",
-      amount: "6000",
-      vat: "225",
-      totalAmount: "4725",
+      amount: "50",
+      vat: "2.50",
+      totalAmount: "52.50",
       date: new Date().toISOString().split('T')[0]
     });
   };
