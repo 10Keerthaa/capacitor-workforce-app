@@ -5,9 +5,11 @@ export default function SplashScreen() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [decryptedText, setDecryptedText] = useState("");
+  const [lineExpanded, setLineExpanded] = useState(false);
   const targetText = "10XWORKFORCE.AI";
 
   useEffect(() => {
+    setTimeout(() => setLineExpanded(true), 100);
     let iteration = 0;
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
     
@@ -55,14 +57,12 @@ export default function SplashScreen() {
             <h1 className="text-3xl md:text-5xl font-mono font-bold tracking-[0.2em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
               {decryptedText || "0101010101010"}
             </h1>
-            <div className="mt-8 flex items-center space-x-4 opacity-70">
-              <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-indigo-500/80"></div>
-              <span className="text-indigo-200/80 font-mono text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
-                {decryptedText === targetText ? 'NEURAL ENGINE ACTIVE' : 'DECRYPTING CORE...'}
-              </span>
-              <div className="w-12 h-[1px] bg-gradient-to-l from-transparent to-indigo-500/80"></div>
+            
+            <div className="mt-6 flex justify-center items-center h-[2px] relative w-64 md:w-96">
+              <div className={`absolute h-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_15px_rgba(99,102,241,0.8)] transition-all duration-[1500ms] ease-out ${lineExpanded ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+              <div className={`absolute h-[1px] bg-white transition-all duration-[1000ms] ease-out delay-300 blur-[1px] ${lineExpanded ? 'w-1/3 opacity-80' : 'w-0 opacity-0'}`}></div>
             </div>
+
           </div>
         </div>
       </div>
