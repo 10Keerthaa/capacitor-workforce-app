@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, BrainCircuit, AlertTriangle, CheckCircle, 
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
-  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter
+  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +17,7 @@ export default function AgenticDashboard() {
   const [supervisorReport, setSupervisorReport] = useState<any>(null);
   const [reportHistory, setReportHistory] = useState<any[]>([]);
   const [isSweeping, setIsSweeping] = useState(false);
+  const [selectedReviewItem, setSelectedReviewItem] = useState<any>(null);
   
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
@@ -178,6 +179,11 @@ export default function AgenticDashboard() {
     fetchLatestReport();
     fetchDashboardData();
 
+    // Auto-collapse sidebar after 1.5 seconds for sleek intro
+    const timer = setTimeout(() => {
+      setIsSidebarCollapsed(true);
+    }, 1500);
+
     // Set up Real-Time Dashboard Metrics
     const tablesToWatch = [
       'petty_cash', 'mr_procurement', 'daily_manpower', 'work_output', 
@@ -201,8 +207,25 @@ export default function AgenticDashboard() {
 
     return () => {
       supabase.removeChannel(channel);
+      clearTimeout(timer);
     };
   }, []);
+
+  const handleDrawerAction = async (id: number, sourceTable: string, action: 'approved' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from(sourceTable)
+        .update({ agent_status: action })
+        .eq('id', id);
+        
+      if (!error) {
+        setPendingApprovals(prev => prev.filter(p => p.id !== id || p.sourceTable !== sourceTable));
+        setSelectedReviewItem(null);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const runGlobalSweep = async () => {
     setIsSweeping(true);
@@ -388,7 +411,7 @@ export default function AgenticDashboard() {
                 <p className="text-xs text-gray-200 font-medium mb-1 pl-3 line-clamp-2">{item.description}</p>
                 <p className="text-[10px] text-gray-500 mb-3 pl-3 line-clamp-2">{item.details}</p>
                 <div className="pl-3">
-                  <Link href={`/modules/${item.sourceTable.replace('_', '-')}`} className="inline-block bg-white hover:bg-gray-200 text-black text-[9px] uppercase tracking-widest font-bold py-1.5 px-3 rounded transition-colors text-center">Review</Link>
+                  <button onClick={() => setSelectedReviewItem(item)} className="inline-block bg-white hover:bg-gray-200 text-black text-[9px] uppercase tracking-widest font-bold py-1.5 px-3 rounded transition-colors text-center cursor-pointer">Review</button>
                 </div>
               </div>
             )) : (
@@ -472,6 +495,7 @@ export default function AgenticDashboard() {
                   <th className="p-4">Employee ID</th>
                   <th className="p-4">Trade / Skill</th>
                   <th className="p-4">Status (Present/Absent)</th>
+                  <th className="p-4">Current Site</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
@@ -498,6 +522,9 @@ export default function AgenticDashboard() {
                           {w.status === 'Active' ? 'Present' : 'Absent'}
                         </span>
                       </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-xs font-medium text-gray-300">{w.site || 'Unassigned'}</span>
                     </td>
                   </tr>
                 ))}
@@ -573,17 +600,89 @@ export default function AgenticDashboard() {
     );
   };
 
+  const renderSlideOutDrawer = () => {
+    if (!selectedReviewItem) return null;
+    const item = selectedReviewItem;
+    return (
+      <div className="fixed inset-0 z-[100] flex justify-end">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fade-in"
+          onClick={() => setSelectedReviewItem(null)}
+        />
+        
+        {/* Drawer */}
+        <div className="relative w-full max-w-lg h-full bg-[#0a0a0a] border-l border-[#222] shadow-[0_0_50px_rgba(0,0,0,0.5)] transform transition-transform duration-300 flex flex-col animate-fade-in-up">
+          <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#111]">
+            <div>
+              <h2 className="text-xl font-black tracking-tighter text-white">Human-in-the-Loop Review</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">Source: {item.sourceTable}</p>
+            </div>
+            <button onClick={() => setSelectedReviewItem(null)} className="text-gray-500 hover:text-white transition-colors p-2 hover:bg-[#222] rounded-full">
+              <XCircle className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[#333]">
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Issue Description</p>
+              <p className="text-sm text-gray-200 leading-relaxed">{item.description}</p>
+            </div>
+            
+            <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl"></div>
+              <div className="flex items-center gap-2 mb-3">
+                <BrainCircuit className="w-4 h-4 text-rose-400" />
+                <p className="text-[10px] uppercase tracking-widest font-bold text-rose-400">AI Reasoning & Details</p>
+              </div>
+              <p className="text-sm text-gray-300 leading-relaxed relative z-10">{item.details}</p>
+            </div>
+            
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Agent Context</p>
+              <div className="flex items-center gap-3">
+                <span className={`text-[10px] font-bold tracking-widest uppercase ${item.color} ${item.bg} px-3 py-1.5 rounded border ${item.border}`}>
+                  {item.agentName}
+                </span>
+                <span className="text-xs text-gray-400">Awaiting Manager Override</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 border-t border-[#222] bg-[#111] grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'rejected')} 
+              className="flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+            >
+              <XCircle className="w-4 h-4" /> Reject
+            </button>
+            <button 
+              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'approved')} 
+              className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+            >
+              <CheckCircle className="w-4 h-4" /> Approve
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!mounted) return null;
 
   return (
-    <div className="flex h-screen bg-[#000000] text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30">
+    <div className="flex h-screen bg-[#000000] text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30 relative">
       
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a] border-r border-[#222] flex flex-col z-20 shrink-0 relative`}>
+      <aside 
+        onMouseEnter={() => setIsSidebarCollapsed(false)}
+        onMouseLeave={() => setIsSidebarCollapsed(true)}
+        className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a]/90 backdrop-blur-xl border border-[#222] flex flex-col z-50 fixed left-4 top-4 bottom-4 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden`}
+      >
         {/* Toggle Button */}
         <button 
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-6 bg-[#222] border border-[#333] text-gray-400 hover:text-white rounded-full p-1 z-30 transition-colors"
+          className="absolute -right-3 top-6 bg-[#222] border border-[#333] text-gray-400 hover:text-white rounded-full p-1 z-30 transition-colors hidden md:block"
         >
           <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSidebarCollapsed ? '' : 'rotate-180'}`} />
         </button>
@@ -595,7 +694,7 @@ export default function AgenticDashboard() {
              title={isSidebarCollapsed ? 'Back to Home' : undefined}
            >
              <ChevronRight className="rotate-180 w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
-             {!isSidebarCollapsed && <span className="text-xs font-bold text-gray-500 group-hover:text-white tracking-widest uppercase transition-colors">Home</span>}
+             {!isSidebarCollapsed && <span className="text-xs font-bold text-gray-500 group-hover:text-white tracking-widest uppercase transition-colors whitespace-nowrap">Home</span>}
            </Link>
            
            <h2 className={`text-xl font-black tracking-tight text-white flex items-center gap-2 ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}>
@@ -603,8 +702,8 @@ export default function AgenticDashboard() {
              {!isSidebarCollapsed && "COMMAND"}
            </h2>
         </div>
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#333]">
-          {!isSidebarCollapsed && <p className="text-[10px] font-bold tracking-widest text-gray-600 uppercase mb-4 ml-2 mt-2">Main Menu</p>}
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] overflow-x-hidden">
+          {!isSidebarCollapsed && <p className="text-[10px] font-bold tracking-widest text-gray-600 uppercase mb-4 ml-2 mt-2 whitespace-nowrap">Main Menu</p>}
           <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
           <SidebarItem id="workers" label="Workers" icon={Users} />
           <SidebarItem id="reports" label="Reports" icon={BarChart3} />
@@ -625,18 +724,19 @@ export default function AgenticDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto relative bg-[#000000]">
+      <main className="flex-1 overflow-y-auto relative bg-[#000000] ml-0 md:ml-[104px]">
          {/* Background Mesh fixed behind scrollable content */}
          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 fixed">
            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px]"></div>
            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]"></div>
          </div>
          
-         <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-full pb-24">
+         <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-full pb-24 transition-all duration-300">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'workers' && renderWorkers()}
             {activeTab === 'reports' && renderReports()}
          </div>
+         {renderSlideOutDrawer()}
       </main>
     </div>
   );

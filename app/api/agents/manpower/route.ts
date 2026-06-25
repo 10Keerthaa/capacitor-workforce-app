@@ -43,6 +43,8 @@ export async function POST(req: Request) {
     const startTime = data.startTime || 'Unknown';
     const endTime = data.endTime || 'Unknown';
     const location = data.location || 'Unknown';
+    const logType = data.logType || 'Unknown Log Type';
+    const remarks = data.remarks || 'No remarks provided';
 
     // 1. Fetch Company Rulebook (Master Tables)
     let requiredWorkerCount = 0;
@@ -72,6 +74,7 @@ export async function POST(req: Request) {
       You are a Daily Manpower AI Agent analyzing construction workforce logs.
       
       --- MANPOWER ALLOCATION FORM ---
+      Log Type: ${logType}
       Task Title: ${task_title}
       Site: ${site_code} - ${site_name} (${location})
       Shift: ${startTime} to ${endTime}
@@ -80,15 +83,19 @@ export async function POST(req: Request) {
         - Foreman: ${foreman_name}
         - Driver: ${driver}
         - Other Staff: ${other_staff} (Trade: ${other_staff_trade})
+      Remarks / Issues (Evening Check-Out only): ${remarks}
 
       --- COMPANY RULEBOOK (Supabase Data) ---
       1. Site Demand: ${site_name} officially requires ${requiredWorkerCount} total workers to operate efficiently.
       2. Foreman Skill: According to the employee database, ${foreman_name}'s official trade is "${foremanSkill}".
 
       --- YOUR TASKS ---
-      1. Match skills to tasks/sites: Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation. You may also check if the Foreman's skill (${foremanSkill}) aligns.
-      2. Predict workforce demand & Auto-allocate: If the team is severely understaffed compared to the official 'Site Demand' (${requiredWorkerCount}), you MUST 'Recommend Subcontracting' and actively suggest how many subcontractors are needed in the reasoning.
-      3. Optimize overtime: Check if the Shift duration is dangerously long (e.g. over 12 hours).
+      1. If this is a "Morning Check-In":
+         - Match skills to tasks/sites: Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation. You may also check if the Foreman's skill (${foremanSkill}) aligns.
+         - Predict workforce demand & Auto-allocate: If the team is severely understaffed compared to the official 'Site Demand', you MUST 'Recommend Subcontracting'.
+      2. If this is an "Evening Check-Out":
+         - Read the Remarks VERY CAREFULLY. If the remarks mention ANY delays, broken tools, missing materials, or issues (e.g., 'delayed by rain', 'crane broke'), you MUST flag 'ai_allocation_efficiency' as 'Poor Allocation' to ensure the Master Supervisor gets an alert.
+         - Check if the Shift duration is dangerously long (e.g. over 12 hours) to optimize overtime.
       
       Output ONLY a valid JSON object matching the exact schema provided.
     `;

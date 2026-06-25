@@ -43,6 +43,24 @@ export async function POST(req: Request) {
     const { data: rawOperations } = await supabase.from('work_output').select('projectName, trade, workDescription, agent_metadata');
     const operations = (rawOperations || []).filter(o => o.agent_metadata?.ai_delay_prediction === 'Delay Likely');
 
+    // NEW: Deep Historical Cross-Reference (Camp Boss + Manpower)
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
+    const { data: todayAbsences } = await supabase.from('camp_boss')
+      .select('employeeName, status')
+      .eq('date', today)
+      .eq('status', 'Absent');
+
+    const { data: yesterdayManpower } = await supabase.from('daily_manpower')
+      .select('siteName, foreman, engineer, otherStaff')
+      .eq('date', yesterday);
+
+    const crossReferenceData = {
+      today_absences: todayAbsences || [],
+      yesterday_site_rosters: yesterdayManpower || []
+    };
+
     const prompt = `
       You are the Master Supervisor AI Orchestrator for a global construction company.
       Your job is to look at the isolated alerts from different AI Agents and find the correlations to create a company-wide strategy.
@@ -53,9 +71,14 @@ export async function POST(req: Request) {
       Workforce Agent (Poor Manpower Allocation): ${JSON.stringify(manpower)}
       Operations Agent (Delay Likely): ${JSON.stringify(operations)}
 
-      Analyze how these issues connect by looking at the Site names (projectName / siteName). 
-      For example, if there is a material shortage AND poor manpower allocation at the exact same site, they are highly correlated and causing a severe bottleneck.
-      Determine the overall system status, identify the absolute biggest bottleneck, and create a cross-departmental action plan that includes schedule adjustments based on operations data.
+      DEEP HISTORICAL CROSS-REFERENCE (The "CEO" View):
+      ${JSON.stringify(crossReferenceData)}
+
+      Analyze how these issues connect by looking at the Site names (projectName / siteName) and personnel names. 
+      For example, check the DEEP HISTORICAL CROSS-REFERENCE: If a key leader (Foreman or Engineer) from yesterday's roster is in today's absence list, they are missing today! This will directly cause severe bottlenecks at that specific site today. 
+      Also check if there is a material shortage AND poor manpower allocation at the exact same site.
+      Determine the overall system status, identify the absolute biggest bottleneck (prioritize missing leadership or double-spending), and create a cross-departmental action plan that includes schedule adjustments based on operations data.
+      Output ONLY a valid JSON object matching the exact schema provided.
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
 

@@ -1,29 +1,76 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Beaker } from "lucide-react";
+import { Beaker, Sun, Moon } from "lucide-react";
 
 export default function DailyManpowerForm() {
   const [loading, setLoading] = useState(false);
+  const [canCheckOut, setCanCheckOut] = useState(false);
+  const [morningRecordId, setMorningRecordId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "",
-    engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: ""
+    logType: "Morning Check-In", siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "",
+    engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: "", remarks: ""
   });
 
+  useEffect(() => {
+    const checkTodayLogs = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('daily_manpower')
+        .select('*')
+        .eq('date', today)
+        .eq('logType', 'Morning Check-In')
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setCanCheckOut(true);
+        setMorningRecordId(data[0].id);
+        setFormData(prev => ({
+          ...prev,
+          logType: "Evening Check-Out",
+          siteNo: data[0].siteNo || "",
+          siteName: data[0].siteName || "",
+          location: data[0].location || "",
+          taskTitle: data[0].taskTitle || "",
+          startTime: data[0].startTime || "",
+          engineer: data[0].engineer || "",
+          foreman: data[0].foreman || "",
+          driver: data[0].driver || "",
+          otherStaff: data[0].otherStaff || "",
+          otherStaffTrade: data[0].otherStaffTrade || ""
+        }));
+      }
+    };
+    checkTodayLogs();
+  }, []);
+
   const handleQuickFill = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      siteNo: "S-005",
-      siteName: "Metro Station Alpha",
-      location: "Underground Platform B",
-      taskTitle: "Emergency Generator Repair",
-      startTime: "20:00",
-      endTime: "08:00",
-      engineer: "Sarah Connor",
-      foreman: "Tony Stark",
-      driver: "James Bond",
-      otherStaff: "Mike Smith",
-      otherStaffTrade: "Welder"
-    });
+    if (formData.logType === "Morning Check-In") {
+      setFormData({
+        ...formData,
+        date: new Date().toISOString().split('T')[0],
+        siteNo: "S-101",
+        siteName: "Downtown Commercial Tower",
+        location: "Level 4 North Wing",
+        taskTitle: "Electrical Panel Installation",
+        startTime: "07:00",
+        engineer: "Michael Scott",
+        foreman: "Dwight Schrute",
+        driver: "Jim Halpert",
+        otherStaff: "Kevin Malone",
+        otherStaffTrade: "Plumber" // Deliberate mismatch (Plumber doing Electrical)
+      });
+    } else {
+      setFormData({
+        ...formData,
+        date: new Date().toISOString().split('T')[0], // Retain date
+        siteNo: "S-101", // Retain site
+        siteName: "Downtown Commercial Tower",
+        location: "Level 4 North Wing",
+        taskTitle: "Electrical Panel Installation",
+        endTime: "21:00", // 14 hours! Deliberate overtime risk
+        remarks: "Only 30% completed. Major delay because the vendor delivered the wrong electrical cables and it rained heavily." // Deliberate bottleneck
+      });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +100,30 @@ export default function DailyManpowerForm() {
     e.preventDefault();
     setLoading(true);
     
-    const { data: newRecord, error } = await supabase.from('daily_manpower').insert([formData]).select().single();
+    let newRecord;
+    let error;
+
+    if (formData.logType === "Evening Check-Out" && morningRecordId) {
+      // Update the existing morning row
+      const response = await supabase
+        .from('daily_manpower')
+        .update({
+          logType: formData.logType,
+          endTime: formData.endTime,
+          remarks: formData.remarks,
+          taskTitle: formData.taskTitle // in case they changed it
+        })
+        .eq('id', morningRecordId)
+        .select()
+        .single();
+      newRecord = response.data;
+      error = response.error;
+    } else {
+      // Insert a brand new row (Morning Check-In)
+      const response = await supabase.from('daily_manpower').insert([formData]).select().single();
+      newRecord = response.data;
+      error = response.error;
+    }
     
     if (error) {
       alert("Error saving record: " + error.message);
@@ -65,7 +135,12 @@ export default function DailyManpowerForm() {
           body: JSON.stringify({ ...formData, id: newRecord.id })
         }).catch(err => console.error("Agent call failed:", err));
         alert("Record saved and submitted to AI for analysis!"); 
-        setFormData({ siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "", engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: "" });
+        if (formData.logType === "Morning Check-In") {
+          setCanCheckOut(true);
+          setMorningRecordId(newRecord.id);
+        }
+        // Reset form but keep logType logic
+        setFormData({ logType: formData.logType, siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "", engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: "", remarks: "" });
       } catch (err) {
         console.error(err);
       }
@@ -78,66 +153,105 @@ export default function DailyManpowerForm() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Fatigue Risk Scenario)
+          <Beaker className="w-4 h-4" /> Quick Fill ({formData.logType === 'Morning Check-In' ? 'Standard Deploy' : 'Fatigue/Delay Scenario'})
         </button>
       </div>
+
+      <div className="flex items-center gap-4 bg-gray-900 p-2 rounded-xl border border-gray-800">
+        <button 
+          type="button"
+          onClick={() => setFormData({...formData, logType: "Morning Check-In"})}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${formData.logType === 'Morning Check-In' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' : 'text-gray-500 hover:bg-gray-800'}`}
+        >
+          <Sun className="w-4 h-4" /> Morning Check-In
+        </button>
+        <button 
+          type="button"
+          disabled={!canCheckOut}
+          onClick={() => setFormData({...formData, logType: "Evening Check-Out"})}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-all ${formData.logType === 'Evening Check-Out' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50' : 'text-gray-500 hover:bg-gray-800'} ${!canCheckOut ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : ''}`}
+        >
+          <Moon className="w-4 h-4" /> Evening Check-Out
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium text-gray-300">Date (YYYY-MM-DD)</label>
-          <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-gray-300">Date (YYYY-MM-DD)</label>
+            <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Site Number</label>
+            <input required name="siteNo" value={formData.siteNo} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. S-1024" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Site Name</label>
+            <input required name="siteName" value={formData.siteName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Location</label>
+            <input required name="location" value={formData.location} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+          </div>
+
+          {formData.logType === "Morning Check-In" && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Task Title</label>
+                <input required name="taskTitle" value={formData.taskTitle} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. Pouring Concrete" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Start Time</label>
+                <input type="time" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="startTime" value={formData.startTime} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+              </div>
+            </>
+          )}
+
+          {formData.logType === "Evening Check-Out" && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Task Title (Verify)</label>
+                <input required name="taskTitle" value={formData.taskTitle} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. Pouring Concrete" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">End Time</label>
+                <input type="time" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="endTime" value={formData.endTime} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium text-gray-300">Remarks / Issues</label>
+                <textarea rows={3} name="remarks" value={formData.remarks} onChange={(e: any) => handleChange(e)} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Describe what was done and any issues (e.g., 'Finished 80%, delayed by rain')" />
+              </div>
+            </>
+          )}
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Site Number</label>
-          <input required name="siteNo" value={formData.siteNo} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. S-1024" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Site Name</label>
-          <input required name="siteName" value={formData.siteName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Location</label>
-          <input required name="location" value={formData.location} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Task Title</label>
-          <input required name="taskTitle" value={formData.taskTitle} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. Pouring Concrete" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Start Time</label>
-          <input type="time" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="startTime" value={formData.startTime} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">End Time</label>
-          <input type="time" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="endTime" value={formData.endTime} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-        </div>
-      </div>
       
-      <div className="pt-6 border-t border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-4">Personnel Assignments</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Engineer</label>
-            <input name="engineer" value={formData.engineer} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+        {formData.logType === "Morning Check-In" && (
+          <div className="pt-6 border-t border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">Personnel Assignments</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Engineer</label>
+                <input name="engineer" value={formData.engineer} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Foreman / In-Charge</label>
+                <input name="foreman" value={formData.foreman} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Driver</label>
+                <input name="driver" value={formData.driver} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Other Staff</label>
+                <input name="otherStaff" value={formData.otherStaff} onChange={handleChange} onBlur={handleOtherStaffBlur} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Enter name to auto-fill trade" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Other Staff Trade</label>
+                <input name="otherStaffTrade" value={formData.otherStaffTrade} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Trade of additional staff" />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Foreman / In-Charge</label>
-            <input name="foreman" value={formData.foreman} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Driver</label>
-            <input name="driver" value={formData.driver} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Other Staff</label>
-            <input name="otherStaff" value={formData.otherStaff} onChange={handleChange} onBlur={handleOtherStaffBlur} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Enter name to auto-fill trade" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Other Staff Trade</label>
-            <input name="otherStaffTrade" value={formData.otherStaffTrade} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Trade of additional staff" />
-          </div>
-        </div>
-      </div>
+        )}
       
         <button disabled={loading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
           {loading ? "Saving..." : "Save Record"}
