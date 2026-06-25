@@ -138,7 +138,7 @@ export default function DailyManpowerForm() {
               await supabase.from('daily_manpower').update({
                 agent_status: 'pending_manager_review',
                 agent_metadata: { error: true, reason: '?? System Error: AI Overloaded. Rerouted to Manual Review.' }
-              }).eq('id', data[0].id);
+              }).eq('id', newRecord.id);
               alert("? Record Saved.\n\n?? The AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
             }
           }).catch(async (err) => {
@@ -146,7 +146,7 @@ export default function DailyManpowerForm() {
             await supabase.from('daily_manpower').update({
               agent_status: 'pending_manager_review',
               agent_metadata: { error: true, reason: '?? System Error: AI Connection Failed. Rerouted to Manual Review.' }
-            }).eq('id', data[0].id);
+            }).eq('id', newRecord.id);
           });
         alert("Record saved and submitted to AI for analysis!"); 
         if (formData.logType === "Morning Check-In") {
@@ -192,7 +192,7 @@ export default function DailyManpowerForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-300">Date (YYYY-MM-DD)</label>
+            <label className="text-sm font-medium text-gray-300">Date</label>
             <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
           </div>
           <div className="space-y-2">

@@ -30,18 +30,18 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
     
-    // Extract the raw work output data from the Android app
-    const { id, technician_name, trade, work_description, uom, output_per_day, site } = data;
+    // Extract the raw work output data from the Android app using camelCase matching the frontend
+    const { id, technicianName, trade, workDescription, unitOfMeasure, outputPerDay, projectName } = data;
 
     // 1. Build the intelligence prompt for Gemini
     const prompt = `
       You are evaluating a daily work output log:
-      Technician: ${technician_name || 'Unknown'}
+      Technician: ${technicianName || 'Unknown'}
       Trade: ${trade || 'Unknown'}
-      Site: ${site || 'Unknown'}
-      Work Performed: ${work_description || 'Unknown'}
-      Unit of Measure: ${uom || 'Unknown'}
-      Output Achieved Today (8 hr shift): ${output_per_day || 0}
+      Site: ${projectName || 'Unknown'}
+      Work Performed: ${workDescription || 'Unknown'}
+      Unit of Measure: ${unitOfMeasure || 'Unknown'}
+      Output Achieved Today (8 hr shift): ${outputPerDay || 0}
 
       Analyze if this output is reasonable for a standard 8-hour construction shift. 
       Identify if there is a severe bottleneck (e.g., if the output is abnormally low, something prevented them from working).
