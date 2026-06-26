@@ -54,6 +54,27 @@ export async function POST(req: Request) {
       photoUrl = checkoutPhotoUrisJson[0];
     }
 
+    // 0. Fetch "Rulebook" from master_tools
+    let toolBrand = brand || 'Unknown';
+    let toolWarranty = warrantyDetails || 'Unknown';
+    let toolPurchaseDate = purchaseDate || 'Unknown';
+    let toolName = itemName || 'Unknown';
+
+    if (tagName) {
+      const { data: masterTool } = await supabase
+        .from('master_tools')
+        .select('brand, warranty_status, purchase_date, item_name')
+        .eq('tag_name', tagName)
+        .single();
+        
+      if (masterTool) {
+         toolBrand = masterTool.brand || toolBrand;
+         toolWarranty = masterTool.warranty_status || toolWarranty;
+         toolPurchaseDate = masterTool.purchase_date || toolPurchaseDate;
+         toolName = masterTool.item_name || toolName;
+      }
+    }
+
     // 1. Fetch Worker History (Monitor Tool Usage Patterns)
     let workerHistoryContext = "No prior history of tool loss or discrepancies for this worker.";
     if (assignedTo) {
@@ -76,14 +97,14 @@ export async function POST(req: Request) {
     // 1. Build the intelligence prompt
     const prompt = `
       You are an Asset Controller Agent analyzing tool inventory.
-      Item: ${brand || 'Unknown'} ${itemName || 'Unknown'}
+      Item: ${toolBrand} ${toolName}
       Tag: ${tagName || 'Unknown'}
       Original Qty Checked Out: ${quantity || 0}
       Qty Worker Claims to Return: ${returnedQty !== undefined ? returnedQty : 'Not provided'}
       Current Custody/Task: ${assignedTo || 'Unassigned'}
       Condition Status: ${condition || 'Unknown'}
-      Warranty Details: ${warrantyDetails || 'Unknown'}
-      Purchase Date (Epoch): ${purchaseDate || 'Unknown'}
+      Warranty Details: ${toolWarranty}
+      Purchase Date (Epoch): ${toolPurchaseDate}
 
       Analyze if this tool is at risk of being lost/hoarded based on custody.
       Check if the tool is broken but under warranty.
