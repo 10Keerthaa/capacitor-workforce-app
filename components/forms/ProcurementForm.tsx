@@ -11,11 +11,11 @@ export default function ProcurementForm() {
   const handleQuickFill = (scenario: 'safe' | 'hoarding' | 'unapproved') => {
     const today = new Date().toISOString().split('T')[0];
     if (scenario === 'safe') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "John Safe", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Safety Gloves", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Ahmed Ali", projectCode: "PRJ-002", projectName: "Downtown Mall Project", siteCode: "S-002", siteName: "Site B", materialName: "Safety Gloves", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
     } else if (scenario === 'hoarding') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Tony Stark", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-110", requestedBy: "Bruce Wayne", projectCode: "PRJ-003", projectName: "Burj Skyline", siteCode: "S-003", siteName: "Site C", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
     } else if (scenario === 'unapproved') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Tony Stark", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-111", requestedBy: "Clark Kent", projectCode: "PRJ-004", projectName: "Palm Jumeirah Villas", siteCode: "S-004", siteName: "Site D", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
     }
   };
 

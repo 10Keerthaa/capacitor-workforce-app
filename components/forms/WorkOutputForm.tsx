@@ -11,11 +11,11 @@ export default function WorkOutputForm() {
   const handleQuickFill = (scenario: 'normal' | 'low_output' | 'delayed') => {
     const today = new Date().toISOString().split('T')[0];
     if (scenario === 'normal') {
-      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-105", technicianName: "Bob Builder", trade: "Concrete Mason", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Pouring concrete foundation for sector 4.", unitOfMeasure: "Cubic Meters", outputPerDay: "12" });
+      setFormData({ date: today, projectCode: "PRJ-003", projectName: "Desert Solar Plant", technicianId: "EMP-105", technicianName: "Bob Builder", trade: "Solar Technician", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Installing solar panels in sector 4.", unitOfMeasure: "Panels", outputPerDay: "120" });
     } else if (scenario === 'low_output') {
-      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-106", technicianName: "John Safe", trade: "Concrete Mason", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Pouring concrete foundation. Extremely slow progress today.", unitOfMeasure: "Cubic Meters", outputPerDay: "2" });
+      setFormData({ date: today, projectCode: "PRJ-002", projectName: "Downtown Mall Project", technicianId: "EMP-106", technicianName: "John Safe", trade: "Concrete Mason", foremanId: "EMP-110", foremanName: "Bruce Wayne", workDescription: "Pouring concrete foundation. Extremely slow progress today.", unitOfMeasure: "Cubic Meters", outputPerDay: "2" });
     } else if (scenario === 'delayed') {
-      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-107", technicianName: "Mike Ross", trade: "Electrician", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Cable laying. Halted due to missing materials.", unitOfMeasure: "Meters", outputPerDay: "0" });
+      setFormData({ date: today, projectCode: "PRJ-004", projectName: "Burj Skyline", technicianId: "EMP-107", technicianName: "Mike Ross", trade: "Electrician", foremanId: "EMP-111", foremanName: "Clark Kent", workDescription: "Cable laying. Halted due to missing materials.", unitOfMeasure: "Meters", outputPerDay: "0" });
     }
   };
 
