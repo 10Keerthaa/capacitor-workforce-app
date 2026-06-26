@@ -9,18 +9,18 @@ export default function ToolsManagementForm() {
   const [showReturnTab, setShowReturnTab] = useState(false);
   
   // Checkout State
-  const [checkoutData, setCheckoutData] = useState({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
+  const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
   const handleQuickFill = (scenario: 'good' | 'damaged' | 'lost') => {
     const today = new Date().toISOString().split('T')[0];
     if (activeStep === "checkout") {
       if (scenario === 'good') {
-        setCheckoutData({ ...checkoutData, itemName: "Drill", brand: "Makita", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: today, quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
+        setCheckoutData({ ...checkoutData, itemName: "Impact Drill", tagName: "TOOL-DR-01", quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
       } else if (scenario === 'damaged') {
-        setCheckoutData({ ...checkoutData, itemName: "Grinder", brand: "Bosch", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Expired", purchaseDate: "2023-01-01", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
+        setCheckoutData({ ...checkoutData, itemName: "Rotary Hammer", tagName: "TOOL-DR-02", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
       } else if (scenario === 'lost') {
-        setCheckoutData({ ...checkoutData, itemName: "Laser Level", brand: "Hilti", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: "2024-01-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
+        setCheckoutData({ ...checkoutData, itemName: "Circular Saw", tagName: "TOOL-SA-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
       }
     } else {
       if (scenario === 'good') {
@@ -47,9 +47,6 @@ export default function ToolsManagementForm() {
       quantity: checkoutData.quantity,
       assignedTo: checkoutData.assignedTo,
       itemName: checkoutData.itemName,
-      brand: checkoutData.brand,
-      warrantyDetails: checkoutData.warrantyDetails,
-      purchaseDate: checkoutData.purchaseDate,
       condition: checkoutData.condition,
       checkoutPhotoUrisJson: checkoutPhotoUrisJson
     };
@@ -69,7 +66,7 @@ export default function ToolsManagementForm() {
         }).catch(err => console.error("Agent execution failed:", err));
       }
 
-      setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" }); 
+      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" }); 
       setCheckoutPhotoUrisJson([]); 
       setShowReturnTab(true);
       setActiveStep("return");
@@ -110,7 +107,7 @@ export default function ToolsManagementForm() {
       setReturnPhotoUrisJson([]);
       setShowReturnTab(false);
       setActiveStep("checkout");
-      setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
+      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
     }
     setLoading(false);
   };
@@ -140,7 +137,8 @@ export default function ToolsManagementForm() {
       {activeStep === "checkout" ? (
         <form onSubmit={handleCheckoutSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Tag Name</label><input required value={checkoutData.tagName} onChange={(e) => setCheckoutData({...checkoutData, tagName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Item Name</label><input required value={checkoutData.itemName} onChange={(e) => setCheckoutData({...checkoutData, itemName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Tag ID</label><input required value={checkoutData.tagName} onChange={(e) => setCheckoutData({...checkoutData, tagName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Quantity</label><input type="number" required value={checkoutData.quantity} onChange={(e) => setCheckoutData({...checkoutData, quantity: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
             <div className="space-y-2 md:col-span-2"><label className="text-sm font-medium text-gray-300">Assigned To (Custodian)</label><input required value={checkoutData.assignedTo} onChange={(e) => setCheckoutData({...checkoutData, assignedTo: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
           </div>
