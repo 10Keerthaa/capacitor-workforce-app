@@ -13,14 +13,23 @@ export default function ToolsManagementForm() {
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
   const handleQuickFill = (scenario: 'good' | 'damaged' | 'lost') => {
-    setActiveStep("checkout");
     const today = new Date().toISOString().split('T')[0];
-    if (scenario === 'good') {
-      setCheckoutData({ ...checkoutData, itemName: "Makita Drill", brand: "Makita", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: today, quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
-    } else if (scenario === 'damaged') {
-      setCheckoutData({ ...checkoutData, itemName: "Bosch Grinder", brand: "Bosch", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Expired", purchaseDate: "2023-01-01", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
-    } else if (scenario === 'lost') {
-      setCheckoutData({ ...checkoutData, itemName: "Hilti Laser Level", brand: "Hilti", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: "2024-01-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
+    if (activeStep === "checkout") {
+      if (scenario === 'good') {
+        setCheckoutData({ ...checkoutData, itemName: "Drill", brand: "Makita", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: today, quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
+      } else if (scenario === 'damaged') {
+        setCheckoutData({ ...checkoutData, itemName: "Grinder", brand: "Bosch", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Expired", purchaseDate: "2023-01-01", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
+      } else if (scenario === 'lost') {
+        setCheckoutData({ ...checkoutData, itemName: "Laser Level", brand: "Hilti", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: "2024-01-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
+      }
+    } else {
+      if (scenario === 'good') {
+        setReturnData({ returnedQty: "1", condition: "Good" });
+      } else if (scenario === 'damaged') {
+        setReturnData({ returnedQty: "1", condition: "Damaged - Broken Handle" });
+      } else if (scenario === 'lost') {
+        setReturnData({ returnedQty: "0", condition: "Lost/Stolen - Could not find" });
+      }
     }
   };
   
