@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
       --- YOUR TASKS ---
       Fulfill all 5 requirements of the Finance Agent:
-      1. Auto-categorize the expense (e.g., Fuel, Materials, Food, Office Supplies, Maintenance, Other).
+      1. Auto-categorize the expense by inventing a highly accurate, concise 1-2 word category name based entirely on the description.
       2. Detect duplicate/abnormal claims (Compare with their recent claims context above).
       3. Predict budget overruns (Warn if this pushes the remaining budget below $0 or dangerously close).
       4. Flag fraud patterns (e.g., is $500 for a pen abnormal? Is this amount suspiciously similar to a recent claim?).
