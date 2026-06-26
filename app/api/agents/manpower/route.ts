@@ -46,7 +46,27 @@ export async function POST(req: Request) {
     const logType = data.logType || 'Unknown Log Type';
     const remarks = data.remarks || 'No remarks provided';
 
-    // 1. Fetch Company Rulebook (Master Tables)
+    // 1. Check if this is a Morning Check-In
+    if (logType === 'Morning Check-In') {
+      // Bypass AI and Manager Approval. Auto-approve to update Dashboard instantly.
+      const { error } = await supabase
+        .from('daily_manpower') 
+        .update({
+          agent_status: 'approved',
+          agent_metadata: { 
+            ai_reasoning: 'Morning Check-In automatically logged and approved. AI will run full analysis upon Evening Check-Out.',
+            ai_overtime_risk: 'Safe',
+            ai_allocation_efficiency: 'Optimal',
+            ai_subcontract_recommendation: 'Maintain Internal Staff'
+          }
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, bypassed: true });
+    }
+
+    // 2. Fetch Company Rulebook (Master Tables)
     let requiredWorkerCount = 0;
     const { data: siteMaster } = await supabase
       .from('sites')
@@ -69,7 +89,7 @@ export async function POST(req: Request) {
       foremanSkill = foremanData.trade || 'Unknown';
     }
 
-    // 2. Build the intelligence prompt
+    // 3. Build the intelligence prompt for Evening Check-Out
     const prompt = `
       You are a Daily Manpower AI Agent analyzing construction workforce logs.
       
@@ -90,17 +110,15 @@ export async function POST(req: Request) {
       2. Foreman Skill: According to the employee database, ${foreman_name}'s official trade is "${foremanSkill}".
 
       --- YOUR TASKS ---
-      1. If this is a "Morning Check-In":
-         - Match skills to tasks/sites: Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation. You may also check if the Foreman's skill (${foremanSkill}) aligns.
-         - Predict workforce demand & Auto-allocate: If the team is severely understaffed compared to the official 'Site Demand', you MUST 'Recommend Subcontracting'.
-      2. If this is an "Evening Check-Out":
-         - Read the Remarks VERY CAREFULLY. If the remarks mention ANY delays, broken tools, missing materials, or issues (e.g., 'delayed by rain', 'crane broke'), you MUST flag 'ai_allocation_efficiency' as 'Poor Allocation' to ensure the Master Supervisor gets an alert.
-         - Check if the Shift duration is dangerously long (e.g. over 12 hours) to optimize overtime.
+      Analyze the Evening Check-Out data:
+      1. Read the Remarks VERY CAREFULLY. If the remarks mention ANY delays, broken tools, missing materials, or issues (e.g., 'delayed by rain', 'crane broke'), you MUST flag 'ai_allocation_efficiency' as 'Poor Allocation' to ensure the Master Supervisor gets an alert.
+      2. Check if the Shift duration is dangerously long (e.g. over 12 hours) to optimize overtime.
+      3. Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation.
+      4. If the team is severely understaffed compared to the official 'Site Demand', you MUST 'Recommend Subcontracting'.
       
-      Output ONLY a valid JSON object matching the exact schema provided.
     `;
 
-    // 2. Call the Google Gen AI SDK
+    // 4. Call the Google Gen AI SDK
     const result = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
@@ -116,7 +134,7 @@ export async function POST(req: Request) {
 
     const aiAnalysis = JSON.parse(responseText);
 
-    // 3. Save the AI intelligence back to the Supabase database
+    // 5. Save the AI intelligence back to the Supabase database
     const { error } = await supabase
       .from('daily_manpower') 
       .update({

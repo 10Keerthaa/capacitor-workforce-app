@@ -132,13 +132,24 @@ export default function AgenticDashboard() {
           (c.date === todayDateStr || c.date?.startsWith(todayDateStr))
         );
 
+        const isWorkerInManpowerLog = (log: any, workerName: string) => {
+          if (!log || !workerName) return false;
+          const lowerName = workerName.toLowerCase();
+          return (
+            log.engineer?.toLowerCase() === lowerName ||
+            log.foreman?.toLowerCase() === lowerName ||
+            log.driver?.toLowerCase() === lowerName ||
+            log.otherStaff?.toLowerCase().includes(lowerName)
+          );
+        };
+
         const assignmentToday = manpowerLogs?.find(m => 
-          (m.employeeId === w.employee_id || m.fullName === w.employee_name) && 
+          isWorkerInManpowerLog(m, w.employee_name) && 
           (m.date === todayDateStr || m.date?.startsWith(todayDateStr))
         );
         
         const mostRecent = assignmentToday || manpowerLogs?.find(m => 
-          m.employeeId === w.employee_id || m.fullName === w.employee_name
+          isWorkerInManpowerLog(m, w.employee_name)
         );
 
         let finalStatus = 'Active'; // Default to Active if not in camp boss logs
