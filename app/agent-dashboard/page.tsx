@@ -648,7 +648,7 @@ export default function AgenticDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                   <XAxis dataKey="name" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
                   <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                   <Area type="monotone" dataKey="output" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorOutput)" name="Concrete Poured (m3)" />
                   <Line type="monotone" dataKey="headcount" stroke="#f43f5e" strokeWidth={3} dot={{ fill: '#f43f5e', r: 4 }} name="Total Laborers" />
                 </AreaChart>
@@ -666,7 +666,7 @@ export default function AgenticDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                   <XAxis dataKey="site" stroke="#555" tick={{ fill: '#888', fontSize: 10 }} />
                   <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
-                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                   <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
                   <Bar dataKey="hoardingRisk" name="Hoarding Flags (MR)" fill="#f97316" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="pettyCashAnomalies" name="Fraud Flags (Cash)" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -696,7 +696,7 @@ export default function AgenticDashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                   <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px', color: '#888' }}/>
                 </PieChart>
               </ResponsiveContainer>
@@ -713,7 +713,7 @@ export default function AgenticDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
                   <XAxis type="number" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
                   <YAxis dataKey="day" type="category" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
-                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} />
+                  <RechartsTooltip cursor={{ fill: '#111' }} contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                   <Legend wrapperStyle={{ fontSize: '12px', color: '#888' }} />
                   <Bar dataKey="autonomous" name="Auto-Approved (Low Risk)" fill="#10b981" stackId="a" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="blocked" name="AI Blocked (Manager Review)" fill="#3b82f6" stackId="a" radius={[0, 4, 4, 0]} />
