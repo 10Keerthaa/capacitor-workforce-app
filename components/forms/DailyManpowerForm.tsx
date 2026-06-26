@@ -39,12 +39,11 @@ export default function DailyManpowerForm() {
     const today = new Date().toISOString().split('T')[0];
     if (formData.logType === "Morning Check-In") {
       if (scenario === 'normal') {
-        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Concrete Pouring", startTime: "07:00", engineer: "John Safe", foreman: "Mike Ross", driver: "Paul Atreides", otherStaff: "", otherStaffTrade: "" });
+        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-001", siteName: "Downtown Mall Project", location: "Zone A", taskTitle: "Foundation Pouring", startTime: "07:00", engineer: "Sarah Connor", foreman: "Raj Patel", driver: "Ali Khan", otherStaff: "Mike Smith", otherStaffTrade: "Welder", remarks: "All present." });
       } else if (scenario === 'missing_staff') {
-        setFormData({ ...formData, date: today, siteNo: "S-102", siteName: "Metro Stn", location: "Underground", taskTitle: "Excavation", startTime: "08:00", engineer: "Tony Stark", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "" });
+        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-002", siteName: "Burj Skyline", location: "Level 15", taskTitle: "Electrical Wiring", startTime: "07:30", engineer: "Tony Stark", foreman: "John Doe", driver: "Carlos Ray", otherStaff: "2", otherStaffTrade: "Electricians", remarks: "Short staffed today due to sickness." });
       } else {
-        // Overtime/Trade mismatch setup
-        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Electrical Panel Installation", startTime: "07:00", engineer: "Michael Scott", foreman: "Dwight Schrute", driver: "Jim Halpert", otherStaff: "Kevin Malone", otherStaffTrade: "Plumber" });
+        setFormData({ ...formData, logType: "Evening Check-Out", date: today, siteNo: "SITE-003", siteName: "Palm Jumeirah Villas", location: "Villa 42", taskTitle: "Interior Painting", startTime: "06:00", engineer: "Sarah Connor", foreman: "David Lee", driver: "James Bond", otherStaff: "6", otherStaffTrade: "Painters", endTime: "22:00", remarks: "Pushed late to finish zone." });
       }
     } else {
       if (scenario === 'normal') {

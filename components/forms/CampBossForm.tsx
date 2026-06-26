@@ -11,11 +11,11 @@ export default function CampBossForm() {
   const handleQuickFill = (scenario: 'normal' | 'sick' | 'absent') => {
     const today = new Date().toISOString().split('T')[0];
     if (scenario === 'normal') {
-      setFormData({ date: today, employeeId: "EMP-105", employeeName: "Ahmed Ali", campLocation: "Dubai Marina Camp", roomNumber: "C-10", status: "Present", remarks: "Ready for duty." });
+      setFormData({ date: today, employeeId: "EMP-105", employeeName: "Mike Smith", campLocation: "Dubai Marina Camp", roomNumber: "C-10", status: "Present", remarks: "Ready for duty." });
     } else if (scenario === 'sick') {
-      setFormData({ date: today, employeeId: "EMP-106", employeeName: "Mike Ross", campLocation: "Al Quoz Labour Camp", roomNumber: "A-22", status: "Sick Leave", remarks: "Complaining of high fever. Staying in camp." });
+      setFormData({ date: today, employeeId: "EMP-106", employeeName: "David Lee", campLocation: "Al Quoz Labour Camp", roomNumber: "A-22", status: "Sick Leave", remarks: "Complaining of high fever. Staying in camp." });
     } else if (scenario === 'absent') {
-      setFormData({ date: today, employeeId: "EMP-107", employeeName: "Dwight Schrute", campLocation: "Jebel Ali Camp", roomNumber: "D-05", status: "Absent", remarks: "Not in room during morning roll call. Unreachable." });
+      setFormData({ date: today, employeeId: "EMP-107", employeeName: "Sarah Connor", campLocation: "Jebel Ali Camp", roomNumber: "D-05", status: "Absent", remarks: "Not in room during morning roll call. Unreachable." });
     }
   };
 
