@@ -115,7 +115,7 @@ export default function AgenticDashboard() {
     // Fetch Workers Data
     const { data: masterWorkers } = await supabase.from('master_employees').select('*');
     const { data: manpowerLogs } = await supabase.from('daily_manpower')
-      .select('employeeId, siteName, date, fullName')
+      .select('siteName, date, engineer, foreman, driver, otherStaff')
       .order('id', { ascending: false })
       .limit(1000);
     const { data: campBossLogs } = await supabase.from('camp_boss')
