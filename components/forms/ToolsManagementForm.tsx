@@ -40,10 +40,35 @@ export default function ToolsManagementForm() {
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.from('tools_management').insert([{ ...checkoutData, checkoutPhotoUrisJson }]);
+    
+    // Only send fields that actually exist in the tools_management table schema
+    const payload = {
+      tagName: checkoutData.tagName,
+      quantity: checkoutData.quantity,
+      assignedTo: checkoutData.assignedTo,
+      itemName: checkoutData.itemName,
+      brand: checkoutData.brand,
+      warrantyDetails: checkoutData.warrantyDetails,
+      purchaseDate: checkoutData.purchaseDate,
+      condition: checkoutData.condition,
+      checkoutPhotoUrisJson: checkoutPhotoUrisJson
+    };
+
+    const { data, error } = await supabase.from('tools_management').insert([payload]).select();
+    
     if (error) alert("Error: " + error.message);
     else { 
-      alert("Checked out!"); 
+      alert("Checked out! AI is verifying custody limits..."); 
+      
+      // Trigger the AI agent for checkout analysis
+      if (data && data[0]) {
+        fetch('/api/agents/tools', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data[0])
+        }).catch(err => console.error("Agent execution failed:", err));
+      }
+
       setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" }); 
       setCheckoutPhotoUrisJson([]); 
       setShowReturnTab(true);
@@ -54,7 +79,40 @@ export default function ToolsManagementForm() {
 
   const handleReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("In a full implementation, you would select an active tool checkout to link this return to. Since we have no RLS, we'll just insert a separate log.");
+    setLoading(true);
+    
+    // Send a new record representing the return event
+    const payload = {
+      tagName: checkoutData.tagName,
+      assignedTo: checkoutData.assignedTo,
+      returnedQty: returnData.returnedQty,
+      condition: returnData.condition,
+      returnPhotoUrisJson: returnPhotoUrisJson
+    };
+    
+    const { data, error } = await supabase.from('tools_management').insert([payload]).select();
+    
+    if (error) {
+      alert("Error: " + error.message);
+    } else {
+      alert("Return Logged! AI is analyzing the return...");
+      
+      // Trigger the AI agent for the return analysis
+      if (data && data[0]) {
+        fetch('/api/agents/tools', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data[0])
+        }).catch(err => console.error("Agent execution failed:", err));
+      }
+      
+      setReturnData({ returnedQty: "", condition: "" });
+      setReturnPhotoUrisJson([]);
+      setShowReturnTab(false);
+      setActiveStep("checkout");
+      setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
+    }
+    setLoading(false);
   };
 
   return (

@@ -28,15 +28,7 @@ export default function DailyManpowerForm() {
           ...prev,
           logType: "Evening Check-Out",
           siteNo: data[0].siteNo || "",
-          siteName: data[0].siteName || "",
-          location: data[0].location || "",
-          taskTitle: data[0].taskTitle || "",
-          startTime: data[0].startTime || "",
-          engineer: data[0].engineer || "",
-          foreman: data[0].foreman || "",
-          driver: data[0].driver || "",
-          otherStaff: data[0].otherStaff || "",
-          otherStaffTrade: data[0].otherStaffTrade || ""
+          siteName: data[0].siteName || ""
         }));
       }
     };
