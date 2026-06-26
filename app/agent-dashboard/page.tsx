@@ -483,15 +483,15 @@ export default function AgenticDashboard() {
           {/* Top Panel: Approvals */}
           <div className="flex-1 min-h-0 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden flex flex-col">
           <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 shrink-0">
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
             Human-in-the-Loop
           </h2>
           <div className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent flex-1">
             {pendingApprovals.length > 0 ? pendingApprovals.map((item, idx) => (
               <div key={idx} className="bg-[#111] border border-[#222] rounded-xl p-4 relative overflow-hidden group">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/50"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500/50"></div>
                 <div className="flex justify-between items-start mb-2 pl-3">
-                  <span className={`text-[9px] font-bold tracking-widest uppercase text-amber-400 bg-amber-500/10 px-2 py-1 rounded`}>{item.agentName}</span>
+                  <span className={`text-[9px] font-bold tracking-widest uppercase text-orange-500 bg-orange-500/10 px-2 py-1 rounded`}>{item.agentName}</span>
                   <Clock className="w-3 h-3 text-gray-500"/>
                 </div>
                 <p className="text-xs text-gray-200 font-medium mb-1 pl-3 line-clamp-2">{item.description}</p>
