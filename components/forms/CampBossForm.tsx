@@ -8,16 +8,15 @@ export default function CampBossForm() {
     employeeId: "", employeeName: "", campLocation: "", roomNumber: "", status: "Present", remarks: "", date: ""
   });
 
-  const handleQuickFill = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      employeeId: "EMP-105",
-      employeeName: "Mike Smith",
-      campLocation: "City Center Premium Camp",
-      roomNumber: "C-10",
-      status: "Present",
-      remarks: "All workers present, site running smoothly."
-    });
+  const handleQuickFill = (scenario: 'normal' | 'sick' | 'absent') => {
+    const today = new Date().toISOString().split('T')[0];
+    if (scenario === 'normal') {
+      setFormData({ date: today, employeeId: "EMP-105", employeeName: "John Safe", campLocation: "City Center Premium Camp", roomNumber: "C-10", status: "Present", remarks: "Ready for duty." });
+    } else if (scenario === 'sick') {
+      setFormData({ date: today, employeeId: "EMP-106", employeeName: "Mike Ross", campLocation: "City Center Premium Camp", roomNumber: "C-11", status: "Sick Leave", remarks: "Complaining of high fever. Staying in camp." });
+    } else if (scenario === 'absent') {
+      setFormData({ date: today, employeeId: "EMP-107", employeeName: "Dwight Schrute", campLocation: "City Center Premium Camp", roomNumber: "C-12", status: "Absent", remarks: "Not in room during morning roll call. Unreachable." });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -43,7 +42,7 @@ export default function CampBossForm() {
               await supabase.from('camp_boss').update({
                 agent_status: 'pending_manager_review',
                 agent_metadata: { error: true, reason: '?? System Error: AI Overloaded. Rerouted to Manual Review.' }
-              }).eq('id', data[0].id);
+              }).eq('id', newRecord.id);
               alert("? Record Saved.\n\n?? The AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
             }
           }).catch(async (err) => {
@@ -51,7 +50,7 @@ export default function CampBossForm() {
             await supabase.from('camp_boss').update({
               agent_status: 'pending_manager_review',
               agent_metadata: { error: true, reason: '?? System Error: AI Connection Failed. Rerouted to Manual Review.' }
-            }).eq('id', data[0].id);
+            }).eq('id', newRecord.id);
           });
         alert("Record saved and submitted to AI for analysis!"); 
         setFormData({ employeeId: "", employeeName: "", campLocation: "", roomNumber: "", status: "Present", remarks: "", date: "" });
@@ -65,9 +64,15 @@ export default function CampBossForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Health Risk Scenario)
+      <div className="flex justify-end gap-2 flex-wrap">
+        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Normal (Present)
+        </button>
+        <button type="button" onClick={() => handleQuickFill('sick')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Sick Leave
+        </button>
+        <button type="button" onClick={() => handleQuickFill('absent')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> AWOL (Absent)
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">

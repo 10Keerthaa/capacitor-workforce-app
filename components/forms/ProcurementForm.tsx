@@ -8,25 +8,15 @@ export default function ProcurementForm() {
     mrNo: "", employeeId: "", requestedBy: "", projectCode: "", projectName: "", siteCode: "", siteName: "", materialName: "", remarks: "", quantity: "", requestedDate: "", requiredDate: ""
   });
 
-  const handleQuickFill = () => {
+  const handleQuickFill = (scenario: 'safe' | 'hoarding' | 'unapproved') => {
     const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    setFormData({
-      mrNo: "MR-1005",
-      employeeId: "EMP-109",
-      requestedBy: "Tony Stark",
-      projectCode: "PRJ-001",
-      projectName: "City Infrastructure Revamp",
-      siteCode: "S-005",
-      siteName: "Metro Station Alpha",
-      materialName: "Copper Wiring (100m)",
-      remarks: "Standard weekly restock for sector 2. No rush.",
-      quantity: "10",
-      requestedDate: today,
-      requiredDate: today
-    });
+    if (scenario === 'safe') {
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "John Safe", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Safety Gloves", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
+    } else if (scenario === 'hoarding') {
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Tony Stark", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
+    } else if (scenario === 'unapproved') {
+      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Tony Stark", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", siteCode: "S-005", siteName: "Metro Station Alpha", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -73,9 +63,15 @@ export default function ProcurementForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Supply Crisis Scenario)
+      <div className="flex justify-end gap-2 flex-wrap">
+        <button type="button" onClick={() => handleQuickFill('safe')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Safe Restock
+        </button>
+        <button type="button" onClick={() => handleQuickFill('hoarding')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Hoarding (5000x)
+        </button>
+        <button type="button" onClick={() => handleQuickFill('unapproved')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Unapproved Item
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">

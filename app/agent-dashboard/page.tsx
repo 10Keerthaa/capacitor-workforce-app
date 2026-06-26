@@ -28,6 +28,12 @@ export default function AgenticDashboard() {
   const [workersList, setWorkersList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Live Chart Data State
+  const [laborRoiData, setLaborRoiData] = useState<any[]>([]);
+  const [assetData, setAssetData] = useState<any[]>([]);
+  const [fraudData, setFraudData] = useState<any[]>([]);
+  const [aiHealthData, setAiHealthData] = useState<any[]>([]);
+
   const fetchDashboardData = async () => {
     const tables = [
       { name: 'petty_cash', agent: 'Finance Agent', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
@@ -164,6 +170,75 @@ export default function AgenticDashboard() {
     }
   };
 
+  const fetchChartData = async () => {
+    try {
+      // 1. Asset Drain
+      const { data: tools } = await supabase.from('tools_management').select('condition');
+      let active = 0, damaged = 0, lost = 0;
+      tools?.forEach(t => {
+        if (t.condition === 'Good' || t.condition === 'Active' || t.condition === 'Excellent') active++;
+        else if (t.condition === 'Damaged') damaged++;
+        else lost++;
+      });
+      setAssetData([
+        { name: 'Active Tools', value: active || 1, color: '#10b981' },
+        { name: 'Damaged', value: damaged, color: '#f59e0b' },
+        { name: 'Lost/Stolen', value: lost, color: '#ef4444' },
+      ]);
+
+      // 2. Fraud Radar
+      const { data: proc } = await supabase.from('mr_procurement').select('projectName, siteName, agent_metadata');
+      const { data: petty } = await supabase.from('petty_cash').select('projectName, agent_metadata');
+      let fMap: any = {};
+      const addRisk = (site: string, isHoard: boolean) => {
+        if (!fMap[site]) fMap[site] = { site, hoardingRisk: 0, pettyCashAnomalies: 0 };
+        if (isHoard) fMap[site].hoardingRisk++;
+        else fMap[site].pettyCashAnomalies++;
+      };
+      proc?.forEach(p => {
+        const risk = p.agent_metadata?.ai_risk_level || p.agent_metadata?.hoarding_risk;
+        if (risk === 'High' || risk === 'Critical') addRisk(p.siteName || p.projectName || 'General', true);
+      });
+      petty?.forEach(p => {
+        const risk = p.agent_metadata?.fraud_risk || p.agent_metadata?.ai_risk_level;
+        if (risk === 'High' || risk === 'Critical') addRisk(p.projectName || 'General', false);
+      });
+      setFraudData(Object.values(fMap));
+
+      // 3. Labor ROI
+      const { data: camp } = await supabase.from('camp_boss').select('date, status');
+      const { data: work } = await supabase.from('work_output').select('date, outputPerDay');
+      let dateMap: any = {};
+      camp?.forEach(c => {
+        if (!c.date) return;
+        if (!dateMap[c.date]) dateMap[c.date] = { name: c.date, headcount: 0, output: 0 };
+        if (c.status === 'Present') dateMap[c.date].headcount++;
+      });
+      work?.forEach(w => {
+        if (!w.date) return;
+        if (!dateMap[w.date]) dateMap[w.date] = { name: w.date, headcount: 0, output: 0 };
+        dateMap[w.date].output += (parseFloat(w.outputPerDay) || 0);
+      });
+      const roiArr = Object.values(dateMap).sort((a:any,b:any) => a.name.localeCompare(b.name)).slice(-7);
+      setLaborRoiData(roiArr.length ? roiArr : [{name: 'No Data', headcount: 0, output: 0}]);
+
+      // 4. AI Health
+      let hMap: any = {};
+      for (const t of ['work_output', 'petty_cash', 'mr_procurement', 'daily_manpower']) {
+        const { data } = await supabase.from(t).select('agent_status');
+        data?.forEach(d => {
+          const day = 'Recent Activity';
+          if (!hMap[day]) hMap[day] = { day, autonomous: 0, blocked: 0 };
+          if (d.agent_status === 'approved') hMap[day].autonomous++;
+          else if (d.agent_status === 'pending_manager_review') hMap[day].blocked++;
+        });
+      }
+      setAiHealthData(Object.values(hMap).length ? Object.values(hMap) : [{day: 'Recent Activity', autonomous: 1, blocked: 0}]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const fetchLatestReport = async () => {
     const { data } = await supabase
       .from('supervisor_reports')
@@ -181,6 +256,7 @@ export default function AgenticDashboard() {
     setMounted(true);
     fetchLatestReport();
     fetchDashboardData();
+    fetchChartData();
 
     // Auto-collapse sidebar after 1.5 seconds for sleek intro
     const timer = setTimeout(() => {
@@ -202,6 +278,7 @@ export default function AgenticDashboard() {
         () => {
           // Re-fetch data whenever any of the tables change
           fetchDashboardData();
+          fetchChartData();
         }
       );
     });
@@ -546,39 +623,6 @@ export default function AgenticDashboard() {
   };
 
   const renderReports = () => {
-    // 1. Labor ROI & Productivity (Camp Boss vs Work Output)
-    const laborRoiData = [
-      { name: '1st', headcount: 45, output: 90 },
-      { name: '8th', headcount: 50, output: 105 },
-      { name: '15th', headcount: 85, output: 120 }, // Law of diminishing returns starts
-      { name: '22nd', headcount: 110, output: 125 }, // Overcrowded site, output flatlines
-      { name: '29th', headcount: 115, output: 122 },
-    ];
-
-    // 2. Physical Asset Drain (Tools Management)
-    const assetData = [
-      { name: 'Active Tools', value: 850, color: '#10b981' },
-      { name: 'Damaged', value: 85, color: '#f59e0b' },
-      { name: 'Lost/Stolen', value: 42, color: '#ef4444' },
-    ];
-
-    // 3. Material Hoarding & Fraud (Procurement & Petty Cash)
-    const fraudData = [
-      { site: 'Metro Stn', hoardingRisk: 8, pettyCashAnomalies: 2 },
-      { site: 'City Mall', hoardingRisk: 2, pettyCashAnomalies: 12 },
-      { site: 'Tower B', hoardingRisk: 15, pettyCashAnomalies: 4 },
-      { site: 'Bridge 9', hoardingRisk: 1, pettyCashAnomalies: 1 },
-    ];
-
-    // 4. System-Wide AI Intervention Rate
-    const aiHealthData = [
-      { day: 'Mon', autonomous: 120, blocked: 10 },
-      { day: 'Tue', autonomous: 132, blocked: 15 },
-      { day: 'Wed', autonomous: 101, blocked: 45 }, // Spike in field errors
-      { day: 'Thu', autonomous: 145, blocked: 8 },
-      { day: 'Fri', autonomous: 150, blocked: 5 },
-    ];
-
     return (
       <div className="animate-fade-in-up">
         <div className="mb-8">

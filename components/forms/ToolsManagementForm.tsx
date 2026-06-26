@@ -12,19 +12,16 @@ export default function ToolsManagementForm() {
   const [checkoutData, setCheckoutData] = useState({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
-  const handleQuickFill = () => {
+  const handleQuickFill = (scenario: 'good' | 'damaged' | 'lost') => {
     setActiveStep("checkout");
-    setCheckoutData({
-      ...checkoutData,
-      date: new Date().toISOString().split('T')[0],
-      workerName: "John Safe",
-      workerId: "EMP-111",
-      toolId: "T-800",
-      toolName: "Makita Hammer Drill",
-      action: "Check-Out",
-      condition: "Excellent",
-      remarks: "Standard checkout for morning shift."
-    });
+    const today = new Date().toISOString().split('T')[0];
+    if (scenario === 'good') {
+      setCheckoutData({ ...checkoutData, itemName: "Makita Drill", brand: "Makita", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: today, quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
+    } else if (scenario === 'damaged') {
+      setCheckoutData({ ...checkoutData, itemName: "Bosch Grinder", brand: "Bosch", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Expired", purchaseDate: "2023-01-01", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
+    } else if (scenario === 'lost') {
+      setCheckoutData({ ...checkoutData, itemName: "Hilti Laser Level", brand: "Hilti", tagName: `T-${Math.floor(Math.random()*1000)}`, warrantyDetails: "Active", purchaseDate: "2024-01-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
+    }
   };
   
   // Return State
@@ -38,7 +35,7 @@ export default function ToolsManagementForm() {
     if (error) alert("Error: " + error.message);
     else { 
       alert("Checked out!"); 
-      setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "" }); 
+      setCheckoutData({ itemName: "", brand: "", tagName: "", warrantyDetails: "", purchaseDate: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" }); 
       setCheckoutPhotoUrisJson([]); 
       setShowReturnTab(true);
       setActiveStep("return");
@@ -60,9 +57,17 @@ export default function ToolsManagementForm() {
             <button onClick={() => setActiveStep("return")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activeStep === "return" ? "bg-indigo-500 text-white shadow" : "text-gray-400 hover:text-white"}`}>Return</button>
           )}
         </div>
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Mass Checkout)
-        </button>
+        <div className="flex justify-end gap-2 flex-wrap">
+          <button type="button" onClick={() => handleQuickFill('good')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
+            <Beaker className="w-3 h-3" /> Tool (Good)
+          </button>
+          <button type="button" onClick={() => handleQuickFill('damaged')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
+            <Beaker className="w-3 h-3" /> Tool (Damaged)
+          </button>
+          <button type="button" onClick={() => handleQuickFill('lost')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
+            <Beaker className="w-3 h-3" /> Tool (Lost)
+          </button>
+        </div>
       </div>
 
       {activeStep === "checkout" ? (

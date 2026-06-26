@@ -8,20 +8,15 @@ export default function WorkOutputForm() {
     projectCode: "", projectName: "", technicianId: "", technicianName: "", trade: "", foremanId: "", foremanName: "", workDescription: "", unitOfMeasure: "", outputPerDay: "", date: ""
   });
 
-  const handleQuickFill = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      projectCode: "PRJ-001",
-      projectName: "City Infrastructure Revamp",
-      technicianId: "EMP-105",
-      technicianName: "Bob Builder",
-      trade: "Concrete Mason",
-      foremanId: "EMP-109",
-      foremanName: "Tony Stark",
-      workDescription: "Pouring concrete foundation for sector 4. Severely low output observed.",
-      unitOfMeasure: "Cubic Meters",
-      outputPerDay: "2"
-    });
+  const handleQuickFill = (scenario: 'normal' | 'low_output' | 'delayed') => {
+    const today = new Date().toISOString().split('T')[0];
+    if (scenario === 'normal') {
+      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-105", technicianName: "Bob Builder", trade: "Concrete Mason", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Pouring concrete foundation for sector 4.", unitOfMeasure: "Cubic Meters", outputPerDay: "12" });
+    } else if (scenario === 'low_output') {
+      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-106", technicianName: "John Safe", trade: "Concrete Mason", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Pouring concrete foundation. Extremely slow progress today.", unitOfMeasure: "Cubic Meters", outputPerDay: "2" });
+    } else if (scenario === 'delayed') {
+      setFormData({ date: today, projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", technicianId: "EMP-107", technicianName: "Mike Ross", trade: "Electrician", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Cable laying. Halted due to missing materials.", unitOfMeasure: "Meters", outputPerDay: "0" });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -57,9 +52,15 @@ export default function WorkOutputForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Low Productivity Scenario)
+      <div className="flex justify-end gap-2 flex-wrap">
+        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Normal Output
+        </button>
+        <button type="button" onClick={() => handleQuickFill('low_output')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Low Productivity
+        </button>
+        <button type="button" onClick={() => handleQuickFill('delayed')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Zero Output (Delayed)
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -43,33 +43,25 @@ export default function DailyManpowerForm() {
     checkTodayLogs();
   }, []);
 
-  const handleQuickFill = () => {
+  const handleQuickFill = (scenario: 'normal' | 'missing_staff' | 'overtime') => {
+    const today = new Date().toISOString().split('T')[0];
     if (formData.logType === "Morning Check-In") {
-      setFormData({
-        ...formData,
-        date: new Date().toISOString().split('T')[0],
-        siteNo: "S-101",
-        siteName: "Downtown Commercial Tower",
-        location: "Level 4 North Wing",
-        taskTitle: "Electrical Panel Installation",
-        startTime: "07:00",
-        engineer: "Michael Scott",
-        foreman: "Dwight Schrute",
-        driver: "Jim Halpert",
-        otherStaff: "Kevin Malone",
-        otherStaffTrade: "Plumber" // Deliberate mismatch (Plumber doing Electrical)
-      });
+      if (scenario === 'normal') {
+        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Concrete Pouring", startTime: "07:00", engineer: "John Safe", foreman: "Mike Ross", driver: "Paul Atreides", otherStaff: "", otherStaffTrade: "" });
+      } else if (scenario === 'missing_staff') {
+        setFormData({ ...formData, date: today, siteNo: "S-102", siteName: "Metro Stn", location: "Underground", taskTitle: "Excavation", startTime: "08:00", engineer: "Tony Stark", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "" });
+      } else {
+        // Overtime/Trade mismatch setup
+        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Electrical Panel Installation", startTime: "07:00", engineer: "Michael Scott", foreman: "Dwight Schrute", driver: "Jim Halpert", otherStaff: "Kevin Malone", otherStaffTrade: "Plumber" });
+      }
     } else {
-      setFormData({
-        ...formData,
-        date: new Date().toISOString().split('T')[0], // Retain date
-        siteNo: "S-101", // Retain site
-        siteName: "Downtown Commercial Tower",
-        location: "Level 4 North Wing",
-        taskTitle: "Electrical Panel Installation",
-        endTime: "21:00", // 14 hours! Deliberate overtime risk
-        remarks: "Only 30% completed. Major delay because the vendor delivered the wrong electrical cables and it rained heavily." // Deliberate bottleneck
-      });
+      if (scenario === 'normal') {
+        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Concrete Pouring", endTime: "17:00", remarks: "Completed on schedule." });
+      } else if (scenario === 'missing_staff') {
+        setFormData({ ...formData, date: today, siteNo: "S-102", siteName: "Metro Stn", location: "Underground", taskTitle: "Excavation", endTime: "16:00", remarks: "Halted early due to missing foreman." });
+      } else {
+        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Electrical Panel Installation", endTime: "22:00", remarks: "15 hour shift. Major delays." });
+      }
     }
   };
 
@@ -165,9 +157,15 @@ export default function DailyManpowerForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill ({formData.logType === 'Morning Check-In' ? 'Standard Deploy' : 'Fatigue/Delay Scenario'})
+      <div className="flex justify-end gap-2 flex-wrap">
+        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Normal Check
+        </button>
+        <button type="button" onClick={() => handleQuickFill('missing_staff')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Missing Foreman
+        </button>
+        <button type="button" onClick={() => handleQuickFill('overtime')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
+          <Beaker className="w-3 h-3" /> Overtime / Mismatch
         </button>
       </div>
 
