@@ -181,11 +181,16 @@ export default function AgenticDashboard() {
         else if (t.condition === 'Damaged') damaged++;
         else lost++;
       });
-      setAssetData([
-        { name: 'Active Tools', value: active || 1, color: '#10b981' },
-        { name: 'Damaged', value: damaged, color: '#f59e0b' },
-        { name: 'Lost/Stolen', value: lost, color: '#ef4444' },
-      ]);
+      const totalTools = active + damaged + lost;
+      if (totalTools === 0) {
+        setAssetData([{ name: 'No Data', value: 1, color: '#333' }]);
+      } else {
+        setAssetData([
+          { name: 'Active Tools', value: active, color: '#10b981' },
+          { name: 'Damaged', value: damaged, color: '#f59e0b' },
+          { name: 'Lost/Stolen', value: lost, color: '#ef4444' },
+        ]);
+      }
 
       // 2. Fraud Radar
       const { data: proc } = await supabase.from('mr_procurement').select('projectName, siteName, agent_metadata');
