@@ -112,7 +112,10 @@ export default function DailyManpowerForm() {
       error = response.error;
     } else {
       // Insert a brand new row (Morning Check-In)
-      const response = await supabase.from('daily_manpower').insert([formData]).select().single();
+      const payload = { ...formData } as any;
+      if (!payload.startTime) payload.startTime = null;
+      if (!payload.endTime) payload.endTime = null;
+      const response = await supabase.from('daily_manpower').insert([payload]).select().single();
       newRecord = response.data;
       error = response.error;
     }

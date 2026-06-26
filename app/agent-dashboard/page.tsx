@@ -61,7 +61,8 @@ export default function AgenticDashboard() {
       
       if (pending) {
         pending.forEach(p => {
-          let description = p.projectName || p.siteName || p.supplierName || `ID: ${p.id}`;
+          let titleString = p.employeeName || p.projectName || p.siteName || p.supplierName || p.toolName || p.expenseType || 'Record';
+          let description = `ID: ${p.id} (${titleString})`;
           let details = p.agent_metadata?.ai_reasoning || p.agent_metadata?.reason || 'High risk detected by AI. Review required.';
           allPending.push({ id: p.id, sourceTable: t.name, agentName: t.agent, color: t.color, description, details, sortId: p.id });
         });

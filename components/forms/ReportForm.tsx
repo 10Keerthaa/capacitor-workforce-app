@@ -46,8 +46,15 @@ export default function ReportForm() {
       }
 
       // Convert JSON array to CSV format
-      const headers = Object.keys(data[0]).join(",");
-      const rows = data.map((row) =>
+      const filteredData = data.map((row: any) => {
+        const newRow = { ...row };
+        delete newRow.agent_status;
+        delete newRow.agent_metadata;
+        return newRow;
+      });
+
+      const headers = Object.keys(filteredData[0]).join(",");
+      const rows = filteredData.map((row) =>
         Object.values(row)
           .map((value) => {
             // Handle JSON/Object stringification and escape quotes properly

@@ -25,10 +25,14 @@ export async function POST(req: Request) {
     // 1. Fetch "Rulebook" from materials_master
     let approvedVendor = 'Unknown (No Master Record)';
     let standardPrice = 'Unknown';
+    // Extract base material name before any parentheses (e.g. "Copper Wiring (100m)" -> "Copper Wiring")
+    const baseMaterialName = material_name.split(' (')[0].trim();
+
     const { data: materialMaster } = await supabase
       .from('materials_master')
       .select('approved_vendor, standard_unit_price')
-      .eq('material_name', material_name)
+      .ilike('material_name', `%${baseMaterialName}%`)
+      .limit(1)
       .single();
 
     if (materialMaster) {

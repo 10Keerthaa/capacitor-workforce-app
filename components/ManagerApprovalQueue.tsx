@@ -155,13 +155,13 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                 {/* AI Executive Summary Card */}
                 {item.agent_metadata && (
                   <div className={`p-5 rounded-2xl text-sm flex flex-col h-full shadow-2xl backdrop-blur-md relative overflow-hidden ${
-                    (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical')
+                    (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical' || item.agent_metadata.ai_absenteeism_risk === 'High Risk' || item.agent_metadata.ai_absenteeism_risk === 'High')
                     ? 'bg-gradient-to-br from-red-950/40 via-gray-900/80 to-gray-900/90 border border-red-900/50'
                     : 'bg-gradient-to-br from-emerald-950/40 via-gray-900/80 to-gray-900/90 border border-emerald-900/50'
                   }`}>
                     {/* Decorative glowing orb in background */}
                     <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none ${
-                      (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical') ? 'bg-red-500' : 'bg-emerald-500'
+                      (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical' || item.agent_metadata.ai_absenteeism_risk === 'High Risk' || item.agent_metadata.ai_absenteeism_risk === 'High') ? 'bg-red-500' : 'bg-emerald-500'
                     }`}></div>
 
                     <p className="font-semibold text-white mb-4 border-b border-white/10 pb-3 flex items-center space-x-2 z-10">
@@ -171,15 +171,15 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                     
                     <div className="space-y-4 flex-grow z-10">
                       {/* Risk Badge */}
-                      {(item.agent_metadata.fraud_risk || item.agent_metadata.ai_risk_level) && (
+                      {(item.agent_metadata.fraud_risk || item.agent_metadata.ai_risk_level || item.agent_metadata.ai_absenteeism_risk) && (
                         <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
                           <span className="text-gray-400 font-medium text-xs uppercase tracking-wider">System Assessment</span>
                           <span className={`font-bold px-3 py-1 rounded-md text-xs tracking-widest uppercase shadow-sm ${
-                            (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical') 
+                            (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical' || item.agent_metadata.ai_absenteeism_risk === 'High Risk' || item.agent_metadata.ai_absenteeism_risk === 'High') 
                             ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
                             : 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                           }`}>
-                            {item.agent_metadata.fraud_risk || item.agent_metadata.ai_risk_level} RISK
+                            {item.agent_metadata.fraud_risk || item.agent_metadata.ai_risk_level || item.agent_metadata.ai_absenteeism_risk}
                           </span>
                         </div>
                       )}
@@ -204,11 +204,11 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                       <div className="pt-2">
                         <span className="text-gray-400 block mb-2 font-medium text-xs uppercase tracking-wider">AI Reasoning</span>
                         <div className={`p-4 rounded-xl leading-relaxed text-gray-200 border-l-4 shadow-inner ${
-                          (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical') 
+                          (item.agent_metadata.fraud_risk === 'High' || item.agent_metadata.ai_risk_level === 'High' || item.agent_metadata.ai_risk_level === 'Critical' || item.agent_metadata.ai_absenteeism_risk === 'High Risk' || item.agent_metadata.ai_absenteeism_risk === 'High') 
                           ? 'bg-red-950/20 border-red-500/80' 
                           : 'bg-emerald-950/20 border-emerald-500/80'
                         }`}>
-                          {item.agent_metadata.reason || item.agent_metadata.ai_reason || "No detailed reasoning provided by the AI for this item."}
+                          {item.agent_metadata.reason || item.agent_metadata.ai_reason || item.agent_metadata.ai_reasoning || "No detailed reasoning provided by the AI for this item."}
                         </div>
                       </div>
                     </div>
