@@ -838,11 +838,11 @@ export default function AgenticDashboard() {
   return (
     <div className="flex h-screen bg-[#000000] text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30 relative">
       
-      {/* Sidebar */}
+      {/* Sidebar (Desktop Only) */}
       <aside 
         onMouseEnter={() => setIsSidebarCollapsed(false)}
         onMouseLeave={() => setIsSidebarCollapsed(true)}
-        className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a]/90 backdrop-blur-xl border border-[#222] flex flex-col z-50 fixed left-4 top-4 bottom-4 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden`}
+        className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a]/90 backdrop-blur-xl border border-[#222] flex-col z-50 fixed left-4 top-4 bottom-4 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden`}
       >
         <div className="p-6 border-b border-[#222] flex flex-col items-center">
            <Link 
@@ -880,6 +880,18 @@ export default function AgenticDashboard() {
         </div>
       </aside>
 
+      {/* Mobile Top Header */}
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-[#222] z-40 flex items-center justify-between px-4">
+        <Link href="/" className="p-2 -ml-2 text-gray-500 hover:text-white transition-colors">
+          <ChevronRight className="rotate-180 w-5 h-5" />
+        </Link>
+        <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+          <Network className="text-blue-400 w-5 h-5" />
+          COMMAND
+        </h2>
+        <div className="w-9"></div> {/* Spacer */}
+      </header>
+
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto relative bg-[#000000] ml-0 md:ml-[104px]">
          {/* Background Mesh fixed behind scrollable content */}
@@ -888,13 +900,29 @@ export default function AgenticDashboard() {
            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]"></div>
          </div>
          
-         <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-full pb-24 transition-all duration-300">
+         <div className="p-6 md:p-10 pt-20 pb-24 md:pt-10 max-w-7xl mx-auto min-h-full transition-all duration-300">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'workers' && renderWorkers()}
             {activeTab === 'reports' && renderReports()}
          </div>
          {renderSlideOutDrawer()}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/90 backdrop-blur-xl border-t border-[#222] z-50 flex justify-around p-3 pb-safe">
+        <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 ${activeTab === 'dashboard' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Dashboard</span>
+        </button>
+        <button onClick={() => setActiveTab('workers')} className={`flex flex-col items-center gap-1 ${activeTab === 'workers' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
+          <Users className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Workers</span>
+        </button>
+        <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center gap-1 ${activeTab === 'reports' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Reports</span>
+        </button>
+      </nav>
     </div>
   );
 }
