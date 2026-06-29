@@ -143,8 +143,8 @@ export default function ToolsManagementForm() {
             <div className="space-y-2 md:col-span-2"><label className="text-sm font-medium text-gray-300">Assigned To (Custodian)</label><input required value={checkoutData.assignedTo} onChange={(e) => setCheckoutData({...checkoutData, assignedTo: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Checkout Photo (Optional)</label>
-            <FileUpload key="checkout-upload" bucketName="new-assets" folderPath="tools/checkout" onUploadComplete={setCheckoutPhotoUrisJson} accept="image/*" />
+            <label className="text-sm font-medium text-gray-300">Checkout Photo (Live Camera)</label>
+            <FileUpload key="checkout-upload" bucketName="new-assets" folderPath="tools/checkout" onUploadComplete={setCheckoutPhotoUrisJson} accept="image/*" capture="environment" />
           </div>
           <button disabled={loading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">Save Checkout</button>
         </form>
@@ -155,8 +155,8 @@ export default function ToolsManagementForm() {
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Condition/Status</label><input required value={returnData.condition} onChange={(e) => setReturnData({...returnData, condition: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Return Photo (Optional)</label>
-            <FileUpload key="return-upload" bucketName="new-assets" folderPath="tools/return" onUploadComplete={setReturnPhotoUrisJson} accept="image/*" />
+            <label className="text-sm font-medium text-gray-300">Return Photo (Live Camera)</label>
+            <FileUpload key="return-upload" bucketName="new-assets" folderPath="tools/return" onUploadComplete={setReturnPhotoUrisJson} accept="image/*" capture="environment" />
           </div>
           <button type="submit" className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl transition-all">Log Return</button>
         </form>

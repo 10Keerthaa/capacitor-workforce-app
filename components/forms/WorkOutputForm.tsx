@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
 
@@ -7,6 +7,24 @@ export default function WorkOutputForm() {
   const [formData, setFormData] = useState({
     projectCode: "", projectName: "", technicianId: "", technicianName: "", trade: "", foremanId: "", foremanName: "", workDescription: "", unitOfMeasure: "", outputPerDay: "", date: ""
   });
+  
+  const [foremanList, setForemanList] = useState<{employee_name: string, employee_id: string}[]>([]);
+  const [technicianList, setTechnicianList] = useState<{employee_name: string, employee_id: string, trade: string}[]>([]);
+  const [projectList, setProjectList] = useState<{project_name: string, project_code: string}[]>([]);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data: emps } = await supabase.from('master_employees').select('employee_name, employee_id, trade');
+      if (emps) {
+        setForemanList(emps.filter(e => e.trade === 'Foreman' || e.trade === 'Site Manager'));
+        setTechnicianList(emps.filter(e => e.trade !== 'Foreman' && e.trade !== 'Site Manager'));
+      }
+
+      const { data: projs } = await supabase.from('projects_master').select('project_name, project_code');
+      if (projs) setProjectList(projs);
+    };
+    fetchMasterData();
+  }, []);
 
   const handleQuickFill = (scenario: 'normal' | 'low_output' | 'delayed') => {
     const today = new Date().toISOString().split('T')[0];
@@ -70,38 +88,62 @@ export default function WorkOutputForm() {
           <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Project Code</label>
-          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
-        </div>
-        <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Project Name</label>
-          <input required name="projectName" value={formData.projectName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="projectName" list="project-names" value={formData.projectName} onChange={(e) => {
+            handleChange(e);
+            const match = projectList.find(p => p.project_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, projectCode: match.project_code }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing project name..." />
+          <datalist id="project-names">
+            {projectList.map(p => <option key={p.project_code} value={p.project_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Technician ID</label>
-          <input required name="technicianId" value={formData.technicianId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Project Code</label>
+          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from name..." />
         </div>
+
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Technician Name</label>
-          <input required name="technicianName" value={formData.technicianName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Trade</label>
-          <input required name="trade" value={formData.trade} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Foreman Name</label>
+          <input required name="foremanName" list="foreman-names" value={formData.foremanName} onChange={(e) => {
+            handleChange(e);
+            const match = foremanList.find(f => f.employee_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, foremanId: match.employee_id }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing foreman name..." />
+          <datalist id="foreman-names">
+            {foremanList.map(f => <option key={f.employee_id} value={f.employee_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Foreman ID</label>
-          <input required name="foremanId" value={formData.foremanId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="foremanId" value={formData.foremanId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from foreman..." />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Technician Name</label>
+          <input required name="technicianName" list="technician-names" value={formData.technicianName} onChange={(e) => {
+            handleChange(e);
+            const match = technicianList.find(t => t.employee_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, technicianId: match.employee_id, trade: match.trade || prev.trade }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing tech name..." />
+          <datalist id="technician-names">
+            {technicianList.map(t => <option key={t.employee_id} value={t.employee_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Foreman Name</label>
-          <input required name="foremanName" value={formData.foremanName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Technician ID</label>
+          <input required name="technicianId" value={formData.technicianId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from tech..." />
         </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Trade</label>
+          <input required name="trade" value={formData.trade} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from tech..." />
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Unit of Measure (UOM)</label>
           <input required name="unitOfMeasure" value={formData.unitOfMeasure} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 lg:col-span-2">
           <label className="text-sm font-medium text-gray-300">Output / Day</label>
           <input type="number" required name="outputPerDay" value={formData.outputPerDay} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
         </div>

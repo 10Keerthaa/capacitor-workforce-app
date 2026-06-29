@@ -6,12 +6,29 @@ export default function DailyManpowerForm() {
   const [loading, setLoading] = useState(false);
   const [canCheckOut, setCanCheckOut] = useState(false);
   const [morningRecordId, setMorningRecordId] = useState<number | null>(null);
+  const [otherStaffList, setOtherStaffList] = useState([{ name: "", trade: "" }]);
   const [formData, setFormData] = useState({
     logType: "Morning Check-In", siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "",
-    engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: "", remarks: ""
+    engineer: "", foreman: "", driver: "", date: "", remarks: ""
   });
 
+  const [engineerList, setEngineerList] = useState<string[]>([]);
+  const [foremanList, setForemanList] = useState<string[]>([]);
+  const [driverList, setDriverList] = useState<string[]>([]);
+  const [otherStaffBucket, setOtherStaffBucket] = useState<{name: string, trade: string}[]>([]);
+
   useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data: emps } = await supabase.from('master_employees').select('employee_name, trade');
+      if (emps) {
+        setEngineerList(emps.filter(e => e.trade === 'Engineer').map(e => e.employee_name));
+        setForemanList(emps.filter(e => e.trade === 'Foreman' || e.trade === 'Site Manager').map(e => e.employee_name));
+        setDriverList(emps.filter(e => e.trade === 'Driver').map(e => e.employee_name));
+        setOtherStaffBucket(emps.filter(e => !['Engineer', 'Foreman', 'Site Manager', 'Driver'].includes(e.trade || '')).map(e => ({ name: e.employee_name, trade: e.trade || '' })));
+      }
+    };
+    fetchMasterData();
+
     const checkTodayLogs = async () => {
       const today = new Date().toISOString().split('T')[0];
       const { data } = await supabase
@@ -39,11 +56,14 @@ export default function DailyManpowerForm() {
     const today = new Date().toISOString().split('T')[0];
     if (formData.logType === "Morning Check-In") {
       if (scenario === 'normal') {
-        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-001", siteName: "Downtown Mall Project", location: "Zone A", taskTitle: "Foundation Pouring", startTime: "07:00", engineer: "Sarah Connor", foreman: "Raj Patel", driver: "Ali Khan", otherStaff: "Mike Smith", otherStaffTrade: "Welder", remarks: "All present." });
+        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-001", siteName: "Downtown Mall Project", location: "Zone A", taskTitle: "Foundation Pouring", startTime: "07:00", engineer: "Sarah Connor", foreman: "Raj Patel", driver: "Ali Khan", remarks: "All present." });
+        setOtherStaffList([{ name: "Mike Smith", trade: "Welder" }]);
       } else if (scenario === 'missing_staff') {
-        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-002", siteName: "Burj Skyline", location: "Level 15", taskTitle: "Electrical Wiring", startTime: "07:30", engineer: "Tony Stark", foreman: "John Doe", driver: "Carlos Ray", otherStaff: "2", otherStaffTrade: "Electricians", remarks: "Short staffed today due to sickness." });
+        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-002", siteName: "Burj Skyline", location: "Level 15", taskTitle: "Electrical Wiring", startTime: "07:30", engineer: "Tony Stark", foreman: "John Doe", driver: "Carlos Ray", remarks: "Short staffed today due to sickness." });
+        setOtherStaffList([{ name: "2", trade: "Electricians" }]);
       } else {
-        setFormData({ ...formData, logType: "Evening Check-Out", date: today, siteNo: "SITE-003", siteName: "Palm Jumeirah Villas", location: "Villa 42", taskTitle: "Interior Painting", startTime: "06:00", engineer: "Sarah Connor", foreman: "David Lee", driver: "James Bond", otherStaff: "6", otherStaffTrade: "Painters", endTime: "22:00", remarks: "Pushed late to finish zone." });
+        setFormData({ ...formData, logType: "Evening Check-Out", date: today, siteNo: "SITE-003", siteName: "Palm Jumeirah Villas", location: "Villa 42", taskTitle: "Interior Painting", startTime: "06:00", engineer: "Sarah Connor", foreman: "David Lee", driver: "James Bond", endTime: "22:00", remarks: "Pushed late to finish zone." });
+        setOtherStaffList([{ name: "6", trade: "Painters" }]);
       }
     } else {
       if (scenario === 'normal') {
@@ -60,8 +80,8 @@ export default function DailyManpowerForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleOtherStaffBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const staffName = e.target.value.trim();
+  const handleOtherStaffBlur = async (index: number, name: string) => {
+    const staffName = name.trim();
     if (!staffName) return;
 
     try {
@@ -72,7 +92,9 @@ export default function DailyManpowerForm() {
         .maybeSingle();
 
       if (data && data.trade) {
-        setFormData(prev => ({ ...prev, otherStaffTrade: data.trade }));
+        const newList = [...otherStaffList];
+        newList[index].trade = data.trade;
+        setOtherStaffList(newList);
       }
     } catch (err) {
       console.error('Failed to fetch trade:', err);
@@ -103,7 +125,7 @@ export default function DailyManpowerForm() {
       error = response.error;
     } else {
       // Insert a brand new row (Morning Check-In)
-      const payload = { ...formData } as any;
+      const payload = { ...formData, otherStaff: JSON.stringify(otherStaffList) } as any;
       if (!payload.startTime) payload.startTime = null;
       if (!payload.endTime) payload.endTime = null;
       const response = await supabase.from('daily_manpower').insert([payload]).select().single();
@@ -118,7 +140,7 @@ export default function DailyManpowerForm() {
         fetch('/api/agents/manpower', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, id: newRecord.id })
+          body: JSON.stringify({ ...formData, otherStaff: JSON.stringify(otherStaffList), id: newRecord.id })
         }).then(async (res) => {
             if (!res.ok) {
               await supabase.from('daily_manpower').update({
@@ -140,7 +162,8 @@ export default function DailyManpowerForm() {
           setMorningRecordId(newRecord.id);
         }
         // Reset form but keep logType logic
-        setFormData({ logType: formData.logType, siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "", engineer: "", foreman: "", driver: "", otherStaff: "", otherStaffTrade: "", date: "", remarks: "" });
+        setFormData({ logType: formData.logType, siteNo: "", siteName: "", location: "", taskTitle: "", startTime: "", endTime: "", engineer: "", foreman: "", driver: "", date: "", remarks: "" });
+        setOtherStaffList([{ name: "", trade: "" }]);
       } catch (err) {
         console.error(err);
       }
@@ -237,24 +260,54 @@ export default function DailyManpowerForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Engineer</label>
-                <input name="engineer" value={formData.engineer} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <input list="engineer-names" name="engineer" value={formData.engineer} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <datalist id="engineer-names">{engineerList.map(n => <option key={n} value={n} />)}</datalist>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Foreman / In-Charge</label>
-                <input name="foreman" value={formData.foreman} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <input list="foreman-names" name="foreman" value={formData.foreman} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <datalist id="foreman-names">{foremanList.map(n => <option key={n} value={n} />)}</datalist>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Driver</label>
-                <input name="driver" value={formData.driver} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <input list="driver-names" name="driver" value={formData.driver} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+                <datalist id="driver-names">{driverList.map(n => <option key={n} value={n} />)}</datalist>
               </div>
-              <div className="space-y-2">
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="flex justify-between items-center">
                 <label className="text-sm font-medium text-gray-300">Other Staff</label>
-                <input name="otherStaff" value={formData.otherStaff} onChange={handleChange} onBlur={handleOtherStaffBlur} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Enter name to auto-fill trade" />
+                <button type="button" onClick={() => setOtherStaffList([...otherStaffList, { name: "", trade: "" }])} className="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-lg hover:bg-indigo-500/30 transition-all">+ Add Other Staff</button>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Other Staff Trade</label>
-                <input name="otherStaffTrade" value={formData.otherStaffTrade} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Trade of additional staff" />
-              </div>
+              {otherStaffList.map((staff, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <input list="other-staff-names" value={staff.name} onChange={(e) => {
+                    const val = e.target.value;
+                    const newList = [...otherStaffList];
+                    newList[index].name = val;
+                    const match = otherStaffBucket.find(s => s.name === val);
+                    if (match) newList[index].trade = match.trade;
+                    setOtherStaffList(newList);
+                  }} onBlur={(e) => handleOtherStaffBlur(index, e.target.value)} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Enter name to auto-fill trade" />
+                  <div className="flex gap-2">
+                    <input value={staff.trade} onChange={(e) => {
+                      const newList = [...otherStaffList];
+                      newList[index].trade = e.target.value;
+                      setOtherStaffList(newList);
+                    }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Trade" />
+                    {otherStaffList.length > 1 && (
+                      <button type="button" onClick={() => {
+                        const newList = otherStaffList.filter((_, i) => i !== index);
+                        setOtherStaffList(newList);
+                      }} className="px-4 py-2 bg-rose-500/20 text-rose-400 rounded-xl hover:bg-rose-500/30 font-bold transition-all">X</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <datalist id="other-staff-names">
+                {otherStaffBucket.map(s => <option key={s.name} value={s.name} />)}
+              </datalist>
             </div>
           </div>
         )}

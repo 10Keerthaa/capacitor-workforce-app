@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
 
@@ -7,6 +7,16 @@ export default function CampBossForm() {
   const [formData, setFormData] = useState({
     employeeId: "", employeeName: "", campLocation: "", roomNumber: "", status: "Present", remarks: "", date: ""
   });
+
+  const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const { data } = await supabase.from('master_employees').select('employee_name, employee_id');
+      if (data) setEmployeeList(data);
+    };
+    fetchEmployees();
+  }, []);
 
   const handleQuickFill = (scenario: 'normal' | 'sick' | 'absent') => {
     const today = new Date().toISOString().split('T')[0];
@@ -82,12 +92,19 @@ export default function CampBossForm() {
           <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Employee ID</label>
-          <input required name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="EMP-1234" />
+          <label className="text-sm font-medium text-gray-300">Employee Name</label>
+          <input required name="employeeName" list="employee-names" value={formData.employeeName} onChange={(e) => {
+            handleChange(e);
+            const match = employeeList.find(emp => emp.employee_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, employeeId: match.employee_id }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
+          <datalist id="employee-names">
+            {employeeList.map(emp => <option key={emp.employee_id} value={emp.employee_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Employee Name</label>
-          <input required name="employeeName" value={formData.employeeName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Employee ID</label>
+          <input required name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from name..." />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Camp Location</label>

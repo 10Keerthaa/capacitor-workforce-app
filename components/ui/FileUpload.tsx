@@ -8,9 +8,10 @@ interface FileUploadProps {
   onUploadComplete: (urls: string[]) => void;
   accept?: string;
   multiple?: boolean;
+  capture?: "user" | "environment" | boolean;
 }
 
-export default function FileUpload({ bucketName, folderPath, onUploadComplete, accept = "*/*", multiple = true }: FileUploadProps) {
+export default function FileUpload({ bucketName, folderPath, onUploadComplete, accept = "*/*", multiple = true, capture }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<{ url: string; name: string }[]>([]);
 
@@ -56,11 +57,20 @@ export default function FileUpload({ bucketName, folderPath, onUploadComplete, a
           ) : (
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
           )}
-          <p className="mb-2 text-sm text-gray-400 font-medium">
-            <span className="text-indigo-400">Click to upload</span> or drag and drop
+          <p className="mb-2 text-sm text-gray-400 font-medium text-center">
+            <span className="text-indigo-400">Click to {capture ? "open camera" : "upload"}</span><br/>
+            {!capture && "or drag and drop"}
           </p>
         </div>
-        <input type="file" className="hidden" onChange={handleUpload} accept={accept} multiple={multiple} disabled={uploading} />
+        <input 
+          type="file" 
+          className="hidden" 
+          onChange={handleUpload} 
+          accept={accept} 
+          multiple={multiple} 
+          disabled={uploading}
+          {...(capture ? { capture: capture === true ? "environment" : capture } : {})}
+        />
       </label>
 
       {files.length > 0 && (

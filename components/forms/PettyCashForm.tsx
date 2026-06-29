@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
 import { Beaker } from "lucide-react";
@@ -10,6 +10,19 @@ export default function PettyCashForm() {
   });
   
   const [invoiceUrisJson, setInvoiceUrisJson] = useState<string[]>([]);
+  const [employeeList, setEmployeeList] = useState<string[]>([]);
+  const [projectList, setProjectList] = useState<{project_name: string, project_code: string}[]>([]);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data: emps } = await supabase.from('master_employees').select('employee_name');
+      if (emps) setEmployeeList(emps.map(e => e.employee_name).filter(Boolean));
+
+      const { data: projs } = await supabase.from('projects_master').select('project_name, project_code');
+      if (projs) setProjectList(projs);
+    };
+    fetchMasterData();
+  }, []);
 
   const handleQuickFill = (scenario: 'safe' | 'fraud' | 'duplicate') => {
     const today = new Date().toISOString().split('T')[0];
@@ -98,7 +111,10 @@ export default function PettyCashForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Petty Cash Holder</label>
-          <input required name="pettyCashHolder" value={formData.pettyCashHolder} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="pettyCashHolder" list="employee-names" value={formData.pettyCashHolder} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
+          <datalist id="employee-names">
+            {employeeList.map(name => <option key={name} value={name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Supplier Name</label>
@@ -109,12 +125,19 @@ export default function PettyCashForm() {
           <textarea required name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Project Code</label>
-          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Project Name</label>
+          <input required name="projectName" list="project-names" value={formData.projectName} onChange={(e) => {
+            handleChange(e);
+            const match = projectList.find(p => p.project_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, projectCode: match.project_code }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing project name..." />
+          <datalist id="project-names">
+            {projectList.map(p => <option key={p.project_code} value={p.project_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Project Name</label>
-          <input required name="projectName" value={formData.projectName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Project Code</label>
+          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from name..." />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Currency</label>

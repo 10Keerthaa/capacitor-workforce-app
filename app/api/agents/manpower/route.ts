@@ -37,8 +37,18 @@ export async function POST(req: Request) {
     const engineer_name = data.engineerName || data.engineer || 'Unknown';
     const foreman_name = data.foremanName || data.foreman || 'Unknown';
     const driver = data.driver || 'None';
-    const other_staff = data.otherStaff || data.otherStaffName || 'None';
-    const other_staff_trade = data.otherStaffTrade || data.otherStaffTradeSkill || 'Unknown';
+    const other_staff = data.otherStaff || '[]';
+    
+    let staffList = [];
+    try {
+      staffList = JSON.parse(other_staff);
+    } catch (e) {
+      staffList = [{ name: data.otherStaffName || other_staff, trade: data.otherStaffTrade || data.otherStaffTradeSkill || 'Unknown' }];
+    }
+    
+    let formatted_other_staff_list = staffList.length > 0 && staffList[0].name !== ""
+      ? staffList.map((s: any, i: number) => `        ${i + 1}. ${s.name} (Trade: ${s.trade || 'Unknown'})`).join('\n')
+      : '        None';
     const task_title = data.taskTitle || 'General Works';
     const startTime = data.startTime || 'Unknown';
     const endTime = data.endTime || 'Unknown';
@@ -102,7 +112,8 @@ export async function POST(req: Request) {
         - Engineer: ${engineer_name}
         - Foreman: ${foreman_name}
         - Driver: ${driver}
-        - Other Staff: ${other_staff} (Trade: ${other_staff_trade})
+        - Other Staff:
+${formatted_other_staff_list}
       Remarks / Issues (Evening Check-Out only): ${remarks}
 
       --- COMPANY RULEBOOK (Supabase Data) ---
@@ -113,7 +124,7 @@ export async function POST(req: Request) {
       Analyze the Evening Check-Out data:
       1. Read the Remarks VERY CAREFULLY. If the remarks mention ANY delays, broken tools, missing materials, or issues (e.g., 'delayed by rain', 'crane broke'), you MUST flag 'ai_allocation_efficiency' as 'Poor Allocation' to ensure the Master Supervisor gets an alert.
       2. Check if the Shift duration is dangerously long (e.g. over 12 hours) to optimize overtime.
-      3. Check if the 'Other Staff' trade (${other_staff_trade}) makes sense for the Task Title (${task_title}). If it is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation.
+      3. Review the entire 'Other Staff' list. If the combination of their trades does not make sense for the Task Title (${task_title}) or there is a severe mismatch (e.g., Plumber doing Electrical), flag it as Poor Allocation.
       4. If the team is severely understaffed compared to the official 'Site Demand', you MUST 'Recommend Subcontracting'.
       
     `;

@@ -1,21 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
 
 export default function ProcurementForm() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    mrNo: "", employeeId: "", requestedBy: "", projectCode: "", projectName: "", siteCode: "", siteName: "", materialName: "", remarks: "", quantity: "", requestedDate: "", requiredDate: ""
+    mrNo: "Auto-Assigned on Save", employeeId: "", requestedBy: "", projectCode: "", projectName: "", siteCode: "", siteName: "", materialName: "", remarks: "", quantity: "", requestedDate: "", requiredDate: ""
   });
+  
+  const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
+  const [siteList, setSiteList] = useState<{site_name: string, site_code: string, parent_project_code: string}[]>([]);
+  const [projectList, setProjectList] = useState<{project_name: string, project_code: string}[]>([]);
+  const [materialList, setMaterialList] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data: emps } = await supabase.from('master_employees').select('employee_name, employee_id');
+      if (emps) setEmployeeList(emps);
+
+      const { data: sites } = await supabase.from('sites').select('site_name, site_code, parent_project_code');
+      if (sites) setSiteList(sites);
+      
+      const { data: projs } = await supabase.from('projects_master').select('project_name, project_code');
+      if (projs) setProjectList(projs);
+      
+      const { data: mats } = await supabase.from('master_materials').select('material_name');
+      if (mats) setMaterialList(mats.map((m: any) => m.material_name));
+    };
+    fetchMasterData();
+  }, []);
 
   const handleQuickFill = (scenario: 'safe' | 'hoarding' | 'unapproved') => {
     const today = new Date().toISOString().split('T')[0];
     if (scenario === 'safe') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-109", requestedBy: "Ahmed Ali", projectCode: "PRJ-002", projectName: "Downtown Mall Project", siteCode: "S-002", siteName: "Site B", materialName: "Safety Gloves", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-109", requestedBy: "Ahmed Ali", projectCode: "PRJ-002", projectName: "Downtown Mall Project", siteCode: "S-002", siteName: "Site B", materialName: "Safety Gloves", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
     } else if (scenario === 'hoarding') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-110", requestedBy: "Bruce Wayne", projectCode: "PRJ-003", projectName: "Burj Skyline", siteCode: "S-003", siteName: "Site C", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-110", requestedBy: "Bruce Wayne", projectCode: "PRJ-003", projectName: "Burj Skyline", siteCode: "S-003", siteName: "Site C", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
     } else if (scenario === 'unapproved') {
-      setFormData({ mrNo: `MR-${Math.floor(Math.random()*1000)}`, employeeId: "EMP-111", requestedBy: "Clark Kent", projectCode: "PRJ-004", projectName: "Palm Jumeirah Villas", siteCode: "S-004", siteName: "Site D", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
+      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-111", requestedBy: "Clark Kent", projectCode: "PRJ-004", projectName: "Palm Jumeirah Villas", siteCode: "S-004", siteName: "Site D", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
     }
   };
 
@@ -27,17 +49,27 @@ export default function ProcurementForm() {
     e.preventDefault();
     setLoading(true);
     
-    const { data, error } = await supabase.from('mr_procurement').insert([formData]).select();
+    const payload = { ...formData };
+    delete (payload as any).mrNo; // Let the system generate this after we get the DB ID
+
+    const { data, error } = await supabase.from('mr_procurement').insert([payload]).select();
     
     if (error) alert("Error saving record: " + error.message);
     else { 
       alert("Record saved! AI is analyzing the request..."); 
       
       if (data && data[0]) {
+        // Generate the True Sequential MR Number using the Database ID (e.g. ID 5 becomes MR-1005)
+        const generatedMrNo = `MR-${1000 + data[0].id}`;
+        const updatedRow = { ...data[0], mrNo: generatedMrNo };
+        
+        // Update the database with the new sequential number
+        await supabase.from('mr_procurement').update({ mrNo: generatedMrNo }).eq('id', data[0].id);
+
         fetch('/api/agents/procurement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data[0])
+          body: JSON.stringify(updatedRow)
         }).then(async (res) => {
             if (!res.ok) {
               await supabase.from('mr_procurement').update({
@@ -55,7 +87,7 @@ export default function ProcurementForm() {
           });
       }
 
-      setFormData({ mrNo: "", employeeId: "", requestedBy: "", projectCode: "", projectName: "", siteCode: "", siteName: "", materialName: "", remarks: "", quantity: "", requestedDate: "", requiredDate: "" }); 
+      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "", requestedBy: "", projectCode: "", projectName: "", siteCode: "", siteName: "", materialName: "", remarks: "", quantity: "", requestedDate: "", requiredDate: "" }); 
     }
     
     setLoading(false);
@@ -77,37 +109,63 @@ export default function ProcurementForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">MR No</label>
-          <input required name="mrNo" value={formData.mrNo} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Employee ID</label>
-          <input required name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">MR No (Auto-Generated)</label>
+          <input required name="mrNo" value={formData.mrNo} readOnly className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-gray-400 focus:ring-0 outline-none cursor-not-allowed opacity-70" />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Requested By</label>
-          <input required name="requestedBy" value={formData.requestedBy} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="requestedBy" list="employee-names" value={formData.requestedBy} onChange={(e) => {
+            handleChange(e);
+            const match = employeeList.find(emp => emp.employee_name === e.target.value);
+            if (match) setFormData(prev => ({ ...prev, employeeId: match.employee_id }));
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
+          <datalist id="employee-names">
+            {employeeList.map(emp => <option key={emp.employee_id} value={emp.employee_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Project Code</label>
-          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Employee ID</label>
+          <input required name="employeeId" value={formData.employeeId} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from name..." />
         </div>
+
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Project Name</label>
-          <input required name="projectName" value={formData.projectName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Site Name</label>
+          <input required name="siteName" list="site-names" value={formData.siteName} onChange={(e) => {
+            handleChange(e);
+            const match = siteList.find(s => s.site_name === e.target.value);
+            if (match) {
+              const proj = projectList.find(p => p.project_code === match.parent_project_code);
+              setFormData(prev => ({ 
+                ...prev, 
+                siteCode: match.site_code,
+                projectCode: match.parent_project_code || prev.projectCode,
+                projectName: proj ? proj.project_name : prev.projectName
+              }));
+            }
+          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing site..." />
+          <datalist id="site-names">
+            {siteList.map(s => <option key={s.site_code} value={s.site_name} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Site Code</label>
-          <input required name="siteCode" value={formData.siteCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="siteCode" value={formData.siteCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from site..." />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Site Name</label>
-          <input required name="siteName" value={formData.siteName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <label className="text-sm font-medium text-gray-300">Project Name</label>
+          <input required name="projectName" value={formData.projectName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from site..." />
         </div>
-
-        <div className="space-y-2 lg:col-span-3">
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Project Code</label>
+          <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from site..." />
+        </div>
+        <div className="space-y-2 lg:col-span-2">
           <label className="text-sm font-medium text-gray-300">Material Name</label>
-          <input required name="materialName" value={formData.materialName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <input required name="materialName" list="material-names" value={formData.materialName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing material..." />
+          <datalist id="material-names">
+            {materialList.map(m => <option key={m} value={m} />)}
+          </datalist>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Quantity</label>
