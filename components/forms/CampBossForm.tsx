@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function CampBossForm() {
   const [loading, setLoading] = useState(false);
@@ -93,14 +94,15 @@ export default function CampBossForm() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Employee Name</label>
-          <input required name="employeeName" list="employee-names" value={formData.employeeName} onChange={(e) => {
-            handleChange(e);
-            const match = employeeList.find(emp => emp.employee_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, employeeId: match.employee_id }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
-          <datalist id="employee-names">
-            {employeeList.map(emp => <option key={emp.employee_id} value={emp.employee_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="employeeName"
+            required
+            placeholder="Start typing name..."
+            value={formData.employeeName}
+            onChange={(val) => setFormData(prev => ({ ...prev, employeeName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, employeeName: opt.label, employeeId: opt.value }))}
+            options={employeeList.map(emp => ({ label: emp.employee_name, value: emp.employee_id }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Employee ID</label>

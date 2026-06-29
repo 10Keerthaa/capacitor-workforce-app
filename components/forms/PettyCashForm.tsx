@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
 import { Beaker } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function PettyCashForm() {
   const [loading, setLoading] = useState(false);
@@ -10,13 +11,13 @@ export default function PettyCashForm() {
   });
   
   const [invoiceUrisJson, setInvoiceUrisJson] = useState<string[]>([]);
-  const [employeeList, setEmployeeList] = useState<string[]>([]);
+  const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
   const [projectList, setProjectList] = useState<{project_name: string, project_code: string}[]>([]);
 
   useEffect(() => {
     const fetchMasterData = async () => {
-      const { data: emps } = await supabase.from('master_employees').select('employee_name');
-      if (emps) setEmployeeList(emps.map(e => e.employee_name).filter(Boolean));
+      const { data: emps } = await supabase.from('master_employees').select('employee_name, employee_id');
+      if (emps) setEmployeeList(emps);
 
       const { data: projs } = await supabase.from('projects_master').select('project_name, project_code');
       if (projs) setProjectList(projs);
@@ -111,10 +112,15 @@ export default function PettyCashForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Petty Cash Holder</label>
-          <input required name="pettyCashHolder" list="employee-names" value={formData.pettyCashHolder} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
-          <datalist id="employee-names">
-            {employeeList.map(name => <option key={name} value={name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="pettyCashHolder"
+            required
+            placeholder="Start typing name..."
+            value={formData.pettyCashHolder}
+            onChange={(val) => setFormData(prev => ({ ...prev, pettyCashHolder: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, pettyCashHolder: opt.label }))}
+            options={employeeList.map(e => ({ label: e.employee_name, value: e.employee_id }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Supplier Name</label>
@@ -126,14 +132,15 @@ export default function PettyCashForm() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Project Name</label>
-          <input required name="projectName" list="project-names" value={formData.projectName} onChange={(e) => {
-            handleChange(e);
-            const match = projectList.find(p => p.project_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, projectCode: match.project_code }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing project name..." />
-          <datalist id="project-names">
-            {projectList.map(p => <option key={p.project_code} value={p.project_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="projectName"
+            required
+            placeholder="Start typing project name..."
+            value={formData.projectName}
+            onChange={(val) => setFormData(prev => ({ ...prev, projectName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, projectName: opt.label, projectCode: opt.value }))}
+            options={projectList.map(p => ({ label: p.project_name, value: p.project_code }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Project Code</label>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker, Sun, Moon } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function DailyManpowerForm() {
   const [loading, setLoading] = useState(false);
@@ -260,18 +261,36 @@ export default function DailyManpowerForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Engineer</label>
-                <input list="engineer-names" name="engineer" value={formData.engineer} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-                <datalist id="engineer-names">{engineerList.map(n => <option key={n} value={n} />)}</datalist>
+                <SearchableDropdown
+                  name="engineer"
+                  placeholder="Start typing name..."
+                  value={formData.engineer}
+                  onChange={(val) => setFormData(prev => ({ ...prev, engineer: val }))}
+                  onSelect={(opt) => setFormData(prev => ({ ...prev, engineer: opt.label }))}
+                  options={engineerList.map(n => ({ label: n, value: n }))}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Foreman / In-Charge</label>
-                <input list="foreman-names" name="foreman" value={formData.foreman} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-                <datalist id="foreman-names">{foremanList.map(n => <option key={n} value={n} />)}</datalist>
+                <SearchableDropdown
+                  name="foreman"
+                  placeholder="Start typing name..."
+                  value={formData.foreman}
+                  onChange={(val) => setFormData(prev => ({ ...prev, foreman: val }))}
+                  onSelect={(opt) => setFormData(prev => ({ ...prev, foreman: opt.label }))}
+                  options={foremanList.map(n => ({ label: n, value: n }))}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Driver</label>
-                <input list="driver-names" name="driver" value={formData.driver} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
-                <datalist id="driver-names">{driverList.map(n => <option key={n} value={n} />)}</datalist>
+                <SearchableDropdown
+                  name="driver"
+                  placeholder="Start typing name..."
+                  value={formData.driver}
+                  onChange={(val) => setFormData(prev => ({ ...prev, driver: val }))}
+                  onSelect={(opt) => setFormData(prev => ({ ...prev, driver: opt.label }))}
+                  options={driverList.map(n => ({ label: n, value: n }))}
+                />
               </div>
             </div>
 
@@ -282,14 +301,23 @@ export default function DailyManpowerForm() {
               </div>
               {otherStaffList.map((staff, index) => (
                 <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <input list="other-staff-names" value={staff.name} onChange={(e) => {
-                    const val = e.target.value;
-                    const newList = [...otherStaffList];
-                    newList[index].name = val;
-                    const match = otherStaffBucket.find(s => s.name === val);
-                    if (match) newList[index].trade = match.trade;
-                    setOtherStaffList(newList);
-                  }} onBlur={(e) => handleOtherStaffBlur(index, e.target.value)} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Enter name to auto-fill trade" />
+                  <SearchableDropdown
+                    placeholder="Enter name to auto-fill trade"
+                    value={staff.name}
+                    onChange={(val) => {
+                      const newList = [...otherStaffList];
+                      newList[index].name = val;
+                      setOtherStaffList(newList);
+                    }}
+                    onSelect={(opt) => {
+                      const newList = [...otherStaffList];
+                      newList[index].name = opt.label;
+                      newList[index].trade = opt.trade;
+                      setOtherStaffList(newList);
+                    }}
+                    onBlur={(val) => handleOtherStaffBlur(index, val)}
+                    options={otherStaffBucket.map(s => ({ label: s.name, value: s.name, trade: s.trade }))}
+                  />
                   <div className="flex gap-2">
                     <input value={staff.trade} onChange={(e) => {
                       const newList = [...otherStaffList];
@@ -305,9 +333,6 @@ export default function DailyManpowerForm() {
                   </div>
                 </div>
               ))}
-              <datalist id="other-staff-names">
-                {otherStaffBucket.map(s => <option key={s.name} value={s.name} />)}
-              </datalist>
             </div>
           </div>
         )}

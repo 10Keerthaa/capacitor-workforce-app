@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function ProcurementForm() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,7 @@ export default function ProcurementForm() {
   const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
   const [siteList, setSiteList] = useState<{site_name: string, site_code: string, parent_project_code: string}[]>([]);
   const [projectList, setProjectList] = useState<{project_name: string, project_code: string}[]>([]);
-  const [materialList, setMaterialList] = useState<string[]>([]);
+  const [materialList, setMaterialList] = useState<{material_name: string, material_code: string}[]>([]);
 
   useEffect(() => {
     const fetchMasterData = async () => {
@@ -24,8 +25,8 @@ export default function ProcurementForm() {
       const { data: projs } = await supabase.from('projects_master').select('project_name, project_code');
       if (projs) setProjectList(projs);
       
-      const { data: mats } = await supabase.from('master_materials').select('material_name');
-      if (mats) setMaterialList(mats.map((m: any) => m.material_name));
+      const { data: mats } = await supabase.from('master_materials').select('material_name, material_code');
+      if (mats) setMaterialList(mats);
     };
     fetchMasterData();
   }, []);
@@ -114,14 +115,15 @@ export default function ProcurementForm() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Requested By</label>
-          <input required name="requestedBy" list="employee-names" value={formData.requestedBy} onChange={(e) => {
-            handleChange(e);
-            const match = employeeList.find(emp => emp.employee_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, employeeId: match.employee_id }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing name..." />
-          <datalist id="employee-names">
-            {employeeList.map(emp => <option key={emp.employee_id} value={emp.employee_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="requestedBy"
+            required
+            placeholder="Start typing name..."
+            value={formData.requestedBy}
+            onChange={(val) => setFormData(prev => ({ ...prev, requestedBy: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, requestedBy: opt.label, employeeId: opt.value }))}
+            options={employeeList.map(e => ({ label: e.employee_name, value: e.employee_id }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Employee ID</label>
@@ -130,22 +132,25 @@ export default function ProcurementForm() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Site Name</label>
-          <input required name="siteName" list="site-names" value={formData.siteName} onChange={(e) => {
-            handleChange(e);
-            const match = siteList.find(s => s.site_name === e.target.value);
-            if (match) {
-              const proj = projectList.find(p => p.project_code === match.parent_project_code);
+          <SearchableDropdown
+            name="siteName"
+            required
+            placeholder="Start typing site name..."
+            value={formData.siteName}
+            onChange={(val) => setFormData(prev => ({ ...prev, siteName: val }))}
+            onSelect={(opt) => {
+              const siteData = opt.siteData;
+              const proj = projectList.find(p => p.project_code === siteData.parent_project_code);
               setFormData(prev => ({ 
                 ...prev, 
-                siteCode: match.site_code,
-                projectCode: match.parent_project_code || prev.projectCode,
-                projectName: proj ? proj.project_name : prev.projectName
+                siteName: opt.label, 
+                siteCode: siteData.site_code, 
+                projectName: proj?.project_name || "", 
+                projectCode: siteData.parent_project_code || "" 
               }));
-            }
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing site..." />
-          <datalist id="site-names">
-            {siteList.map(s => <option key={s.site_code} value={s.site_name} />)}
-          </datalist>
+            }}
+            options={siteList.map(s => ({ label: s.site_name, value: s.site_code, siteData: s }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Site Code</label>
@@ -160,12 +165,17 @@ export default function ProcurementForm() {
           <label className="text-sm font-medium text-gray-300">Project Code</label>
           <input required name="projectCode" value={formData.projectCode} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Auto-fills from site..." />
         </div>
-        <div className="space-y-2 lg:col-span-2">
+        <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Material Name</label>
-          <input required name="materialName" list="material-names" value={formData.materialName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing material..." />
-          <datalist id="material-names">
-            {materialList.map(m => <option key={m} value={m} />)}
-          </datalist>
+          <SearchableDropdown
+            name="materialName"
+            required
+            placeholder="Start typing material..."
+            value={formData.materialName}
+            onChange={(val) => setFormData(prev => ({ ...prev, materialName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, materialName: opt.label }))}
+            options={materialList.map(m => ({ label: m.material_name, value: m.material_code }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Quantity</label>

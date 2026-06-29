@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Beaker } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function WorkOutputForm() {
   const [loading, setLoading] = useState(false);
@@ -89,14 +90,15 @@ export default function WorkOutputForm() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Project Name</label>
-          <input required name="projectName" list="project-names" value={formData.projectName} onChange={(e) => {
-            handleChange(e);
-            const match = projectList.find(p => p.project_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, projectCode: match.project_code }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing project name..." />
-          <datalist id="project-names">
-            {projectList.map(p => <option key={p.project_code} value={p.project_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="projectName"
+            required
+            placeholder="Start typing project name..."
+            value={formData.projectName}
+            onChange={(val) => setFormData(prev => ({ ...prev, projectName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, projectName: opt.label, projectCode: opt.value }))}
+            options={projectList.map(p => ({ label: p.project_name, value: p.project_code }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Project Code</label>
@@ -105,14 +107,15 @@ export default function WorkOutputForm() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Foreman Name</label>
-          <input required name="foremanName" list="foreman-names" value={formData.foremanName} onChange={(e) => {
-            handleChange(e);
-            const match = foremanList.find(f => f.employee_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, foremanId: match.employee_id }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing foreman name..." />
-          <datalist id="foreman-names">
-            {foremanList.map(f => <option key={f.employee_id} value={f.employee_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="foremanName"
+            required
+            placeholder="Start typing foreman name..."
+            value={formData.foremanName}
+            onChange={(val) => setFormData(prev => ({ ...prev, foremanName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, foremanName: opt.label, foremanId: opt.value }))}
+            options={foremanList.map(f => ({ label: f.employee_name, value: f.employee_id }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Foreman ID</label>
@@ -121,14 +124,15 @@ export default function WorkOutputForm() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Technician Name</label>
-          <input required name="technicianName" list="technician-names" value={formData.technicianName} onChange={(e) => {
-            handleChange(e);
-            const match = technicianList.find(t => t.employee_name === e.target.value);
-            if (match) setFormData(prev => ({ ...prev, technicianId: match.employee_id, trade: match.trade || prev.trade }));
-          }} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Start typing tech name..." />
-          <datalist id="technician-names">
-            {technicianList.map(t => <option key={t.employee_id} value={t.employee_name} />)}
-          </datalist>
+          <SearchableDropdown
+            name="technicianName"
+            required
+            placeholder="Start typing tech name..."
+            value={formData.technicianName}
+            onChange={(val) => setFormData(prev => ({ ...prev, technicianName: val }))}
+            onSelect={(opt) => setFormData(prev => ({ ...prev, technicianName: opt.label, technicianId: opt.value, trade: opt.trade || prev.trade }))}
+            options={technicianList.map(t => ({ label: t.employee_name, value: t.employee_id, trade: t.trade }))}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Technician ID</label>
