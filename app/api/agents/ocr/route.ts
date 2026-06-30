@@ -5,22 +5,40 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(request: Request) {
   try {
-    const { imageUrl } = await request.json();
+    const { imageUrl, imageUrls } = await request.json();
+    
+    const urlsToProcess = imageUrls || (imageUrl ? [imageUrl] : []);
 
-    if (!imageUrl) {
+    if (urlsToProcess.length === 0) {
       return NextResponse.json({ success: false, error: "No image URL provided" }, { status: 400 });
     }
 
-    // Fetch the image from the public URL
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      return NextResponse.json({ success: false, error: "Failed to fetch image from URL" }, { status: 400 });
-    }
+    const imageParts: any[] = [];
     
-    const arrayBuffer = await imageResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64Data = buffer.toString('base64');
-    const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    for (const url of urlsToProcess) {
+      try {
+        const imageResponse = await fetch(url);
+        if (imageResponse.ok) {
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64Data = buffer.toString('base64');
+          const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+          
+          imageParts.push({
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to fetch image: ${url}`, err);
+      }
+    }
+
+    if (imageParts.length === 0) {
+      return NextResponse.json({ success: false, error: "Failed to fetch image from URL(s)" }, { status: 400 });
+    }
 
     const prompt = `
       You are an expert AI Receipt Data Extractor.
@@ -44,12 +62,7 @@ export async function POST(request: Request) {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: mimeType
-          }
-        },
+        ...imageParts,
         prompt
       ],
     });

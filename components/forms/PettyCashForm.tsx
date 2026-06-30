@@ -37,7 +37,7 @@ export default function PettyCashForm() {
       const response = await fetch('/api/agents/ocr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: urls[urls.length - 1] })
+        body: JSON.stringify({ imageUrls: urls })
       });
       const resData = await response.json();
       
@@ -161,7 +161,7 @@ export default function PettyCashForm() {
               bucketName="new-assets" 
               folderPath="pettycash/invoices" 
               onUploadComplete={handleOcrUpload} 
-              multiple={false}
+              multiple={true}
             />
           )}
         </div>
