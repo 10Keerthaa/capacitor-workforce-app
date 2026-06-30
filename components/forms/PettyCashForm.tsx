@@ -162,7 +162,6 @@ export default function PettyCashForm() {
               folderPath="pettycash/invoices" 
               onUploadComplete={handleOcrUpload} 
               multiple={false}
-              capture={true} 
             />
           )}
         </div>

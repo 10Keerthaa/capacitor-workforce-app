@@ -59,7 +59,7 @@ export function SearchableDropdown({ options, value, onChange, onSelect, placeho
       />
       
       {isOpen && filteredOptions.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-2 bg-gray-950/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-800 overflow-hidden max-h-60 overflow-y-auto">
           <ul className="py-1">
             {filteredOptions.map((opt, idx) => (
               <li
@@ -68,7 +68,7 @@ export function SearchableDropdown({ options, value, onChange, onSelect, placeho
                   onSelect(opt);
                   setIsOpen(false);
                 }}
-                className="px-4 py-3 text-gray-800 hover:bg-indigo-50 cursor-pointer transition-colors text-sm font-medium"
+                className="px-4 py-3 text-gray-200 hover:bg-indigo-900/50 cursor-pointer transition-colors text-sm font-medium"
               >
                 {opt.label}
               </li>
