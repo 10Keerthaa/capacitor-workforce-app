@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
-import { Beaker } from "lucide-react";
+import { Beaker, Sparkles, Loader2 } from "lucide-react";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function PettyCashForm() {
   const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const [formData, setFormData] = useState({
     pettyCashHolder: "", supplierName: "", description: "", projectCode: "", projectName: "", currency: "USD", amount: "", vat: "", totalAmount: "", date: ""
   });
@@ -24,6 +25,45 @@ export default function PettyCashForm() {
     };
     fetchMasterData();
   }, []);
+
+  const handleOcrUpload = async (urls: string[]) => {
+    // Always add to invoice URIs so it's attached to the final form
+    setInvoiceUrisJson(prev => Array.from(new Set([...prev, ...urls])));
+    
+    if (urls.length === 0) return;
+    
+    setOcrLoading(true);
+    try {
+      const response = await fetch('/api/agents/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: urls[urls.length - 1] })
+      });
+      const resData = await response.json();
+      
+      if (resData.success && resData.data) {
+        const extracted = resData.data;
+        setFormData(prev => {
+          const newAmount = extracted.amount ? String(extracted.amount) : prev.amount;
+          const newVat = extracted.vat ? String(extracted.vat) : prev.vat;
+          const amt = parseFloat(newAmount) || 0;
+          const v = parseFloat(newVat) || 0;
+          
+          return {
+            ...prev,
+            supplierName: extracted.supplierName || prev.supplierName,
+            amount: newAmount,
+            vat: newVat,
+            totalAmount: (newAmount || newVat) ? (amt + v).toFixed(2) : prev.totalAmount,
+            date: extracted.date || prev.date
+          };
+        });
+      }
+    } catch (error) {
+      console.error("OCR failed:", error);
+    }
+    setOcrLoading(false);
+  };
 
   const handleQuickFill = (scenario: 'safe' | 'fraud' | 'duplicate') => {
     const today = new Date().toISOString().split('T')[0];
@@ -97,6 +137,37 @@ export default function PettyCashForm() {
 
   return (
     <div className="space-y-6">
+      {/* Smart Scan Hero Section */}
+      <div className="bg-indigo-950/20 border-2 border-indigo-500/30 border-dashed rounded-2xl p-6 relative overflow-hidden group hover:bg-indigo-950/30 transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Sparkles className="w-24 h-24 text-indigo-400" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="w-6 h-6 text-indigo-400" />
+            <h2 className="text-xl font-bold text-white">Smart Scan Auto-Fill</h2>
+          </div>
+          <p className="text-indigo-200/70 text-sm mb-6">
+            Save time! Upload your receipt and let AI extract the details instantly.
+          </p>
+          
+          {ocrLoading ? (
+            <div className="flex flex-col items-center justify-center p-6 bg-gray-950/50 rounded-xl border border-indigo-500/20">
+              <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-3" />
+              <p className="text-indigo-300 font-medium animate-pulse">AI is extracting receipt data...</p>
+            </div>
+          ) : (
+            <FileUpload 
+              bucketName="new-assets" 
+              folderPath="pettycash/invoices" 
+              onUploadComplete={handleOcrUpload} 
+              multiple={false}
+              capture={true} 
+            />
+          )}
+        </div>
+      </div>
+
       <div className="flex justify-end gap-2 flex-wrap">
         <button type="button" onClick={() => handleQuickFill('safe')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
           <Beaker className="w-3 h-3" /> Safe ($50)
