@@ -1,26 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
 import { Beaker } from "lucide-react";
+import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function ToolsManagementForm() {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState<"checkout" | "return">("checkout");
   const [showReturnTab, setShowReturnTab] = useState(false);
+  const [siteList, setSiteList] = useState<{site_name: string, site_code: string}[]>([]);
+
+  useEffect(() => {
+    const fetchSites = async () => {
+      const { data } = await supabase.from('sites').select('site_name, site_code');
+      if (data) setSiteList(data);
+    };
+    fetchSites();
+  }, []);
   
   // Checkout State
-  const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
+  const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
   const handleQuickFill = (scenario: 'good' | 'damaged' | 'lost') => {
     const today = new Date().toISOString().split('T')[0];
     if (activeStep === "checkout") {
       if (scenario === 'good') {
-        setCheckoutData({ ...checkoutData, itemName: "Impact Drill", tagName: "TOOL-DR-01", quantity: "1", assignedTo: "John Safe", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
+        setCheckoutData({ ...checkoutData, itemName: "Impact Drill", tagName: "TOOL-DR-01", quantity: "1", assignedTo: "John Safe", siteName: "Downtown Skyscraper Project", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
       } else if (scenario === 'damaged') {
-        setCheckoutData({ ...checkoutData, itemName: "Rotary Hammer", tagName: "TOOL-DR-02", quantity: "1", assignedTo: "Tony Stark", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
+        setCheckoutData({ ...checkoutData, itemName: "Rotary Hammer", tagName: "TOOL-DR-02", quantity: "1", assignedTo: "Tony Stark", siteName: "Marina Mall Expansion", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
       } else if (scenario === 'lost') {
-        setCheckoutData({ ...checkoutData, itemName: "Circular Saw", tagName: "TOOL-SA-01", quantity: "1", assignedTo: "Unknown", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
+        setCheckoutData({ ...checkoutData, itemName: "Circular Saw", tagName: "TOOL-SA-01", quantity: "1", assignedTo: "Unknown", siteName: "Palm Jumeirah Villa 42", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
       }
     } else {
       if (scenario === 'good') {
@@ -53,6 +63,7 @@ export default function ToolsManagementForm() {
       itemName: checkoutData.itemName,
       condition: checkoutData.condition,
       checkoutPhotoUrisJson: checkoutPhotoUrisJson,
+      siteName: checkoutData.siteName,
       latitude: lat,
       longitude: lng
     };
@@ -72,7 +83,7 @@ export default function ToolsManagementForm() {
         }).catch(err => console.error("Agent execution failed:", err));
       }
 
-      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" }); 
+      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" }); 
       setCheckoutPhotoUrisJson([]); 
       setShowReturnTab(true);
       setActiveStep("return");
@@ -113,7 +124,7 @@ export default function ToolsManagementForm() {
       setReturnPhotoUrisJson([]);
       setShowReturnTab(false);
       setActiveStep("checkout");
-      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "" });
+      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
     }
     setLoading(false);
   };
@@ -146,6 +157,18 @@ export default function ToolsManagementForm() {
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Item Name</label><input required value={checkoutData.itemName} onChange={(e) => setCheckoutData({...checkoutData, itemName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Tag ID</label><input required value={checkoutData.tagName} onChange={(e) => setCheckoutData({...checkoutData, tagName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Quantity</label><input type="number" required value={checkoutData.quantity} onChange={(e) => setCheckoutData({...checkoutData, quantity: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Target Site</label>
+              <SearchableDropdown
+                name="siteName"
+                required
+                placeholder="Start typing site name..."
+                value={checkoutData.siteName}
+                onChange={(val) => setCheckoutData(prev => ({ ...prev, siteName: val }))}
+                onSelect={(opt) => setCheckoutData(prev => ({ ...prev, siteName: opt.label }))}
+                options={siteList.map(s => ({ label: s.site_name, value: s.site_code }))}
+              />
+            </div>
             <div className="space-y-2 md:col-span-2"><label className="text-sm font-medium text-gray-300">Assigned To (Custodian)</label><input required value={checkoutData.assignedTo} onChange={(e) => setCheckoutData({...checkoutData, assignedTo: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
           </div>
           <div className="space-y-2">

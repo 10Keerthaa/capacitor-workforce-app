@@ -58,6 +58,7 @@ export default function LiveMap() {
             <Popup>
               <div className="font-sans min-w-[150px]">
                 <strong className="text-gray-900 block text-sm mb-1">{tool.itemName}</strong>
+                {tool.siteName && <p className="text-gray-800 text-xs font-bold m-0 mb-1">📍 {tool.siteName}</p>}
                 <p className="text-gray-600 text-xs m-0 mb-1"><strong>Tag:</strong> {tool.tagName}</p>
                 <p className="text-gray-600 text-xs m-0 mb-1"><strong>Assigned To:</strong> {tool.assignedTo}</p>
                 <p className={`text-xs m-0 font-bold ${tool.condition === 'Good' ? 'text-emerald-600' : 'text-rose-600'}`}>
