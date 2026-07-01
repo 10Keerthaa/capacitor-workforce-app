@@ -40,7 +40,11 @@ export default function ToolsManagementForm() {
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+    // Mock coordinates centered around Dubai (Lat: 25.2048, Lng: 55.2708)
+    // Adding random offset for scattered pins
+    const lat = 25.2048 + (Math.random() * 0.1 - 0.05);
+    const lng = 55.2708 + (Math.random() * 0.1 - 0.05);
+
     // Only send fields that actually exist in the tools_management table schema
     const payload = {
       tagName: checkoutData.tagName,
@@ -48,7 +52,9 @@ export default function ToolsManagementForm() {
       assignedTo: checkoutData.assignedTo,
       itemName: checkoutData.itemName,
       condition: checkoutData.condition,
-      checkoutPhotoUrisJson: checkoutPhotoUrisJson
+      checkoutPhotoUrisJson: checkoutPhotoUrisJson,
+      latitude: lat,
+      longitude: lng
     };
 
     const { data, error } = await supabase.from('tools_management').insert([payload]).select();

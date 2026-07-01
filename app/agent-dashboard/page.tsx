@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, BrainCircuit, AlertTriangle, CheckCircle, 
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
-  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle
+  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -639,6 +639,21 @@ export default function AgenticDashboard() {
     );
   };
 
+  const renderMap = () => (
+    <div className="animate-fade-in-up">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black tracking-tighter text-white">Live Resource Map</h1>
+        <p className="text-gray-500 text-sm mt-1">Google Maps Integration</p>
+      </div>
+      <div className="w-full h-[600px] bg-[#0a0a0a] border border-[#222] rounded-2xl flex flex-col items-center justify-center text-center p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <MapPin className="w-16 h-16 text-indigo-500/50 mb-4 animate-bounce relative z-10" />
+        <h2 className="text-xl font-bold text-white mb-2 relative z-10">Live Map is Connecting</h2>
+        <p className="text-gray-400 max-w-md relative z-10">The map interface is currently reading mock coordinates from Supabase. Please inject the Google Maps API Key to render the full interactive map.</p>
+      </div>
+    </div>
+  );
+
   const renderReports = () => {
     return (
       <div className="animate-fade-in-up">
@@ -862,6 +877,7 @@ export default function AgenticDashboard() {
         <div className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] overflow-x-hidden">
           {!isSidebarCollapsed && <p className="text-[10px] font-bold tracking-widest text-gray-600 uppercase mb-4 ml-2 mt-2 whitespace-nowrap">Main Menu</p>}
           <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
+          <SidebarItem id="map" label="Live Map" icon={MapPin} />
           <SidebarItem id="workers" label="Workers" icon={Users} />
           <SidebarItem id="reports" label="Reports" icon={BarChart3} />
         </div>
@@ -902,6 +918,7 @@ export default function AgenticDashboard() {
          
          <div className="p-6 md:p-10 pt-20 pb-24 md:pt-10 max-w-7xl mx-auto min-h-full transition-all duration-300">
             {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'map' && renderMap()}
             {activeTab === 'workers' && renderWorkers()}
             {activeTab === 'reports' && renderReports()}
          </div>
@@ -913,6 +930,10 @@ export default function AgenticDashboard() {
         <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 ${activeTab === 'dashboard' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Dashboard</span>
+        </button>
+        <button onClick={() => setActiveTab('map')} className={`flex flex-col items-center gap-1 ${activeTab === 'map' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
+          <MapPin className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Map</span>
         </button>
         <button onClick={() => setActiveTab('workers')} className={`flex flex-col items-center gap-1 ${activeTab === 'workers' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
           <Users className="w-5 h-5" />

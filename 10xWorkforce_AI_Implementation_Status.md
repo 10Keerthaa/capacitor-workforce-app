@@ -47,3 +47,14 @@ This document outlines the detailed implementation status of all AI Agent functi
 | | Recommend subcontracting | ✅ Implemented | Outputs strict JSON to recommend subcontracting if the site is severely understaffed. |
 | **Master Orchestration** | Agents collaborate autonomously | ⏳ Pending | Full agent-to-agent peer horizontal communication is pending. |
 | | Supervisor Agent Action Plan | ✅ Implemented | Supervisor sweeps all DB tables and pushes a Master Action Plan to Dashboard. |
+
+## 🗺️ Live Resource Mapping (Google Maps Integration)
+**Status:** Planned
+
+**Production Strategy (Real GPS):**
+- Integrate the `@capacitor/geolocation` plugin to silently capture exact Latitude and Longitude coordinates when users submit forms (e.g., Tools Checkout, Manpower allocations) on their mobile devices.
+- Build a central "Live Map" Command Dashboard using `@vis.gl/react-google-maps` to read these coordinates from Supabase and drop custom visual pins (e.g., a Wrench icon for tools, a Hardhat icon for workers) across actual construction sites.
+
+**Testing Strategy (Mock GPS):**
+- Using real GPS during desk/office testing would cause all pins to overlap in one single location.
+- **Solution:** During the testing phase, the "Quick Fill" demo buttons on the forms will be programmed to generate and inject randomized, fake GPS coordinates scattered across a specific city (e.g., Dubai). This ensures the Live Map looks incredibly realistic and populated for stakeholder demonstrations. Once deployed to actual sites, the fake generator is swapped for the real Capacitor plugin.
