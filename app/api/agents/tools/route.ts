@@ -94,26 +94,27 @@ export async function POST(req: Request) {
       }
     }
 
-    // 1. Build the intelligence prompt
+    // 2. Build the intelligence prompt with Dual-Mode Logic (Check-Out vs Return)
+    const isReturnEvent = returnedQty !== undefined && returnedQty !== null;
+
     const prompt = `
       You are an Asset Controller Agent analyzing tool inventory.
       Item: ${toolBrand} ${toolName}
       Tag: ${tagName || 'Unknown'}
       Original Qty Checked Out: ${quantity || 0}
-      Qty Worker Claims to Return: ${returnedQty !== undefined ? returnedQty : 'Not provided'}
       Current Custody/Task: ${assignedTo || 'Unassigned'}
       Condition Status: ${condition || 'Unknown'}
       Warranty Details: ${toolWarranty}
       Purchase Date (Epoch): ${toolPurchaseDate}
+      Event Type: ${isReturnEvent ? 'TOOL RETURN' : 'TOOL CHECK-OUT'}
 
-      Analyze if this tool is at risk of being lost/hoarded based on custody.
-      Check if the tool is broken but under warranty.
-      If a photo is provided, visually verify if the tools match the 'Qty Worker Claims to Return'.
-      Compare the 'Qty Worker Claims to Return' against the 'Original Qty Checked Out'. If they don't match, or if the photo does not match, flag a High Risk of tool loss!
-      
       --- WORKER HISTORY (THEFT DETECTIVE) ---
       ${workerHistoryContext}
-      If the worker has a previous history of tool loss (Critical Warning), you MUST escalate the ai_loss_risk to 'High Risk' and explicitly recommend an immediate theft investigation in your reasoning.
+
+      ANALYSIS RULES:
+      1. Check if the tool is broken but under warranty.
+      2. If Event Type is 'TOOL CHECK-OUT': Ignore return quantities. Focus ONLY on the Worker History. If they have a history of tool loss (Critical Warning), escalate ai_loss_risk to 'High Risk' and recommend an immediate manager override. If history is clean, risk is 'Low Risk'.
+      3. If Event Type is 'TOOL RETURN': You are auditing the return. Compare 'Qty Worker Claims to Return' (${isReturnEvent ? returnedQty : 'N/A'}) against 'Original Qty Checked Out' (${quantity || 0}). If they do not match, or if the provided photo shows missing/broken items, flag 'High Risk' of tool loss!
 
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
