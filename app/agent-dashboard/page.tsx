@@ -9,6 +9,9 @@ import {
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend } from 'recharts';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(() => import('@/components/ui/LiveMap'), { ssr: false });
 
 export default function AgenticDashboard() {
   const [mounted, setMounted] = useState(false);
@@ -643,14 +646,9 @@ export default function AgenticDashboard() {
     <div className="animate-fade-in-up">
       <div className="mb-8">
         <h1 className="text-3xl font-black tracking-tighter text-white">Live Resource Map</h1>
-        <p className="text-gray-500 text-sm mt-1">Google Maps Integration</p>
+        <p className="text-gray-500 text-sm mt-1">Real-time Asset & Workforce Tracking</p>
       </div>
-      <div className="w-full h-[600px] bg-[#0a0a0a] border border-[#222] rounded-2xl flex flex-col items-center justify-center text-center p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <MapPin className="w-16 h-16 text-indigo-500/50 mb-4 animate-bounce relative z-10" />
-        <h2 className="text-xl font-bold text-white mb-2 relative z-10">Live Map is Connecting</h2>
-        <p className="text-gray-400 max-w-md relative z-10">The map interface is currently reading mock coordinates from Supabase. Please inject the Google Maps API Key to render the full interactive map.</p>
-      </div>
+      <LiveMap />
     </div>
   );
 
