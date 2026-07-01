@@ -359,14 +359,14 @@ export default function AgenticDashboard() {
     <div className="animate-fade-in-up">
 
       {/* Top Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+      <div className="flex flex-row overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10 pb-2 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
         {[
           { title: 'Total Workers (Present)', value: `${workersList.filter(w => w.status === 'Active').length}/${workersList.length}`, icon: Users, color: 'text-indigo-400', glow: 'bg-indigo-500/5' },
           { title: 'Tasks Processed', value: stats.processed.toLocaleString(), icon: Activity, color: 'text-emerald-400', glow: 'bg-emerald-500/5' },
           { title: 'Pending Approvals', value: stats.approvals, icon: AlertTriangle, color: 'text-amber-400', glow: 'bg-amber-500/5' },
           { title: 'Critical Alerts', value: supervisorReport?.system_status === 'CRITICAL' ? '1 High Risk' : '0 High Risk', icon: ShieldAlert, color: 'text-rose-400', glow: 'bg-rose-500/5' },
         ].map((stat, i) => (
-          <div key={i} className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:bg-[#111] hover:border-[#333] transition-all duration-500">
+          <div key={i} className="w-[85vw] sm:w-[350px] md:w-auto shrink-0 snap-start bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:bg-[#111] hover:border-[#333] transition-all duration-500">
             <div className={`absolute -right-10 -top-10 w-32 h-32 ${stat.glow} rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
             <div className="flex justify-between items-start mb-4 relative z-10">
               <p className="text-gray-500 text-[10px] font-medium tracking-widest uppercase">{stat.title}</p>
