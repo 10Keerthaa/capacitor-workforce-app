@@ -162,6 +162,7 @@ export default function PettyCashForm() {
               folderPath="pettycash/invoices" 
               onUploadComplete={handleOcrUpload} 
               multiple={true}
+              capture={true}
             />
           )}
         </div>
@@ -245,7 +246,7 @@ export default function PettyCashForm() {
       
       <div className="pt-6 border-t border-gray-800">
         <h3 className="text-lg font-semibold text-white mb-4">Invoice Upload</h3>
-        <FileUpload bucketName="new-assets" folderPath="pettycash/invoices" onUploadComplete={setInvoiceUrisJson} multiple={true} />
+        <FileUpload bucketName="new-assets" folderPath="pettycash/invoices" onUploadComplete={setInvoiceUrisJson} multiple={true} capture={true} />
       </div>
 
         <button disabled={loading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">

@@ -176,22 +176,22 @@ export default function OnboardingForm() {
         
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Employee Photo</label>
-          <FileUpload bucketName="new-assets" folderPath="onboarding/photos" onUploadComplete={setEmployeePhotoUrisJson} multiple={false} accept="image/*" />
+          <FileUpload bucketName="new-assets" folderPath="onboarding/photos" onUploadComplete={setEmployeePhotoUrisJson} multiple={false} accept="image/*" capture={true} />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Passport Scan</label>
-          <FileUpload bucketName="new-assets" folderPath="onboarding/passports" onUploadComplete={setPassportScanUrisJson} multiple={true} />
+          <FileUpload bucketName="new-assets" folderPath="onboarding/passports" onUploadComplete={setPassportScanUrisJson} multiple={true} capture={true} />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Driving License</label>
-          <FileUpload bucketName="new-assets" folderPath="onboarding/licenses" onUploadComplete={setDrivingLicenseUrisJson} multiple={true} />
+          <FileUpload bucketName="new-assets" folderPath="onboarding/licenses" onUploadComplete={setDrivingLicenseUrisJson} multiple={true} capture={true} />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Consent Form</label>
-          <FileUpload bucketName="new-assets" folderPath="onboarding/consent" onUploadComplete={setConsentFormUrisJson} multiple={true} />
+          <FileUpload bucketName="new-assets" folderPath="onboarding/consent" onUploadComplete={setConsentFormUrisJson} multiple={true} capture={true} />
         </div>
 
         <div className="space-y-2">

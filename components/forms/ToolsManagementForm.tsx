@@ -144,7 +144,7 @@ export default function ToolsManagementForm() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Checkout Photo</label>
-            <FileUpload key="checkout-upload" bucketName="new-assets" folderPath="tools/checkout" onUploadComplete={setCheckoutPhotoUrisJson} accept="image/*" />
+            <FileUpload key="checkout-upload" bucketName="new-assets" folderPath="tools/checkout" onUploadComplete={setCheckoutPhotoUrisJson} accept="image/*" capture={true} />
           </div>
           <button disabled={loading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">Save Checkout</button>
         </form>
@@ -156,7 +156,7 @@ export default function ToolsManagementForm() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Return Photo</label>
-            <FileUpload key="return-upload" bucketName="new-assets" folderPath="tools/return" onUploadComplete={setReturnPhotoUrisJson} accept="image/*" />
+            <FileUpload key="return-upload" bucketName="new-assets" folderPath="tools/return" onUploadComplete={setReturnPhotoUrisJson} accept="image/*" capture={true} />
           </div>
           <button type="submit" className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl transition-all">Log Return</button>
         </form>
