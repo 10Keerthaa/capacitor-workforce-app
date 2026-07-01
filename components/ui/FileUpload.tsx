@@ -106,7 +106,7 @@ export default function FileUpload({ bucketName, folderPath, onUploadComplete, a
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
           )}
           <p className="mb-2 text-sm text-gray-400 font-medium text-center">
-            <span className="text-indigo-400">Click to {capture ? "open camera" : "upload"}</span><br/>
+            <span className="text-indigo-400">Click to upload</span><br/>
             {!capture && "or drag and drop"}
           </p>
         </div>
