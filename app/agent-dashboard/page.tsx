@@ -98,7 +98,7 @@ export default function AgenticDashboard() {
         if (masterDataTab === 'projects') table = 'projects_master';
         else if (masterDataTab === 'materials') table = 'master_materials';
         else if (masterDataTab === 'sites') table = 'sites';
-        else if (masterDataTab === 'camps') table = 'camps';
+        else if (masterDataTab === 'camps') table = 'master_camps';
         
         const { data } = await supabase.from(table).select('*').limit(50);
         if (data) setMasterDataList(data);
@@ -119,7 +119,7 @@ export default function AgenticDashboard() {
     if (masterDataTab === 'projects') table = 'projects_master';
     else if (masterDataTab === 'materials') table = 'master_materials';
     else if (masterDataTab === 'sites') table = 'sites';
-    else if (masterDataTab === 'camps') table = 'camps';
+    else if (masterDataTab === 'camps') table = 'master_camps';
 
     try {
       if (editingMasterId) {
@@ -153,7 +153,7 @@ export default function AgenticDashboard() {
     if (masterDataTab === 'projects') table = 'projects_master';
     else if (masterDataTab === 'materials') table = 'master_materials';
     else if (masterDataTab === 'sites') table = 'sites';
-    else if (masterDataTab === 'camps') table = 'camps';
+    else if (masterDataTab === 'camps') table = 'master_camps';
     
     try {
       await supabase.from(table).delete().eq('id', id);
@@ -867,26 +867,26 @@ export default function AgenticDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
-                  {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Priority Level</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Project Code</th><th className="p-4">Priority Level</th><th className="p-4 text-right">Actions</th></>}
                   {masterDataTab === 'materials' && <><th className="p-4">Material Name</th><th className="p-4">Vendor</th><th className="p-4">Price</th><th className="p-4 text-right">Actions</th></>}
-                  {masterDataTab === 'sites' && <><th className="p-4">Site Name</th><th className="p-4">Location</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
-                  {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Capacity</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'sites' && <><th className="p-4">Site Name</th><th className="p-4">Site Code</th><th className="p-4">Location</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Camp Code</th><th className="p-4">Location</th><th className="p-4 text-right">Actions</th></>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
                 {masterDataList.map((item, i) => (
                   <tr key={i} className="hover:bg-[#111] transition-colors">
                     {masterDataTab === 'projects' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</td><td className="p-4"><span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span></td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.project_code || 'N/A'}</td><td className="p-4"><span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span></td></>
                     )}
                     {masterDataTab === 'materials' && (
                       <><td className="p-4 text-sm font-semibold text-gray-200">{item.material_name || item.item_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.approved_vendor || item.vendor || 'N/A'}</td><td className="p-4 text-xs text-emerald-400">${item.standard_price || item.price || 0}</td></>
                     )}
                     {masterDataTab === 'sites' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.site_code || 'N/A'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td></>
                     )}
                     {masterDataTab === 'camps' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.total_bed_capacity || item.capacity || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.camp_code || 'N/A'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td></>
                     )}
                     <td className="p-4 text-right">
                       <button onClick={() => {
@@ -1277,6 +1277,8 @@ export default function AgenticDashboard() {
                    <>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Code</label><input required type="text" value={masterDataForm.project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" value={masterDataForm.project_name || ''} onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Budget</label><input type="number" step="0.01" value={masterDataForm.budget || ''} onChange={e => setMasterDataForm({...masterDataForm, budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div>
                        <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
                        <select required value={masterDataForm.priority_level || ''} onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
@@ -1295,7 +1297,6 @@ export default function AgenticDashboard() {
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" value={masterDataForm.material_name || ''} onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Approved Vendor</label><input type="text" value={masterDataForm.approved_vendor || ''} onChange={e => setMasterDataForm({...masterDataForm, approved_vendor: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" step="0.01" value={masterDataForm.standard_price || ''} onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Unit</label><input type="text" value={masterDataForm.unit || ''} onChange={e => setMasterDataForm({...masterDataForm, unit: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                    </>
                  )}
 
