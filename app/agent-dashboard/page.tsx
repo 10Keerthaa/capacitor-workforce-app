@@ -203,8 +203,15 @@ export default function AgenticDashboard() {
           if (t.name === 'camp_boss' && p.agent_metadata) {
             details = `Risk Level: ${p.agent_metadata.ai_absenteeism_risk || 'N/A'}\nRecommended Action: ${p.agent_metadata.ai_replacement_action || 'N/A'}\nCamp Utilization: ${p.agent_metadata.ai_camp_utilization || 'N/A'}\nReasoning: ${p.agent_metadata.ai_reasoning || 'N/A'}`;
           }
+          
+          if (t.name === 'mr_procurement' && p.agent_metadata) {
+            details = `Priority: ${p.agent_metadata.ai_priority || 'Normal'}\nPricing Trend: ${p.agent_metadata.ai_pricing_trend || 'N/A'}\nEmail Draft: ${p.agent_metadata.ai_email_draft || 'N/A'}\nReasoning: ${p.agent_metadata.ai_reason || 'N/A'}`;
+          }
 
-          allPending.push({ id: p.id, sourceTable: t.name, agentName: t.agent, color: t.color, description, details, sortId: p.id });
+          let priorityScore = 0;
+          if (p.agent_metadata?.ai_priority === 'Critical') priorityScore = 1000000;
+
+          allPending.push({ id: p.id, sourceTable: t.name, agentName: t.agent, color: t.color, description, details, sortId: p.id + priorityScore });
         });
       }
 
