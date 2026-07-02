@@ -906,7 +906,13 @@ export default function AgenticDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
-                {masterDataList.map((item, i) => (
+                {[...masterDataList].sort((a, b) => {
+                  if (masterDataTab === 'projects') {
+                    const weight: any = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                    return (weight[b.priority_level] || 0) - (weight[a.priority_level] || 0);
+                  }
+                  return 0;
+                }).map((item, i) => (
                   <tr key={i} className="hover:bg-[#111] transition-colors">
                     {masterDataTab === 'projects' && (
                       <><td className="p-4 text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.project_code || 'N/A'}</td><td className="p-4"><span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span></td></>
