@@ -199,6 +199,11 @@ export default function AgenticDashboard() {
           let titleString = p.employeeName || p.projectName || p.siteName || p.supplierName || p.toolName || p.expenseType || 'Record';
           let description = `ID: ${p.id} (${titleString})`;
           let details = p.agent_metadata?.ai_reasoning || p.agent_metadata?.reason || 'High risk detected by AI. Review required.';
+          
+          if (t.name === 'camp_boss' && p.agent_metadata) {
+            details = `Risk Level: ${p.agent_metadata.ai_absenteeism_risk || 'N/A'}\nRecommended Action: ${p.agent_metadata.ai_replacement_action || 'N/A'}\nAnomaly/Contagion: ${p.agent_metadata.ai_anomaly_detected || 'None detected'}\nCamp Utilization: ${p.agent_metadata.ai_camp_utilization || 'N/A'}\nReasoning: ${p.agent_metadata.ai_reasoning || 'N/A'}`;
+          }
+
           allPending.push({ id: p.id, sourceTable: t.name, agentName: t.agent, color: t.color, description, details, sortId: p.id });
         });
       }
