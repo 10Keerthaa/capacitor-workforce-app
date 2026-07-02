@@ -841,7 +841,34 @@ export default function AgenticDashboard() {
           <button 
             onClick={() => {
               setEditingMasterId(null);
-              setMasterDataForm({});
+              let defaultForm: any = {};
+              if (masterDataList.length > 0) {
+                try {
+                  const idField = masterDataTab === 'projects' ? 'project_code' : 
+                                 masterDataTab === 'materials' ? 'material_code' : 
+                                 masterDataTab === 'sites' ? 'site_code' : 'camp_code';
+                  const prefix = masterDataTab === 'projects' ? 'PRJ-' : 
+                                masterDataTab === 'materials' ? 'MAT-' : 
+                                masterDataTab === 'sites' ? 'SIT-' : 'CMP-';
+                  
+                  const codes = masterDataList.map(item => item[idField]).filter(Boolean);
+                  let maxNum = 0;
+                  codes.forEach(code => {
+                    const match = code.match(/\\d+/);
+                    if (match) {
+                      const num = parseInt(match[0], 10);
+                      if (num > maxNum) maxNum = num;
+                    }
+                  });
+                  if (maxNum > 0) {
+                    const nextCode = `${prefix}${(maxNum + 1).toString().padStart(3, '0')}`;
+                    defaultForm[idField] = nextCode;
+                  }
+                } catch (e) {
+                  console.error("Auto sequence error", e);
+                }
+              }
+              setMasterDataForm(defaultForm);
               setIsMasterDataModalOpen(true);
             }}
             className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
@@ -1277,8 +1304,8 @@ export default function AgenticDashboard() {
                    <>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Code</label><input required type="text" value={masterDataForm.project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" value={masterDataForm.project_name || ''} onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Budget</label><input type="number" step="0.01" value={masterDataForm.budget || ''} onChange={e => setMasterDataForm({...masterDataForm, budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Client Name</label><input type="text" value={masterDataForm.client_name || ''} onChange={e => setMasterDataForm({...masterDataForm, client_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({...masterDataForm, total_budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div>
                        <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
                        <select required value={masterDataForm.priority_level || ''} onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
@@ -1295,6 +1322,18 @@ export default function AgenticDashboard() {
                    <>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Code</label><input required type="text" value={masterDataForm.material_code || ''} onChange={e => setMasterDataForm({...masterDataForm, material_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" value={masterDataForm.material_name || ''} onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div>
+                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Category</label>
+                       <select required value={masterDataForm.category || ''} onChange={e => setMasterDataForm({...masterDataForm, category: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                         <option value="">Select Category</option>
+                         <option value="Raw Material">Raw Material</option>
+                         <option value="Electrical">Electrical</option>
+                         <option value="Plumbing">Plumbing</option>
+                         <option value="PPE">PPE</option>
+                         <option value="Finishing">Finishing</option>
+                         <option value="Tools & Equipment">Tools & Equipment</option>
+                       </select>
+                     </div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Approved Vendor</label><input type="text" value={masterDataForm.approved_vendor || ''} onChange={e => setMasterDataForm({...masterDataForm, approved_vendor: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" step="0.01" value={masterDataForm.standard_price || ''} onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                    </>
@@ -1305,6 +1344,17 @@ export default function AgenticDashboard() {
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Code</label><input required type="text" value={masterDataForm.site_code || ''} onChange={e => setMasterDataForm({...masterDataForm, site_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" value={masterDataForm.site_name || ''} onChange={e => setMasterDataForm({...masterDataForm, site_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({...masterDataForm, total_budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Required Manpower</label><input type="number" value={masterDataForm.required_manpower || ''} onChange={e => setMasterDataForm({...masterDataForm, required_manpower: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div>
+                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Status</label>
+                       <select required value={masterDataForm.status || ''} onChange={e => setMasterDataForm({...masterDataForm, status: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                         <option value="">Select Status</option>
+                         <option value="Active">Active</option>
+                         <option value="Completed">Completed</option>
+                         <option value="On Hold">On Hold</option>
+                       </select>
+                     </div>
                      <div>
                        <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Parent Project</label>
                        <select required value={masterDataForm.parent_project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, parent_project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
