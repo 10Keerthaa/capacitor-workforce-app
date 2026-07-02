@@ -28,16 +28,20 @@ export async function POST(req: Request) {
     // Extract base material name before any parentheses (e.g. "Copper Wiring (100m)" -> "Copper Wiring")
     const baseMaterialName = material_name.split(' (')[0].trim();
 
-    const { data: materialMaster } = await supabase
+    const { data: materialMaster, error: masterError } = await supabase
       .from('master_materials')
-      .select('approved_vendor, standard_price')
+      .select('*')
       .ilike('material_name', `%${baseMaterialName}%`)
       .limit(1)
       .single();
 
+    if (masterError) {
+      console.log("Master DB lookup error (or 0 rows):", masterError);
+    }
+
     if (materialMaster) {
-      approvedVendor = materialMaster.approved_vendor || approvedVendor;
-      standardPrice = materialMaster.standard_price?.toString() || standardPrice;
+      approvedVendor = materialMaster.approved_vendor || materialMaster.vendor || materialMaster.supplierName || approvedVendor;
+      standardPrice = materialMaster.standard_price?.toString() || materialMaster.standard_unit_price?.toString() || materialMaster.unit_price?.toString() || standardPrice;
     }
 
     // 2. Fetch Historical Context for Stock Shortage Prediction
