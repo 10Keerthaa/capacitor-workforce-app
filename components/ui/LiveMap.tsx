@@ -44,10 +44,10 @@ export default function LiveMap() {
         zoom={11} 
         style={{ height: '100%', width: '100%', background: '#0a0a0a', zIndex: 0 }}
       >
-        {/* Sleek Dark Mode Map Tiles to match the dashboard aesthetic */}
+        {/* Satellite Map Tiles for construction sites */}
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         />
         {tools.map((tool) => (
           <Marker 
