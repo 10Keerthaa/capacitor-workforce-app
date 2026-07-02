@@ -53,12 +53,12 @@ export async function POST(req: Request) {
     let sitePriority = 'Unknown';
 
     if (employeeName && employeeName !== 'Unknown') {
-      // Step 1: Look up employee in master_employees (fallback to employees if master_employees fails)
+      // Step 1: Look up employee in master_employees
       let empData = null;
       const { data: masterEmpData } = await supabase
         .from('master_employees')
         .select('*')
-        .eq('full_name', employeeName)
+        .eq('employee_name', employeeName)
         .single();
       
       if (masterEmpData) {
