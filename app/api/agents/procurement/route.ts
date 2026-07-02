@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const baseMaterialName = material_name.split(' (')[0].trim();
 
     const { data: materialMaster } = await supabase
-      .from('materials_master')
+      .from('master_materials')
       .select('approved_vendor, standard_unit_price')
       .ilike('material_name', `%${baseMaterialName}%`)
       .limit(1)
@@ -74,8 +74,9 @@ export async function POST(req: Request) {
       Site Order History: ${historyText}
 
       --- YOUR TASKS ---
-      1. Vendor & Price Setup: We have automatically assigned this material request to our official vendor (${approvedVendor}) at our standard price ($${standardPrice}). You must automatically Approve this request unless it seems like a duplicate or massive stock hoarding.
-      2. Predict Stock Shortages: Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage or if the delivery date is unrealistic. If it is an emergency, flag as Critical.
+      1. Vendor & Price Setup: We have automatically assigned this material request to our official vendor (${approvedVendor}) at our standard price ($${standardPrice}).
+      2. Unapproved Items Rule: If the Auto-Assigned Vendor is 'Unknown (No Master Record)', you MUST flag ai_risk_level as 'High' and ai_recommendation as 'Reject' because it is an unauthorized material.
+      3. Predict Stock Shortages & Hoarding: If the material IS approved, you must automatically Approve this request unless it seems like massive stock hoarding. Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage. If it is an emergency, flag priority as Critical.
 
       Output ONLY a valid JSON object matching this schema exactly:
       {
