@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, BrainCircuit, AlertTriangle, CheckCircle, 
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
-  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin, Database, Save, Plus
+  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin, Database, Save, Plus, Edit2, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -34,22 +34,37 @@ export default function AgenticDashboard() {
   const [newWorkerForm, setNewWorkerForm] = useState({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
   const [isAddingWorker, setIsAddingWorker] = useState(false);
 
+  const [editingWorkerId, setEditingWorkerId] = useState<number | null>(null);
+
   const handleAddWorker = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAddingWorker(true);
     try {
-      const { error } = await supabase.from('master_employees').insert([
-        { 
+      if (editingWorkerId) {
+        const { error } = await supabase.from('master_employees').update({ 
           employee_name: newWorkerForm.name,
           employee_id: newWorkerForm.employee_id,
           trade: newWorkerForm.trade,
           nationality: newWorkerForm.nationality
+        }).eq('id', editingWorkerId);
+        if (!error) {
+          setIsAddWorkerModalOpen(false);
+          setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+          setEditingWorkerId(null);
+          fetchDashboardData();
         }
-      ]);
-      if (!error) {
-        setIsAddWorkerModalOpen(false);
-        setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
-        fetchDashboardData();
+      } else {
+        const { error } = await supabase.from('master_employees').insert([{ 
+          employee_name: newWorkerForm.name,
+          employee_id: newWorkerForm.employee_id,
+          trade: newWorkerForm.trade,
+          nationality: newWorkerForm.nationality
+        }]);
+        if (!error) {
+          setIsAddWorkerModalOpen(false);
+          setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+          fetchDashboardData();
+        }
       }
     } catch (err) {
       console.error(err);
@@ -58,12 +73,23 @@ export default function AgenticDashboard() {
     }
   };
 
+  const handleDeleteWorker = async (id: number) => {
+    if(!confirm("Are you sure you want to delete this worker?")) return;
+    try {
+      await supabase.from('master_employees').delete().eq('id', id);
+      fetchDashboardData();
+    } catch(e) { console.error(e); }
+  };
+
   // Master Data State
   const [masterDataTab, setMasterDataTab] = useState('projects');
   const [masterDataList, setMasterDataList] = useState<any[]>([]);
   const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
   const [masterDataForm, setMasterDataForm] = useState<any>({});
   const [isAddingMasterData, setIsAddingMasterData] = useState(false);
+
+  const [editingMasterId, setEditingMasterId] = useState<number | null>(null);
+  const [projectListDropdown, setProjectListDropdown] = useState<any[]>([]);
 
   useEffect(() => {
     if (activeTab === 'master-data') {
@@ -76,6 +102,11 @@ export default function AgenticDashboard() {
         
         const { data } = await supabase.from(table).select('*').limit(50);
         if (data) setMasterDataList(data);
+
+        if (masterDataTab === 'sites') {
+           const { data: proj } = await supabase.from('projects_master').select('project_code, project_name');
+           if (proj) setProjectListDropdown(proj);
+        }
       };
       fetchMasterDataList();
     }
@@ -91,18 +122,44 @@ export default function AgenticDashboard() {
     else if (masterDataTab === 'camps') table = 'camps';
 
     try {
-      const { error } = await supabase.from(table).insert([masterDataForm]);
-      if (!error) {
-        setIsMasterDataModalOpen(false);
-        setMasterDataForm({});
-        const { data } = await supabase.from(table).select('*').limit(50);
-        if (data) setMasterDataList(data);
+      if (editingMasterId) {
+        const { error } = await supabase.from(table).update([masterDataForm]).eq('id', editingMasterId);
+        if (!error) {
+          setIsMasterDataModalOpen(false);
+          setMasterDataForm({});
+          setEditingMasterId(null);
+          const { data } = await supabase.from(table).select('*').limit(50);
+          if (data) setMasterDataList(data);
+        }
+      } else {
+        const { error } = await supabase.from(table).insert([masterDataForm]);
+        if (!error) {
+          setIsMasterDataModalOpen(false);
+          setMasterDataForm({});
+          const { data } = await supabase.from(table).select('*').limit(50);
+          if (data) setMasterDataList(data);
+        }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsAddingMasterData(false);
     }
+  };
+
+  const handleDeleteMasterData = async (id: number) => {
+    if(!confirm("Are you sure you want to delete this record?")) return;
+    let table = 'projects_master';
+    if (masterDataTab === 'projects') table = 'projects_master';
+    else if (masterDataTab === 'materials') table = 'master_materials';
+    else if (masterDataTab === 'sites') table = 'sites';
+    else if (masterDataTab === 'camps') table = 'camps';
+    
+    try {
+      await supabase.from(table).delete().eq('id', id);
+      const { data } = await supabase.from(table).select('*').limit(50);
+      if (data) setMasterDataList(data);
+    } catch(e) { console.error(e); }
   };
 
   // Live Chart Data State
@@ -678,7 +735,11 @@ export default function AgenticDashboard() {
             <p className="text-gray-500 text-sm mt-1">{workersList.length} total workers registered</p>
           </div>
           <button 
-            onClick={() => setIsAddWorkerModalOpen(true)}
+            onClick={() => {
+              setEditingWorkerId(null);
+              setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+              setIsAddWorkerModalOpen(true);
+            }}
             className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
           >
             <Plus className="w-4 h-4" /> Add New Worker
@@ -711,6 +772,7 @@ export default function AgenticDashboard() {
                   <th className="p-4">Trade / Skill</th>
                   <th className="p-4">Status (Present/Absent)</th>
                   <th className="p-4">Current Site</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
@@ -741,6 +803,18 @@ export default function AgenticDashboard() {
                     <td className="p-4">
                       <span className="text-xs font-medium text-gray-300">{w.site || 'Unassigned'}</span>
                     </td>
+                    <td className="p-4 text-right">
+                      <button onClick={() => {
+                        setEditingWorkerId(w.id);
+                        setNewWorkerForm({ name: w.name, employee_id: w.id, trade: w.role, nationality: w.nationality || '', current_site: w.site });
+                        setIsAddWorkerModalOpen(true);
+                      }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteWorker(w.id)} className="text-gray-500 hover:text-rose-400 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filteredWorkers.length === 0 && (
@@ -765,7 +839,11 @@ export default function AgenticDashboard() {
             <p className="text-gray-500 text-sm mt-1">Manage global system configurations</p>
           </div>
           <button 
-            onClick={() => setIsMasterDataModalOpen(true)}
+            onClick={() => {
+              setEditingMasterId(null);
+              setMasterDataForm({});
+              setIsMasterDataModalOpen(true);
+            }}
             className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
           >
             <Plus className="w-4 h-4" /> Add New Record
@@ -789,10 +867,10 @@ export default function AgenticDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
-                  {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Priority Level</th><th className="p-4">ID</th></>}
-                  {masterDataTab === 'materials' && <><th className="p-4">Material Name</th><th className="p-4">Vendor</th><th className="p-4">Price</th></>}
-                  {masterDataTab === 'sites' && <><th className="p-4">Site Name</th><th className="p-4">Location</th><th className="p-4">ID</th></>}
-                  {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Capacity</th><th className="p-4">ID</th></>}
+                  {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Priority Level</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'materials' && <><th className="p-4">Material Name</th><th className="p-4">Vendor</th><th className="p-4">Price</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'sites' && <><th className="p-4">Site Name</th><th className="p-4">Location</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
+                  {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Capacity</th><th className="p-4">ID</th><th className="p-4 text-right">Actions</th></>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
@@ -808,8 +886,20 @@ export default function AgenticDashboard() {
                       <><td className="p-4 text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
                     )}
                     {masterDataTab === 'camps' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.capacity || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.total_bed_capacity || item.capacity || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
                     )}
+                    <td className="p-4 text-right">
+                      <button onClick={() => {
+                        setEditingMasterId(item.id);
+                        setMasterDataForm(item);
+                        setIsMasterDataModalOpen(true);
+                      }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteMasterData(item.id)} className="text-gray-500 hover:text-rose-400 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {masterDataList.length === 0 && (
@@ -1139,7 +1229,7 @@ export default function AgenticDashboard() {
              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddWorkerModalOpen(false)} />
              <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
                <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-black text-white">Add New Worker</h2>
+                 <h2 className="text-xl font-black text-white">{editingWorkerId ? 'Edit' : 'Add New'} Worker</h2>
                  <button onClick={() => setIsAddWorkerModalOpen(false)} className="text-gray-500 hover:text-white">
                    <XCircle className="w-6 h-6" />
                  </button>
@@ -1176,19 +1266,20 @@ export default function AgenticDashboard() {
              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMasterDataModalOpen(false)} />
              <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
                <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-black text-white capitalize">Add New {masterDataTab.slice(0, -1)}</h2>
+                 <h2 className="text-xl font-black text-white capitalize">{editingMasterId ? 'Edit' : 'Add New'} {masterDataTab.slice(0, -1)}</h2>
                  <button onClick={() => setIsMasterDataModalOpen(false)} className="text-gray-500 hover:text-white">
                    <XCircle className="w-6 h-6" />
                  </button>
                </div>
-               <form onSubmit={handleSaveMasterData} className="space-y-4">
+               <form onSubmit={handleSaveMasterData} className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] pr-2">
                  
                  {masterDataTab === 'projects' && (
                    <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Code</label><input required type="text" value={masterDataForm.project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" value={masterDataForm.project_name || ''} onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                      <div>
                        <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
-                       <select required onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                       <select required value={masterDataForm.priority_level || ''} onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
                          <option value="">Select Priority</option>
                          <option value="High">High</option>
                          <option value="Medium">Medium</option>
@@ -1200,17 +1291,40 @@ export default function AgenticDashboard() {
                  
                  {masterDataTab === 'materials' && (
                    <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Code</label><input required type="text" value={masterDataForm.material_code || ''} onChange={e => setMasterDataForm({...masterDataForm, material_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" value={masterDataForm.material_name || ''} onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Approved Vendor</label><input type="text" value={masterDataForm.approved_vendor || ''} onChange={e => setMasterDataForm({...masterDataForm, approved_vendor: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" step="0.01" value={masterDataForm.standard_price || ''} onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Unit</label><input type="text" value={masterDataForm.unit || ''} onChange={e => setMasterDataForm({...masterDataForm, unit: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
                    </>
                  )}
 
                  {masterDataTab === 'sites' && (
-                   <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, site_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                   <>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Code</label><input required type="text" value={masterDataForm.site_code || ''} onChange={e => setMasterDataForm({...masterDataForm, site_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" value={masterDataForm.site_name || ''} onChange={e => setMasterDataForm({...masterDataForm, site_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div>
+                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Parent Project</label>
+                       <select required value={masterDataForm.parent_project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, parent_project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                         <option value="">Select Parent Project</option>
+                         {projectListDropdown.map((p:any) => (
+                           <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
+                         ))}
+                       </select>
+                     </div>
+                   </>
                  )}
 
                  {masterDataTab === 'camps' && (
-                   <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, camp_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                   <>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Code</label><input required type="text" value={masterDataForm.camp_code || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Name</label><input required type="text" value={masterDataForm.camp_name || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input required type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Bed Capacity</label><input required type="number" value={masterDataForm.total_bed_capacity || ''} onChange={e => setMasterDataForm({...masterDataForm, total_bed_capacity: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Current Occupied Beds</label><input required type="number" value={masterDataForm.current_occupied_beds || ''} onChange={e => setMasterDataForm({...masterDataForm, current_occupied_beds: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Manager Name</label><input type="text" value={masterDataForm.camp_manager_name || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_manager_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                   </>
                  )}
 
                  <button disabled={isAddingMasterData} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
