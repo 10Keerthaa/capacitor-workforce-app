@@ -50,18 +50,59 @@ export async function POST(req: Request) {
     let employeeNationality = 'Unknown';
     let employeeTrade = 'Unknown';
     let assignedSite = 'Unknown';
+    let sitePriority = 'Unknown';
 
     if (employeeName && employeeName !== 'Unknown') {
-      const { data: empData } = await supabase
-        .from('employees')
+      // Step 1: Look up employee in master_employees (fallback to employees if master_employees fails)
+      let empData = null;
+      const { data: masterEmpData } = await supabase
+        .from('master_employees')
         .select('*')
         .eq('full_name', employeeName)
         .single();
+      
+      if (masterEmpData) {
+         empData = masterEmpData;
+      } else {
+         const { data: oldEmpData } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('full_name', employeeName)
+          .single();
+         empData = oldEmpData;
+      }
 
       if (empData) {
         employeeNationality = empData.nationality || 'Unknown';
         employeeTrade = empData.trade_skill || empData.designation || 'Unknown';
         assignedSite = empData.current_site || empData.site_assigned || 'Unknown';
+
+        // Step 2 & 3: Cross-reference the new Master Data tables for Priority
+        if (assignedSite && assignedSite !== 'Unknown') {
+           try {
+             // Get parent project code from sites table
+             const { data: siteData } = await supabase
+               .from('sites')
+               .select('parent_project_code')
+               .eq('site_name', assignedSite)
+               .single();
+               
+             if (siteData && siteData.parent_project_code) {
+                // Get priority level from projects_master table
+                const { data: projectData } = await supabase
+                  .from('projects_master')
+                  .select('priority_level')
+                  .eq('project_code', siteData.parent_project_code)
+                  .single();
+                  
+                if (projectData && projectData.priority_level) {
+                   sitePriority = projectData.priority_level;
+                }
+             }
+           } catch (e) {
+             console.error("Master data priority lookup failed", e);
+           }
+        }
       }
     }
 
@@ -90,7 +131,7 @@ export async function POST(req: Request) {
       You are a Workforce Agent (Camp Boss) analyzing labor camp attendance.
       Employee: ${employeeName || 'Unknown'} (${employeeId || 'Unknown'})
       Trade/Skill: ${employeeTrade}
-      Assigned Site: ${assignedSite}
+      Assigned Site: ${assignedSite} (Database Priority Level: ${sitePriority})
       Nationality: ${employeeNationality}
       Camp Location: ${campLocation || 'Unknown'}
       Room Number: ${roomNumber || 'Unknown'}
