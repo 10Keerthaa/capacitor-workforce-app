@@ -15,10 +15,6 @@ const responseSchema: Schema = {
       type: Type.STRING,
       description: "Action to take, e.g., 'Request Immediate Replacement', 'Monitor Situation', 'No Action Needed'",
     },
-    ai_anomaly_detected: {
-      type: Type.STRING,
-      description: "Describe any anomalies, e.g., 'Possible contagion in room' or 'Normal absence'",
-    },
     ai_reasoning: {
       type: Type.STRING,
       description: "A 1-2 sentence explanation of your analysis.",
@@ -36,7 +32,7 @@ const responseSchema: Schema = {
       description: "Must be 'Over Capacity Risk' (if occupancy is >90% of capacity) or 'Safe'.",
     }
   },
-  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_anomaly_detected", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language", "ai_camp_utilization"],
+  required: ["ai_absenteeism_risk", "ai_replacement_action", "ai_reasoning", "ai_worker_sms_draft", "ai_worker_sms_language", "ai_camp_utilization"],
 };
 
 export async function POST(req: Request) {
@@ -147,7 +143,7 @@ export async function POST(req: Request) {
 
       Analyze the worker's status and remarks to predict absenteeism risk.
       If the worker is sick or absent, determine if a replacement is needed on site based on their role and priority.
-      Detect any anomalies (e.g., if remarks suggest a contagious illness spreading).
+      CRITICAL: Do NOT attempt to diagnose camp-wide contagions or outbreaks. Only assess the individual worker's absenteeism risk and site replacement needs.
       Calculate the Camp Utilization percentage (Current Occupancy / Total Capacity). If it is over 90%, flag 'Over Capacity Risk', otherwise 'Safe'.
       
       CRITICAL: Draft a Care SMS to send to the worker. 
