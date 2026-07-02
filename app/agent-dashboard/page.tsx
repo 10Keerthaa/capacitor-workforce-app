@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, BrainCircuit, AlertTriangle, CheckCircle, 
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
-  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin
+  RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin, Database, Save, Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -30,6 +30,80 @@ export default function AgenticDashboard() {
   // Worker Data State
   const [workersList, setWorkersList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddWorkerModalOpen, setIsAddWorkerModalOpen] = useState(false);
+  const [newWorkerForm, setNewWorkerForm] = useState({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+  const [isAddingWorker, setIsAddingWorker] = useState(false);
+
+  const handleAddWorker = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAddingWorker(true);
+    try {
+      const { error } = await supabase.from('master_employees').insert([
+        { 
+          employee_name: newWorkerForm.name,
+          employee_id: newWorkerForm.employee_id,
+          trade: newWorkerForm.trade,
+          nationality: newWorkerForm.nationality
+        }
+      ]);
+      if (!error) {
+        setIsAddWorkerModalOpen(false);
+        setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+        fetchDashboardData();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAddingWorker(false);
+    }
+  };
+
+  // Master Data State
+  const [masterDataTab, setMasterDataTab] = useState('projects');
+  const [masterDataList, setMasterDataList] = useState<any[]>([]);
+  const [isMasterDataModalOpen, setIsMasterDataModalOpen] = useState(false);
+  const [masterDataForm, setMasterDataForm] = useState<any>({});
+  const [isAddingMasterData, setIsAddingMasterData] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'master-data') {
+      const fetchMasterDataList = async () => {
+        let table = 'projects_master';
+        if (masterDataTab === 'projects') table = 'projects_master';
+        else if (masterDataTab === 'materials') table = 'master_materials';
+        else if (masterDataTab === 'sites') table = 'sites';
+        else if (masterDataTab === 'camps') table = 'camps';
+        
+        const { data } = await supabase.from(table).select('*').limit(50);
+        if (data) setMasterDataList(data);
+      };
+      fetchMasterDataList();
+    }
+  }, [activeTab, masterDataTab]);
+
+  const handleSaveMasterData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAddingMasterData(true);
+    let table = 'projects_master';
+    if (masterDataTab === 'projects') table = 'projects_master';
+    else if (masterDataTab === 'materials') table = 'master_materials';
+    else if (masterDataTab === 'sites') table = 'sites';
+    else if (masterDataTab === 'camps') table = 'camps';
+
+    try {
+      const { error } = await supabase.from(table).insert([masterDataForm]);
+      if (!error) {
+        setIsMasterDataModalOpen(false);
+        setMasterDataForm({});
+        const { data } = await supabase.from(table).select('*').limit(50);
+        if (data) setMasterDataList(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAddingMasterData(false);
+    }
+  };
 
   // Live Chart Data State
   const [laborRoiData, setLaborRoiData] = useState<any[]>([]);
@@ -603,6 +677,12 @@ export default function AgenticDashboard() {
             <h1 className="text-3xl font-black tracking-tighter text-white">Workers Directory</h1>
             <p className="text-gray-500 text-sm mt-1">{workersList.length} total workers registered</p>
           </div>
+          <button 
+            onClick={() => setIsAddWorkerModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add New Worker
+          </button>
         </div>
 
         <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-sm overflow-hidden">
@@ -667,6 +747,73 @@ export default function AgenticDashboard() {
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-500">No workers found.</td>
                   </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMasterData = () => {
+    return (
+      <div className="animate-fade-in-up">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tighter text-white">Master Data Admin</h1>
+            <p className="text-gray-500 text-sm mt-1">Manage global system configurations</p>
+          </div>
+          <button 
+            onClick={() => setIsMasterDataModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add New Record
+          </button>
+        </div>
+
+        <div className="flex gap-2 mb-6 border-b border-[#222] pb-2 overflow-x-auto [scrollbar-width:none]">
+          {['projects', 'materials', 'sites', 'camps'].map(tab => (
+            <button 
+              key={tab} 
+              onClick={() => setMasterDataTab(tab)}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${masterDataTab === tab ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-500 hover:bg-[#111]'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                  {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Priority Level</th><th className="p-4">ID</th></>}
+                  {masterDataTab === 'materials' && <><th className="p-4">Material Name</th><th className="p-4">Vendor</th><th className="p-4">Price</th></>}
+                  {masterDataTab === 'sites' && <><th className="p-4">Site Name</th><th className="p-4">Location</th><th className="p-4">ID</th></>}
+                  {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Capacity</th><th className="p-4">ID</th></>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222]">
+                {masterDataList.map((item, i) => (
+                  <tr key={i} className="hover:bg-[#111] transition-colors">
+                    {masterDataTab === 'projects' && (
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</td><td className="p-4"><span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span></td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                    )}
+                    {masterDataTab === 'materials' && (
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.material_name || item.item_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.approved_vendor || item.vendor || 'N/A'}</td><td className="p-4 text-xs text-emerald-400">${item.standard_price || item.price || 0}</td></>
+                    )}
+                    {masterDataTab === 'sites' && (
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                    )}
+                    {masterDataTab === 'camps' && (
+                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.capacity || 'N/A'}</td><td className="p-4 text-xs text-gray-500">{item.id}</td></>
+                    )}
+                  </tr>
+                ))}
+                {masterDataList.length === 0 && (
+                  <tr><td colSpan={3} className="p-8 text-center text-gray-500">No records found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -863,7 +1010,16 @@ export default function AgenticDashboard() {
                 <span className={`text-[10px] font-bold tracking-widest uppercase ${item.color} ${item.bg} px-3 py-1.5 rounded border ${item.border}`}>
                   {item.agentName}
                 </span>
-                <span className="text-xs text-gray-400">Awaiting Manager Override</span>
+                <span className="text-xs text-gray-400">
+                  {item.sourceTable === 'petty_cash' ? 'Awaiting Finance Approval' :
+                   item.sourceTable === 'employee_onboarding' ? 'Awaiting HR Approval' :
+                   item.sourceTable === 'mr_procurement' ? 'Awaiting Procurement Approval' :
+                   item.sourceTable === 'work_output' ? 'Awaiting Operations Override' :
+                   item.sourceTable === 'daily_manpower' ? 'Awaiting Site Admin Override' :
+                   item.sourceTable === 'camp_boss' ? 'Awaiting Camp Manager Override' :
+                   item.sourceTable === 'tools_management' ? 'Awaiting Asset Manager Override' :
+                   'Awaiting Manager Override'}
+                </span>
               </div>
             </div>
           </div>
@@ -931,6 +1087,7 @@ export default function AgenticDashboard() {
           <SidebarItem id="map" label="Live Map" icon={MapPin} />
           <SidebarItem id="workers" label="Workers" icon={Users} />
           <SidebarItem id="reports" label="Reports" icon={BarChart3} />
+          <SidebarItem id="master-data" label="Master Data" icon={Database} />
         </div>
         <div className="p-4 border-t border-[#222]">
           <div className={`flex items-center gap-3 bg-[#111] border border-[#222] rounded-xl cursor-pointer hover:border-[#333] transition-colors ${isSidebarCollapsed ? 'p-2 justify-center' : 'p-3'}`}>
@@ -972,8 +1129,98 @@ export default function AgenticDashboard() {
             {activeTab === 'map' && renderMap()}
             {activeTab === 'workers' && renderWorkers()}
             {activeTab === 'reports' && renderReports()}
+            {activeTab === 'master-data' && renderMasterData()}
          </div>
          {renderSlideOutDrawer()}
+
+         {/* Add Worker Modal */}
+         {isAddWorkerModalOpen && (
+           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddWorkerModalOpen(false)} />
+             <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+               <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-xl font-black text-white">Add New Worker</h2>
+                 <button onClick={() => setIsAddWorkerModalOpen(false)} className="text-gray-500 hover:text-white">
+                   <XCircle className="w-6 h-6" />
+                 </button>
+               </div>
+               <form onSubmit={handleAddWorker} className="space-y-4">
+                 <div>
+                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee Name</label>
+                   <input required type="text" value={newWorkerForm.name} onChange={e => setNewWorkerForm({...newWorkerForm, name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Alex Mercer" />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee ID</label>
+                   <input required type="text" value={newWorkerForm.employee_id} onChange={e => setNewWorkerForm({...newWorkerForm, employee_id: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. EMP-1042" />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Trade / Skill</label>
+                   <input required type="text" value={newWorkerForm.trade} onChange={e => setNewWorkerForm({...newWorkerForm, trade: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Master Welder" />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Nationality</label>
+                   <input required type="text" value={newWorkerForm.nationality} onChange={e => setNewWorkerForm({...newWorkerForm, nationality: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Indian" />
+                 </div>
+                 <button disabled={isAddingWorker} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
+                   {isAddingWorker ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                   {isAddingWorker ? 'Saving...' : 'Save Worker to Database'}
+                 </button>
+               </form>
+             </div>
+           </div>
+         )}
+
+         {/* Master Data Modal */}
+         {isMasterDataModalOpen && (
+           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMasterDataModalOpen(false)} />
+             <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+               <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-xl font-black text-white capitalize">Add New {masterDataTab.slice(0, -1)}</h2>
+                 <button onClick={() => setIsMasterDataModalOpen(false)} className="text-gray-500 hover:text-white">
+                   <XCircle className="w-6 h-6" />
+                 </button>
+               </div>
+               <form onSubmit={handleSaveMasterData} className="space-y-4">
+                 
+                 {masterDataTab === 'projects' && (
+                   <>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div>
+                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
+                       <select required onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                         <option value="">Select Priority</option>
+                         <option value="High">High</option>
+                         <option value="Medium">Medium</option>
+                         <option value="Low">Low</option>
+                       </select>
+                     </div>
+                   </>
+                 )}
+                 
+                 {masterDataTab === 'materials' && (
+                   <>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                   </>
+                 )}
+
+                 {masterDataTab === 'sites' && (
+                   <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, site_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                 )}
+
+                 {masterDataTab === 'camps' && (
+                   <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Name</label><input required type="text" onChange={e => setMasterDataForm({...masterDataForm, camp_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                 )}
+
+                 <button disabled={isAddingMasterData} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
+                   {isAddingMasterData ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                   {isAddingMasterData ? 'Saving...' : 'Save Record'}
+                 </button>
+               </form>
+             </div>
+           </div>
+         )}
       </main>
 
       {/* Mobile Bottom Navigation */}
