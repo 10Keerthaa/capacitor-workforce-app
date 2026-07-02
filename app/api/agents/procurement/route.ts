@@ -25,6 +25,7 @@ export async function POST(req: Request) {
     // 1. Fetch "Rulebook" from materials_master
     let approvedVendor = 'Unknown (No Master Record)';
     let standardPrice = 'Unknown';
+    let currentStock = 'Unknown';
     // Extract base material name before any parentheses (e.g. "Copper Wiring (100m)" -> "Copper Wiring")
     const baseMaterialName = material_name.split(' (')[0].trim();
 
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
     if (materialMaster) {
       approvedVendor = materialMaster.approved_vendor || materialMaster.vendor || materialMaster.supplierName || approvedVendor;
       standardPrice = materialMaster.standard_price?.toString() || materialMaster.standard_unit_price?.toString() || materialMaster.unit_price?.toString() || standardPrice;
+      currentStock = materialMaster.curent_stock?.toString() || 'Unknown';
     }
 
     // 2. Fetch Historical Context for Stock Shortage Prediction
@@ -94,13 +96,14 @@ export async function POST(req: Request) {
       --- MASTER DATABASE RULES & HISTORY ---
       Auto-Assigned Vendor: ${approvedVendor}
       Auto-Assigned Price: $${standardPrice}
+      Current Warehouse Stock: ${currentStock}
       Historical Pricing: ${pricingTrendContext}
       Site Order History: ${historyText}
 
       --- YOUR TASKS ---
       1. Vendor & Price Setup: We have automatically assigned this material request to our official vendor (${approvedVendor}) at our standard price ($${standardPrice}).
       2. Unapproved Items Rule: If the Auto-Assigned Vendor is 'Unknown (No Master Record)', you MUST flag ai_risk_level as 'High' and ai_recommendation as 'Reject' because it is an unauthorized material.
-      3. Predict Stock Shortages & Hoarding: If the material IS approved, you must automatically Approve this request unless it seems like massive stock hoarding. Based on the Quantity, Required Date, and Site Order History, predict if this is an urgent stock shortage. If it is an emergency, flag priority as Critical.
+      3. Exact Stock Shortage Math: Compare the Requested Quantity against the Current Warehouse Stock. If the Current Warehouse Stock is 0 or dangerously low compared to the requested quantity, flag priority as Critical (Shortage). If the site is ordering a huge quantity but we already have massive stock, flag it as a potential hoarding risk.
       4. Analyze Pricing Trend: Compare the Auto-Assigned Price against the Historical Pricing context. Output a short insight on whether prices are rising, falling, or stable.
 
       Output ONLY a valid JSON object matching this schema exactly:
