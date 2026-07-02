@@ -31,16 +31,7 @@ export default function ProcurementForm() {
     fetchMasterData();
   }, []);
 
-  const handleQuickFill = (scenario: 'safe' | 'hoarding' | 'unapproved') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (scenario === 'safe') {
-      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-109", requestedBy: "Ahmed Ali", projectCode: "PRJ-002", projectName: "Downtown Mall Project", siteCode: "S-002", siteName: "Site B", materialName: "Safety Helmet", remarks: "Standard weekly restock.", quantity: "50", requestedDate: today, requiredDate: today });
-    } else if (scenario === 'hoarding') {
-      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-110", requestedBy: "Bruce Wayne", projectCode: "PRJ-003", projectName: "Burj Skyline", siteCode: "S-003", siteName: "Site C", materialName: "Copper Wiring (100m)", remarks: "Ordering extra just in case we need it next year.", quantity: "5000", requestedDate: today, requiredDate: today });
-    } else if (scenario === 'unapproved') {
-      setFormData({ mrNo: "Auto-Assigned on Save", employeeId: "EMP-111", requestedBy: "Clark Kent", projectCode: "PRJ-004", projectName: "Palm Jumeirah Villas", siteCode: "S-004", siteName: "Site D", materialName: "Luxury Office Chairs", remarks: "For the new site trailer.", quantity: "4", requestedDate: today, requiredDate: today });
-    }
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -96,17 +87,6 @@ export default function ProcurementForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2 flex-wrap">
-        <button type="button" onClick={() => handleQuickFill('safe')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Safe Restock
-        </button>
-        <button type="button" onClick={() => handleQuickFill('hoarding')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Hoarding (5000x)
-        </button>
-        <button type="button" onClick={() => handleQuickFill('unapproved')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Unapproved Item
-        </button>
-      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-2">
