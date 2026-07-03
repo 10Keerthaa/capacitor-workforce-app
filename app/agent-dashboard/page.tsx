@@ -1068,24 +1068,7 @@ export default function AgenticDashboard() {
             </div>
           </div>
 
-          {/* Chart 5: Pricing Trends */}
-          <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl lg:col-span-2">
-            <h3 className="text-xs font-bold tracking-widest text-cyan-400 uppercase mb-2 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> Historical Pricing Trends
-            </h3>
-            <p className="text-gray-500 text-xs mb-6">Price Fluctuation Over Time ({pricingTrendData[0]?.material || 'Most Requested Material'})</p>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={pricingTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                  <XAxis dataKey="date" stroke="#555" tick={{ fill: '#888', fontSize: 12 }} />
-                  <YAxis stroke="#555" tick={{ fill: '#888', fontSize: 12 }} domain={['auto', 'auto']} tickFormatter={(value) => `$${value}`} />
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} formatter={(value: number) => [`$${value.toFixed(2)}`, 'Unit Price']} />
-                  <Line type="monotone" dataKey="price" stroke="#22d3ee" strokeWidth={3} dot={{ fill: '#22d3ee', r: 4 }} activeDot={{ r: 6 }} name="Unit Price" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+
 
         </div>
       </div>

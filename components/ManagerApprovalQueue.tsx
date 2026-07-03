@@ -198,14 +198,6 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                             <span className="text-white font-semibold text-sm truncate" title={item.agent_metadata.recommended_vendor}>{item.agent_metadata.recommended_vendor}</span>
                           </div>
                         )}
-                        {item.agent_metadata.ai_pricing_trend && (
-                          <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/30 flex flex-col justify-center col-span-2">
-                            <span className="text-amber-500/80 text-[10px] uppercase tracking-wider mb-1 font-bold flex items-center gap-1">
-                              📈 Pricing Trend Alert
-                            </span>
-                            <span className="text-white font-semibold text-sm">{item.agent_metadata.ai_pricing_trend}</span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Reasoning Block */}
@@ -216,7 +208,23 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                           ? 'bg-red-950/20 border-red-500/80' 
                           : 'bg-emerald-950/20 border-emerald-500/80'
                         }`}>
-                          {item.agent_metadata.reason || item.agent_metadata.ai_reason || item.agent_metadata.ai_reasoning || "No detailed reasoning provided by the AI for this item."}
+                          {(() => {
+                            const reasonStr = item.agent_metadata.reason || item.agent_metadata.ai_reason || item.agent_metadata.ai_reasoning || "No detailed reasoning provided by the AI for this item.";
+                            if (reasonStr.includes('Vendor:')) {
+                              const lines = reasonStr.split('\n');
+                              return lines.map((line: string, i: number) => {
+                                if (line.startsWith('Vendor:') || line.startsWith('Price:')) {
+                                  return (
+                                    <div key={i} className="bg-blue-500/10 border border-blue-500/30 rounded px-2 py-1 mb-2 text-blue-400 font-bold w-fit">
+                                      {line}
+                                    </div>
+                                  );
+                                }
+                                return <p key={i} className="mt-2">{line}</p>;
+                              });
+                            }
+                            return reasonStr;
+                          })()}
                         </div>
                       </div>
                     </div>

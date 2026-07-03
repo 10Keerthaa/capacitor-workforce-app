@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     if (materialMaster) {
       approvedVendor = materialMaster.approved_vendor || materialMaster.vendor || materialMaster.supplierName || approvedVendor;
       standardPrice = materialMaster.standard_price?.toString() || materialMaster.standard_unit_price?.toString() || materialMaster.unit_price?.toString() || standardPrice;
-      currentStock = materialMaster.curent_stock?.toString() || 'Unknown';
+      currentStock = materialMaster.current_stock?.toString() || 'Unknown';
     }
 
     // 2. Fetch Historical Context for Stock Shortage Prediction
