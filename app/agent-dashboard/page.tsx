@@ -31,7 +31,7 @@ export default function AgenticDashboard() {
   const [workersList, setWorkersList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddWorkerModalOpen, setIsAddWorkerModalOpen] = useState(false);
-  const [newWorkerForm, setNewWorkerForm] = useState({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+  const [newWorkerForm, setNewWorkerForm] = useState({ name: '', employee_id: '', trade: '', labor_type: 'Direct', assigned_project: 'Unassigned' });
   const [isAddingWorker, setIsAddingWorker] = useState(false);
 
   const [editingWorkerId, setEditingWorkerId] = useState<number | null>(null);
@@ -45,11 +45,14 @@ export default function AgenticDashboard() {
           employee_name: newWorkerForm.name,
           employee_id: newWorkerForm.employee_id,
           trade: newWorkerForm.trade,
-          nationality: newWorkerForm.nationality
+          labor_type: newWorkerForm.labor_type,
+          assigned_project: newWorkerForm.assigned_project
         }).eq('id', editingWorkerId);
-        if (!error) {
+        if (error) {
+          alert("Error updating worker: " + error.message);
+        } else {
           setIsAddWorkerModalOpen(false);
-          setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+          setNewWorkerForm({ name: '', employee_id: '', trade: '', labor_type: 'Direct', assigned_project: 'Unassigned' });
           setEditingWorkerId(null);
           fetchDashboardData();
         }
@@ -58,16 +61,20 @@ export default function AgenticDashboard() {
           employee_name: newWorkerForm.name,
           employee_id: newWorkerForm.employee_id,
           trade: newWorkerForm.trade,
-          nationality: newWorkerForm.nationality
+          labor_type: newWorkerForm.labor_type,
+          assigned_project: newWorkerForm.assigned_project
         }]);
-        if (!error) {
+        if (error) {
+          alert("Error adding worker: " + error.message);
+        } else {
           setIsAddWorkerModalOpen(false);
-          setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+          setNewWorkerForm({ name: '', employee_id: '', trade: '', labor_type: 'Direct', assigned_project: 'Unassigned' });
           fetchDashboardData();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert("An unexpected error occurred: " + err.message);
     } finally {
       setIsAddingWorker(false);
     }
@@ -261,6 +268,8 @@ export default function AgenticDashboard() {
 
     // Fetch Workers Data
     const { data: masterWorkers } = await supabase.from('master_employees').select('*');
+    const { data: projList } = await supabase.from('projects_master').select('project_code, project_name');
+    if (projList) setProjectListDropdown(projList);
     const { data: manpowerLogs } = await supabase.from('daily_manpower')
       .select('siteName, date, engineer, foreman, driver, otherStaff')
       .order('id', { ascending: false })
@@ -316,13 +325,16 @@ export default function AgenticDashboard() {
         }
 
         return {
+          db_id: w.id,
           id: w.employee_id || w.id,
           name: w.employee_name || 'Unknown Worker',
           role: w.trade || 'General Worker',
           status: finalStatus,
           site: finalSite,
           contact: 'N/A', // contact not in master_employees
-          joinDate: 'Recent'
+          joinDate: 'Recent',
+          labor_type: w.labor_type || 'Direct',
+          assigned_project: w.assigned_project || w.current_site || 'Unassigned'
         };
       });
       setWorkersList(processedWorkers);
@@ -749,7 +761,7 @@ export default function AgenticDashboard() {
           <button 
             onClick={() => {
               setEditingWorkerId(null);
-              setNewWorkerForm({ name: '', employee_id: '', trade: '', nationality: '', current_site: 'Unassigned' });
+              setNewWorkerForm({ name: '', employee_id: '', trade: '', labor_type: 'Direct', assigned_project: 'Unassigned' });
               setIsAddWorkerModalOpen(true);
             }}
             className="flex items-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
@@ -817,13 +829,19 @@ export default function AgenticDashboard() {
                     </td>
                     <td className="p-4 text-right">
                       <button onClick={() => {
-                        setEditingWorkerId(w.id);
-                        setNewWorkerForm({ name: w.name, employee_id: w.id, trade: w.role, nationality: w.nationality || '', current_site: w.site });
+                        setEditingWorkerId(w.db_id);
+                        setNewWorkerForm({ 
+                          name: w.name, 
+                          employee_id: w.id, 
+                          trade: w.role, 
+                          labor_type: w.labor_type, 
+                          assigned_project: w.assigned_project 
+                        });
                         setIsAddWorkerModalOpen(true);
                       }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => handleDeleteWorker(w.id)} className="text-gray-500 hover:text-rose-400 transition-colors">
+                      <button onClick={() => handleDeleteWorker(w.db_id)} className="text-gray-500 hover:text-rose-400 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
@@ -1276,9 +1294,21 @@ export default function AgenticDashboard() {
                    <input required type="text" value={newWorkerForm.trade} onChange={e => setNewWorkerForm({...newWorkerForm, trade: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Master Welder" />
                  </div>
                  <div>
-                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Nationality</label>
-                   <input required type="text" value={newWorkerForm.nationality} onChange={e => setNewWorkerForm({...newWorkerForm, nationality: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Indian" />
-                 </div>
+                    <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Labor Type</label>
+                    <select required value={newWorkerForm.labor_type} onChange={e => setNewWorkerForm({...newWorkerForm, labor_type: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                      <option value="Direct">Direct</option>
+                      <option value="Subcontractor">Subcontractor</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Default Assigned Project</label>
+                    <select required value={newWorkerForm.assigned_project} onChange={e => setNewWorkerForm({...newWorkerForm, assigned_project: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                      <option value="Unassigned">Unassigned</option>
+                      {projectListDropdown.map((p: any) => (
+                        <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
+                      ))}
+                    </select>
+                  </div>
                  <button disabled={isAddingWorker} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
                    {isAddingWorker ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                    {isAddingWorker ? 'Saving...' : 'Save Worker to Database'}

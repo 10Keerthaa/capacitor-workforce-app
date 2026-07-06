@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       if (empData) {
         employeeNationality = empData.nationality || 'Unknown';
         employeeTrade = empData.trade_skill || empData.designation || 'Unknown';
-        assignedSite = empData.current_site || empData.site_assigned || 'Unknown';
+        assignedSite = empData.assigned_project || empData.current_site || empData.site_assigned || 'Unknown';
 
         // Step 2 & 3: Cross-reference the new Master Data tables for Priority
         if (assignedSite && assignedSite !== 'Unknown') {
