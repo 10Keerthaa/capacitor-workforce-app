@@ -795,6 +795,7 @@ export default function AgenticDashboard() {
                   <th className="p-4">Employee ID</th>
                   <th className="p-4">Trade / Skill</th>
                   <th className="p-4">Status (Present/Absent)</th>
+                  <th className="p-4">Assigned Project</th>
                   <th className="p-4">Current Site</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
@@ -823,6 +824,9 @@ export default function AgenticDashboard() {
                           {w.status === 'Active' ? 'Present' : 'Absent'}
                         </span>
                       </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-xs font-medium text-purple-400 bg-purple-400/10 px-2 py-1 rounded border border-purple-400/20">{w.assigned_project || 'Unassigned'}</span>
                     </td>
                     <td className="p-4">
                       <span className="text-xs font-medium text-gray-300">{w.site || 'Unassigned'}</span>
