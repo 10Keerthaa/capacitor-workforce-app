@@ -66,15 +66,15 @@ export default function ProcurementForm() {
             if (!res.ok) {
               await supabase.from('mr_procurement').update({
                 agent_status: 'pending_manager_review',
-                agent_metadata: { error: true, reason: '?? System Error: AI Overloaded. Rerouted to Manual Review.' }
+                agent_metadata: { error: true, reason: 'System Error: AI Overloaded. Rerouted to Manual Review.' }
               }).eq('id', data[0].id);
-              alert("? Record Saved.\n\n?? The AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+              alert("Record Saved.\n\nThe AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
             }
           }).catch(async (err) => {
             console.error("Agent call failed:", err);
             await supabase.from('mr_procurement').update({
               agent_status: 'pending_manager_review',
-              agent_metadata: { error: true, reason: '?? System Error: AI Connection Failed. Rerouted to Manual Review.' }
+              agent_metadata: { error: true, reason: 'System Error: AI Connection Failed. Rerouted to Manual Review.' }
             }).eq('id', data[0].id);
           });
       }
