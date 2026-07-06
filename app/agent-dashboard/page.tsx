@@ -782,9 +782,7 @@ export default function AgenticDashboard() {
                 className="w-full bg-[#0a0a0a] border border-[#333] text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-400 transition-colors"
               />
             </div>
-            <button className="bg-[#222] hover:bg-[#333] text-gray-300 p-2 rounded-lg transition-colors border border-[#333]">
-              <Filter className="w-4 h-4" />
-            </button>
+
           </div>
 
           <div className="overflow-x-auto">
