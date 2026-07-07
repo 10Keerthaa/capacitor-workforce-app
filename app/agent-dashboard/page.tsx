@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Activity, BrainCircuit, AlertTriangle, CheckCircle, 
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
@@ -16,6 +16,8 @@ const LiveMap = dynamic(() => import('@/components/ui/LiveMap'), { ssr: false })
 export default function AgenticDashboard() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeStatCard, setActiveStatCard] = useState(0);
+  const statsScrollRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [supervisorReport, setSupervisorReport] = useState<any>(null);
   const [reportHistory, setReportHistory] = useState<any[]>([]);
@@ -551,7 +553,17 @@ export default function AgenticDashboard() {
     <div className="animate-fade-in-up">
 
       {/* Top Stats */}
-      <div className="flex flex-row overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10 pb-2 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
+      <div
+        ref={statsScrollRef}
+        onScroll={() => {
+          if (!statsScrollRef.current) return;
+          const el = statsScrollRef.current;
+          const cardWidth = el.clientWidth;
+          const index = Math.round(el.scrollLeft / cardWidth);
+          setActiveStatCard(Math.min(index, 3));
+        }}
+        className="flex flex-row overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3 md:mb-10 relative z-10 pb-2 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory"
+      >
         {[
           { title: 'Total Workers (Present)', value: `${workersList.filter(w => w.status === 'Active').length}/${workersList.length}`, icon: Users, color: 'text-indigo-400', glow: 'bg-indigo-500/5' },
           { title: 'Tasks Processed', value: stats.processed.toLocaleString(), icon: Activity, color: 'text-emerald-400', glow: 'bg-emerald-500/5' },
@@ -568,6 +580,25 @@ export default function AgenticDashboard() {
               {stat.value}
             </h3>
           </div>
+        ))}
+      </div>
+
+      {/* Mobile-only Carousel Dots */}
+      <div className="flex md:hidden justify-center items-center gap-2 mb-8">
+        {[0, 1, 2, 3].map(i => (
+          <button
+            key={i}
+            onClick={() => {
+              if (!statsScrollRef.current) return;
+              statsScrollRef.current.scrollTo({ left: statsScrollRef.current.clientWidth * i, behavior: 'smooth' });
+              setActiveStatCard(i);
+            }}
+            className={`rounded-full transition-all duration-300 ${
+              activeStatCard === i
+                ? 'w-5 h-2 bg-blue-400'
+                : 'w-2 h-2 bg-gray-600 hover:bg-gray-500'
+            }`}
+          />
         ))}
       </div>
 

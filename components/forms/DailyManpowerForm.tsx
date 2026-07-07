@@ -17,6 +17,7 @@ export default function DailyManpowerForm() {
   const [foremanList, setForemanList] = useState<string[]>([]);
   const [driverList, setDriverList] = useState<string[]>([]);
   const [otherStaffBucket, setOtherStaffBucket] = useState<{name: string, trade: string}[]>([]);
+  const [siteList, setSiteList] = useState<{site_name: string, site_code: string, location: string}[]>([]);
 
   useEffect(() => {
     const fetchMasterData = async () => {
@@ -27,6 +28,9 @@ export default function DailyManpowerForm() {
         setDriverList(emps.filter(e => e.trade === 'Driver').map(e => e.employee_name));
         setOtherStaffBucket(emps.filter(e => !['Engineer', 'Foreman', 'Site Manager', 'Driver'].includes(e.trade || '')).map(e => ({ name: e.employee_name, trade: e.trade || '' })));
       }
+
+      const { data: sites } = await supabase.from('sites').select('site_name, site_code, location');
+      if (sites) setSiteList(sites);
     };
     fetchMasterData();
 
@@ -212,12 +216,27 @@ export default function DailyManpowerForm() {
             <input type="date" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="date" value={formData.date} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Site Number</label>
-            <input required name="siteNo" value={formData.siteNo} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="e.g. S-1024" />
+            <label className="text-sm font-medium text-gray-300">Site Name</label>
+            <SearchableDropdown
+              name="siteName"
+              required
+              placeholder="Start typing site name..."
+              value={formData.siteName}
+              onChange={(val) => setFormData(prev => ({ ...prev, siteName: val }))}
+              onSelect={(opt) => {
+                setFormData(prev => ({
+                  ...prev,
+                  siteName: opt.label,
+                  siteNo: opt.value,
+                  location: opt.siteData?.location || prev.location
+                }));
+              }}
+              options={siteList.map(s => ({ label: s.site_name, value: s.site_code, siteData: s }))}
+            />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Site Name</label>
-            <input required name="siteName" value={formData.siteName} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
+            <label className="text-sm font-medium text-gray-300">Site Code (Auto-filled)</label>
+            <input readOnly name="siteNo" value={formData.siteNo} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-gray-400 focus:ring-0 outline-none cursor-not-allowed opacity-70" placeholder="Auto-fills from site name..." />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Location</label>
