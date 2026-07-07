@@ -787,7 +787,7 @@ export default function AgenticDashboard() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead>
+              <thead className="hidden md:table-header-group">
                 <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                   <th className="p-4">Employee Name</th>
                   <th className="p-4">Employee ID</th>
@@ -798,10 +798,11 @@ export default function AgenticDashboard() {
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#222]">
+              <tbody className="divide-y divide-[#222] flex flex-col md:table-row-group gap-4 md:gap-0 p-4 md:p-0">
                 {filteredWorkers.map((w, i) => (
-                  <tr key={i} className="hover:bg-[#111] transition-colors group">
-                    <td className="p-4">
+                  <tr key={i} className="hover:bg-[#111] transition-colors group flex flex-col md:table-row bg-gray-900/20 md:bg-transparent p-4 md:p-0 rounded-xl border border-gray-800 md:border-0 gap-3 md:gap-0">
+                    <td className="p-0 md:p-4 flex flex-col md:table-cell gap-1">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Employee Name</span>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
                           {w.name.split(' ').map((n: string) => n[0]).join('').substring(0,2)}
@@ -809,13 +810,16 @@ export default function AgenticDashboard() {
                         <p className="font-semibold text-gray-200">{w.name}</p>
                       </div>
                     </td>
-                    <td className="p-4 text-sm text-gray-400 font-medium">
-                      {w.id || 'N/A'}
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Employee ID</span>
+                      <span className="text-sm text-gray-400 font-medium">{w.id || 'N/A'}</span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Trade / Skill</span>
                       <span className="text-xs font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{w.role}</span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Status (Present/Absent)</span>
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${w.status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`}></div>
                         <span className={`text-xs font-bold ${w.status === 'Active' ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -823,35 +827,40 @@ export default function AgenticDashboard() {
                         </span>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Assigned Project</span>
                       <span className="text-xs font-medium text-purple-400 bg-purple-400/10 px-2 py-1 rounded border border-purple-400/20">{w.assigned_project || 'Unassigned'}</span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Current Site</span>
                       <span className="text-xs font-medium text-gray-300">{w.site || 'Unassigned'}</span>
                     </td>
-                    <td className="p-4 text-right">
-                      <button onClick={() => {
-                        setEditingWorkerId(w.db_id);
-                        setNewWorkerForm({ 
-                          name: w.name, 
-                          employee_id: w.id, 
-                          trade: w.role, 
-                          labor_type: w.labor_type, 
-                          assigned_project: w.assigned_project 
-                        });
-                        setIsAddWorkerModalOpen(true);
-                      }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDeleteWorker(w.db_id)} className="text-gray-500 hover:text-rose-400 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell border-t border-gray-800/50 md:border-0 pt-2 md:pt-0">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Actions</span>
+                      <div className="flex items-center justify-end">
+                        <button onClick={() => {
+                          setEditingWorkerId(w.db_id);
+                          setNewWorkerForm({ 
+                            name: w.name, 
+                            employee_id: w.id, 
+                            trade: w.role, 
+                            labor_type: w.labor_type, 
+                            assigned_project: w.assigned_project 
+                          });
+                          setIsAddWorkerModalOpen(true);
+                        }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors p-1">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteWorker(w.db_id)} className="text-gray-500 hover:text-rose-400 transition-colors p-1">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {filteredWorkers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">No workers found.</td>
+                    <td colSpan={7} className="p-8 text-center text-gray-500">No workers found.</td>
                   </tr>
                 )}
               </tbody>
@@ -924,7 +933,7 @@ export default function AgenticDashboard() {
         <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead>
+              <thead className="hidden md:table-header-group">
                 <tr className="bg-[#111] border-b border-[#222] text-[10px] uppercase tracking-widest text-gray-500 font-bold">
                   {masterDataTab === 'projects' && <><th className="p-4">Project Name</th><th className="p-4">Project Code</th><th className="p-4">Priority Level</th><th className="p-4 text-right">Actions</th></>}
                   {masterDataTab === 'materials' && <><th className="p-4">Material Name</th><th className="p-4">Vendor</th><th className="p-4">Price</th><th className="p-4 text-right">Actions</th></>}
@@ -932,7 +941,7 @@ export default function AgenticDashboard() {
                   {masterDataTab === 'camps' && <><th className="p-4">Camp Name</th><th className="p-4">Camp Code</th><th className="p-4">Location</th><th className="p-4 text-right">Actions</th></>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#222]">
+              <tbody className="divide-y divide-[#222] flex flex-col md:table-row-group gap-4 md:gap-0 p-4 md:p-0">
                 {[...masterDataList].sort((a, b) => {
                   if (masterDataTab === 'projects') {
                     const weight: any = { 'High': 3, 'Medium': 2, 'Low': 1 };
@@ -940,35 +949,90 @@ export default function AgenticDashboard() {
                   }
                   return 0;
                 }).map((item, i) => (
-                  <tr key={i} className="hover:bg-[#111] transition-colors">
+                  <tr key={i} className="hover:bg-[#111] transition-colors flex flex-col md:table-row bg-gray-900/20 md:bg-transparent p-4 md:p-0 rounded-xl border border-gray-800 md:border-0 gap-3 md:gap-0">
                     {masterDataTab === 'projects' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.project_code || 'N/A'}</td><td className="p-4"><span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span></td></>
+                      <>
+                        <td className="p-0 md:p-4 flex flex-col md:table-cell gap-1">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Project Name</span>
+                          <span className="text-sm font-semibold text-gray-200">{item.project_name || item.projectName || 'Unnamed'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Project Code</span>
+                          <span className="text-xs text-gray-400">{item.project_code || 'N/A'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Priority Level</span>
+                          <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20">{item.priority_level || 'Normal'}</span>
+                        </td>
+                      </>
                     )}
                     {masterDataTab === 'materials' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.material_name || item.item_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.approved_vendor || item.vendor || 'N/A'}</td><td className="p-4 text-xs text-emerald-400">${item.standard_price || item.price || 0}</td></>
+                      <>
+                        <td className="p-0 md:p-4 flex flex-col md:table-cell gap-1">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Material Name</span>
+                          <span className="text-sm font-semibold text-gray-200">{item.material_name || item.item_name || 'Unnamed'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Vendor</span>
+                          <span className="text-xs text-gray-400">{item.approved_vendor || item.vendor || 'N/A'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Price</span>
+                          <span className="text-xs text-emerald-400">${item.standard_price || item.price || 0}</span>
+                        </td>
+                      </>
                     )}
                     {masterDataTab === 'sites' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.site_code || 'N/A'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td></>
+                      <>
+                        <td className="p-0 md:p-4 flex flex-col md:table-cell gap-1">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Site Name</span>
+                          <span className="text-sm font-semibold text-gray-200">{item.site_name || 'Unnamed'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Site Code</span>
+                          <span className="text-xs text-gray-400">{item.site_code || 'N/A'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Location</span>
+                          <span className="text-xs text-gray-400">{item.location || 'N/A'}</span>
+                        </td>
+                      </>
                     )}
                     {masterDataTab === 'camps' && (
-                      <><td className="p-4 text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</td><td className="p-4 text-xs text-gray-400">{item.camp_code || 'N/A'}</td><td className="p-4 text-xs text-gray-400">{item.location || 'N/A'}</td></>
+                      <>
+                        <td className="p-0 md:p-4 flex flex-col md:table-cell gap-1">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Camp Name</span>
+                          <span className="text-sm font-semibold text-gray-200">{item.camp_name || 'Unnamed'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Camp Code</span>
+                          <span className="text-xs text-gray-400">{item.camp_code || 'N/A'}</span>
+                        </td>
+                        <td className="p-0 md:p-4 flex justify-between items-center md:table-cell">
+                          <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Location</span>
+                          <span className="text-xs text-gray-400">{item.location || 'N/A'}</span>
+                        </td>
+                      </>
                     )}
-                    <td className="p-4 text-right">
-                      <button onClick={() => {
-                        setEditingMasterId(item.id);
-                        setMasterDataForm(item);
-                        setIsMasterDataModalOpen(true);
-                      }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDeleteMasterData(item.id)} className="text-gray-500 hover:text-rose-400 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <td className="p-0 md:p-4 flex justify-between items-center md:table-cell border-t border-gray-800/50 md:border-0 pt-2 md:pt-0">
+                      <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Actions</span>
+                      <div className="flex items-center justify-end">
+                        <button onClick={() => {
+                          setEditingMasterId(item.id);
+                          setMasterDataForm(item);
+                          setIsMasterDataModalOpen(true);
+                        }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors p-1">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteMasterData(item.id)} className="text-gray-500 hover:text-rose-400 transition-colors p-1">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {masterDataList.length === 0 && (
-                  <tr><td colSpan={3} className="p-8 text-center text-gray-500">No records found.</td></tr>
+                  <tr><td colSpan={4} className="p-8 text-center text-gray-500">No records found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -1438,6 +1502,10 @@ export default function AgenticDashboard() {
         <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center gap-1 ${activeTab === 'reports' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
           <BarChart3 className="w-5 h-5" />
           <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Reports</span>
+        </button>
+        <button onClick={() => setActiveTab('master-data')} className={`flex flex-col items-center gap-1 ${activeTab === 'master-data' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>
+          <Database className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-1">Master</span>
         </button>
       </nav>
     </div>

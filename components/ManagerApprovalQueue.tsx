@@ -109,7 +109,7 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                 </span>
                 <p className="text-sm text-gray-400 mt-2">Record ID: {item.id}</p>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-wrap gap-2 items-center">
                 {viewMode === 'pending' ? (
                   <>
                     <button onClick={() => handleAction(item.id, 'rejected')} className="flex items-center space-x-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors font-medium">
@@ -124,7 +124,7 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                      {item.agent_status === 'approved' ? <><CheckCircle size={18} /><span>Approved</span></> : <><XCircle size={18} /><span>Rejected</span></>}
                   </div>
                 )}
-                <button onClick={() => toggleExpand(item.id)} className="flex items-center space-x-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors font-medium ml-2">
+                <button onClick={() => toggleExpand(item.id)} className="flex items-center space-x-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors font-medium">
                   {expandedItems[item.id] ? <><ChevronUp size={18} /><span>Hide Details</span></> : <><ChevronDown size={18} /><span>Show Details</span></>}
                 </button>
               </div>
@@ -143,9 +143,9 @@ export default function ManagerApprovalQueue({ moduleId, onAction }: { moduleId:
                       const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/_/g, ' ');
                       
                       return (
-                        <div key={key} className="flex justify-between items-center border-b border-gray-800/30 pb-2 last:border-0">
+                        <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-800/30 pb-2 last:border-0 gap-1 sm:gap-4">
                           <span className="text-gray-500 font-medium text-xs uppercase tracking-wider">{formattedKey}</span>
-                          <span className="text-right font-semibold text-gray-100 ml-4 break-words">{String(val)}</span>
+                          <span className="text-left sm:text-right font-semibold text-gray-100 sm:ml-4 break-all sm:break-words">{String(val)}</span>
                         </div>
                       );
                     })}
