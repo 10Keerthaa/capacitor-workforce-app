@@ -1,0 +1,44 @@
+workflows:
+  ios-build:
+    name: iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      node: 20.11.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Build Next.js web app
+        script: |
+          npm run build
+      - name: Install Capacitor iOS
+        script: |
+          npm install @capacitor/ios
+      - name: Sync Capacitor iOS
+        script: |
+          npx cap sync ios
+      - name: Install CocoaPods
+        script: |
+          cd ios/App && pod install
+      - name: Build iOS IPA (unsigned)
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath ios/build \
+            build
+          mkdir -p ios/ipa
+          cd ios/build/Build/Products/Release-iphoneos
+          mkdir -p Payload
+          cp -r App.app Payload/
+          zip -r ../../../../../ios/ipa/10xWorkforce.ipa Payload/
+    artifacts:
+      - ios/ipa/*.ipa
