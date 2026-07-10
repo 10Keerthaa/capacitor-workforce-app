@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       employeePhotoUrisJson,
       consentFormUrisJson,
       drivingLicenseUrisJson,
+      certificatesJson,
       date 
     } = data;
     
@@ -77,9 +78,10 @@ export async function POST(req: Request) {
       Employee Photo URIs: ${employeePhotoUrisJson || '[]'}
       Consent Form URIs: ${consentFormUrisJson || '[]'}
       Driving License URIs: ${drivingLicenseUrisJson || '[]'}
+      Certificates List: ${certificatesJson ? JSON.stringify(certificatesJson) : '[]'}
 
-      Verify if all critical documents (Passport Scan, Employee Photo, and Consent Form) are present.
-      If any of these critical files are missing, you MUST flag it in 'ai_compliance_gap' and set 'ai_document_validation' to 'Missing Documents'.
+      Verify if all mandatory documents (Passport Scan, Employee Photo, Consent Form, Driving License, and Certificates) are present.
+      If any of these 5 documents are missing, you MUST flag it in 'ai_compliance_gap' and set 'ai_document_validation' to 'Missing Documents'. You must name the specific missing files in 'ai_compliance_gap'.
 
       Analyze the document expiry dates against the current date.
       Identify any compliance gaps (like missing expiry dates or upcoming expirations).
@@ -87,7 +89,7 @@ export async function POST(req: Request) {
       
       SLA RULE: The company allows a maximum of 3 days to complete onboarding. Compare the 'Application Date' to 'Today's Date'. If it has been more than 3 days, output 'SLA Breached'. Otherwise output 'SLA Met'.
       
-      REASONING RULE: If all documents (Passport Scan, Employee Photo, and Consent Form) are uploaded, valid, and expiries are good, you MUST end the 'ai_reasoning' with: "Good to go for onboarding."
+      REASONING RULE: If all 5 documents (Passport Scan, Employee Photo, Consent Form, Driving License, and Certificates) are uploaded, valid, and expiries are good, you MUST end the 'ai_reasoning' with: "Good to go for onboarding."
 
       Recommend the next action for HR.
       Output ONLY a valid JSON object matching the exact schema provided.
