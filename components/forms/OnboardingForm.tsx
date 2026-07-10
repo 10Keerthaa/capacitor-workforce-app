@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
 import CertificateUpload from "@/components/ui/CertificateUpload";
-import { Beaker } from "lucide-react";
+
 
 export default function OnboardingForm() {
   const [loading, setLoading] = useState(false);
@@ -16,27 +16,7 @@ export default function OnboardingForm() {
   const [drivingLicenseUrisJson, setDrivingLicenseUrisJson] = useState<string[]>([]);
   const [certificatesJson, setCertificatesJson] = useState<{name: string; urls: string[]}[]>([]);
 
-  const handleQuickFill = () => {
-    setFormData({
-      employeeName: "Alex Mercer",
-      nationality: "American",
-      countryCode: "+971",
-      mobileNo: "509988776",
-      trade: "Welder",
-      laborType: "Direct",
-      accommodation: "City Center Premium Camp",
-      passportNo: "W11223344",
-      visaStatus: "Processing",
-      employeeStatus: "Active",
-      onboardingStatus: "Pending Medical",
-      remarks: "Urgent NEW hire for Metro Station Alpha night shift welding.",
-      dob: "1992-11-05",
-      dateOfJoining: new Date().toISOString().split('T')[0], // SLA Met
-      passportExpiry: "2032-11-05",
-      visaExpiry: "2028-11-05", // Fully Compliant
-      passportInLocker: false
-    });
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -84,11 +64,6 @@ export default function OnboardingForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-4">
-        <button type="button" onClick={handleQuickFill} className="flex items-center gap-2 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500/30 transition-colors shadow-lg">
-          <Beaker className="w-4 h-4" /> Quick Fill (Standard Hire)
-        </button>
-      </div>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Personal Details */}
         <div className="space-y-4">

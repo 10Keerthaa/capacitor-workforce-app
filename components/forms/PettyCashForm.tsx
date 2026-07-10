@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
-import { Beaker, Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function PettyCashForm() {
@@ -65,16 +65,7 @@ export default function PettyCashForm() {
     setOcrLoading(false);
   };
 
-  const handleQuickFill = (scenario: 'safe' | 'fraud' | 'duplicate') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (scenario === 'safe') {
-      setFormData({ pettyCashHolder: "John Safe", supplierName: "Office Depot", description: "Standard office supplies and coffee for the site management meeting.", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", currency: "USD", amount: "50", vat: "2.50", totalAmount: "52.50", date: today });
-    } else if (scenario === 'fraud') {
-      setFormData({ pettyCashHolder: "Tony Stark", supplierName: "Luxury Motors", description: "Purchasing a new set of rims for the site manager's personal vehicle.", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", currency: "USD", amount: "2500", vat: "125", totalAmount: "2625", date: today });
-    } else if (scenario === 'duplicate') {
-      setFormData({ pettyCashHolder: "Tony Stark", supplierName: "Metro Fuel Services", description: "Lunch for the team.", projectCode: "PRJ-001", projectName: "City Infrastructure Revamp", currency: "USD", amount: "400", vat: "20", totalAmount: "420", date: today });
-    }
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -168,17 +159,7 @@ export default function PettyCashForm() {
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 flex-wrap">
-        <button type="button" onClick={() => handleQuickFill('safe')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Safe ($50)
-        </button>
-        <button type="button" onClick={() => handleQuickFill('fraud')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Fraud ($2500)
-        </button>
-        <button type="button" onClick={() => handleQuickFill('duplicate')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Lunch ($400)
-        </button>
-      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">

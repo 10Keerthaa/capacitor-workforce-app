@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Beaker, Sun, Moon } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function DailyManpowerForm() {
@@ -57,29 +57,7 @@ export default function DailyManpowerForm() {
     checkTodayLogs();
   }, []);
 
-  const handleQuickFill = (scenario: 'normal' | 'missing_staff' | 'overtime') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (formData.logType === "Morning Check-In") {
-      if (scenario === 'normal') {
-        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-001", siteName: "Downtown Mall Project", location: "Zone A", taskTitle: "Foundation Pouring", startTime: "07:00", engineer: "Sarah Connor", foreman: "Raj Patel", driver: "Ali Khan", remarks: "All present." });
-        setOtherStaffList([{ name: "Mike Smith", trade: "Welder" }]);
-      } else if (scenario === 'missing_staff') {
-        setFormData({ ...formData, logType: "Morning Check-In", date: today, siteNo: "SITE-002", siteName: "Burj Skyline", location: "Level 15", taskTitle: "Electrical Wiring", startTime: "07:30", engineer: "Tony Stark", foreman: "John Doe", driver: "Carlos Ray", remarks: "Short staffed today due to sickness." });
-        setOtherStaffList([{ name: "2", trade: "Electricians" }]);
-      } else {
-        setFormData({ ...formData, logType: "Evening Check-Out", date: today, siteNo: "SITE-003", siteName: "Palm Jumeirah Villas", location: "Villa 42", taskTitle: "Interior Painting", startTime: "06:00", engineer: "Sarah Connor", foreman: "David Lee", driver: "James Bond", endTime: "22:00", remarks: "Pushed late to finish zone." });
-        setOtherStaffList([{ name: "6", trade: "Painters" }]);
-      }
-    } else {
-      if (scenario === 'normal') {
-        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Concrete Pouring", endTime: "17:00", remarks: "Completed on schedule." });
-      } else if (scenario === 'missing_staff') {
-        setFormData({ ...formData, date: today, siteNo: "S-102", siteName: "Metro Stn", location: "Underground", taskTitle: "Excavation", endTime: "16:00", remarks: "Halted early due to missing foreman." });
-      } else {
-        setFormData({ ...formData, date: today, siteNo: "S-101", siteName: "Downtown Commercial Tower", location: "Level 4 North Wing", taskTitle: "Electrical Panel Installation", endTime: "22:00", remarks: "15 hour shift. Major delays." });
-      }
-    }
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -179,17 +157,6 @@ export default function DailyManpowerForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2 flex-wrap">
-        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Normal Check
-        </button>
-        <button type="button" onClick={() => handleQuickFill('missing_staff')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Missing Foreman
-        </button>
-        <button type="button" onClick={() => handleQuickFill('overtime')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Overtime / Mismatch
-        </button>
-      </div>
 
       <div className="flex items-center gap-4 bg-gray-900 p-2 rounded-xl border border-gray-800">
         <button 

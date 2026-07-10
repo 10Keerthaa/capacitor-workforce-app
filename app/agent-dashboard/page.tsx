@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Activity, BrainCircuit, AlertTriangle, CheckCircle, 
+import {
+  Activity, BrainCircuit, AlertTriangle, CheckCircle,
   Clock, ShieldAlert, Cpu, Network, Zap, Pause, AlertCircle, ChevronRight, Server,
   RefreshCw, Target, TrendingUp, LayoutDashboard, Users, BarChart3, Search, Filter, XCircle, MapPin, Database, Save, Plus, Edit2, Trash2
 } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function AgenticDashboard() {
   const [reportHistory, setReportHistory] = useState<any[]>([]);
   const [isSweeping, setIsSweeping] = useState(false);
   const [selectedReviewItem, setSelectedReviewItem] = useState<any>(null);
-  
+
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [agentData, setAgentData] = useState<any[]>([]);
@@ -43,7 +43,7 @@ export default function AgenticDashboard() {
     setIsAddingWorker(true);
     try {
       if (editingWorkerId) {
-        const { error } = await supabase.from('master_employees').update({ 
+        const { error } = await supabase.from('master_employees').update({
           employee_name: newWorkerForm.name,
           employee_id: newWorkerForm.employee_id,
           trade: newWorkerForm.trade,
@@ -59,7 +59,7 @@ export default function AgenticDashboard() {
           fetchDashboardData();
         }
       } else {
-        const { error } = await supabase.from('master_employees').insert([{ 
+        const { error } = await supabase.from('master_employees').insert([{
           employee_name: newWorkerForm.name,
           employee_id: newWorkerForm.employee_id,
           trade: newWorkerForm.trade,
@@ -83,11 +83,11 @@ export default function AgenticDashboard() {
   };
 
   const handleDeleteWorker = async (id: number) => {
-    if(!confirm("Are you sure you want to delete this worker?")) return;
+    if (!confirm("Are you sure you want to delete this worker?")) return;
     try {
       await supabase.from('master_employees').delete().eq('id', id);
       fetchDashboardData();
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
   };
 
   // Master Data State
@@ -108,13 +108,13 @@ export default function AgenticDashboard() {
         else if (masterDataTab === 'materials') table = 'master_materials';
         else if (masterDataTab === 'sites') table = 'sites';
         else if (masterDataTab === 'camps') table = 'master_camps';
-        
+
         const { data } = await supabase.from(table).select('*').limit(50);
         if (data) setMasterDataList(data);
 
         if (masterDataTab === 'sites') {
-           const { data: proj } = await supabase.from('projects_master').select('project_code, project_name');
-           if (proj) setProjectListDropdown(proj);
+          const { data: proj } = await supabase.from('projects_master').select('project_code, project_name');
+          if (proj) setProjectListDropdown(proj);
         }
       };
       fetchMasterDataList();
@@ -157,18 +157,18 @@ export default function AgenticDashboard() {
   };
 
   const handleDeleteMasterData = async (id: number) => {
-    if(!confirm("Are you sure you want to delete this record?")) return;
+    if (!confirm("Are you sure you want to delete this record?")) return;
     let table = 'projects_master';
     if (masterDataTab === 'projects') table = 'projects_master';
     else if (masterDataTab === 'materials') table = 'master_materials';
     else if (masterDataTab === 'sites') table = 'sites';
     else if (masterDataTab === 'camps') table = 'master_camps';
-    
+
     try {
       await supabase.from(table).delete().eq('id', id);
       const { data } = await supabase.from(table).select('*').limit(50);
       if (data) setMasterDataList(data);
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
   };
 
   // Live Chart Data State
@@ -202,17 +202,17 @@ export default function AgenticDashboard() {
         .eq('agent_status', 'pending_manager_review')
         .order('id', { ascending: false })
         .limit(3);
-      
+
       if (pending) {
         pending.forEach(p => {
           let titleString = p.employeeName || p.projectName || p.siteName || p.supplierName || p.toolName || p.expenseType || 'Record';
           let description = `ID: ${p.id} (${titleString})`;
           let details = p.agent_metadata?.ai_reasoning || p.agent_metadata?.reason || 'High risk detected by AI. Review required.';
-          
+
           if (t.name === 'camp_boss' && p.agent_metadata) {
             details = `Risk Level: ${p.agent_metadata.ai_absenteeism_risk || 'N/A'}\nRecommended Action: ${p.agent_metadata.ai_replacement_action || 'N/A'}\nCamp Utilization: ${p.agent_metadata.ai_camp_utilization || 'N/A'}\nReasoning: ${p.agent_metadata.ai_reasoning || 'N/A'}`;
           }
-          
+
           if (t.name === 'mr_procurement' && p.agent_metadata) {
             details = `Priority: ${p.agent_metadata.ai_priority || 'Normal'}\nPricing Trend: ${p.agent_metadata.ai_pricing_trend || 'N/A'}\nEmail Draft: ${p.agent_metadata.ai_email_draft || 'N/A'}\nReasoning: ${p.agent_metadata.ai_reason || 'N/A'}`;
           }
@@ -236,7 +236,7 @@ export default function AgenticDashboard() {
           // Check for error/timeout reason
           const isError = r.agent_metadata?.error || (r.agent_metadata?.reason && r.agent_metadata.reason.includes('System Error'));
           let action = isError ? '⚠️ AI Timeout: Rerouted to Manual Review' : `Processed new record for ${r.projectName || r.siteName || r.trade || r.id}`;
-          
+
           allLogs.push({
             id: r.id,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -283,9 +283,9 @@ export default function AgenticDashboard() {
 
     if (masterWorkers) {
       const todayDateStr = new Date().toISOString().split('T')[0];
-      
+
       const processedWorkers = masterWorkers.map(w => {
-        const campRecordToday = campBossLogs?.find(c => 
+        const campRecordToday = campBossLogs?.find(c =>
           (c.employeeId === w.employee_id || c.employeeName === w.employee_name) &&
           (c.date === todayDateStr || c.date?.startsWith(todayDateStr))
         );
@@ -301,12 +301,12 @@ export default function AgenticDashboard() {
           );
         };
 
-        const assignmentToday = manpowerLogs?.find(m => 
-          isWorkerInManpowerLog(m, w.employee_name) && 
+        const assignmentToday = manpowerLogs?.find(m =>
+          isWorkerInManpowerLog(m, w.employee_name) &&
           (m.date === todayDateStr || m.date?.startsWith(todayDateStr))
         );
-        
-        const mostRecent = assignmentToday || manpowerLogs?.find(m => 
+
+        const mostRecent = assignmentToday || manpowerLogs?.find(m =>
           isWorkerInManpowerLog(m, w.employee_name)
         );
 
@@ -397,8 +397,8 @@ export default function AgenticDashboard() {
         if (!dateMap[w.date]) dateMap[w.date] = { name: w.date, headcount: 0, output: 0 };
         dateMap[w.date].output += (parseFloat(w.outputPerDay) || 0);
       });
-      const roiArr = Object.values(dateMap).sort((a:any,b:any) => a.name.localeCompare(b.name)).slice(-7);
-      setLaborRoiData(roiArr.length ? roiArr : [{name: 'No Data', headcount: 0, output: 0}]);
+      const roiArr = Object.values(dateMap).sort((a: any, b: any) => a.name.localeCompare(b.name)).slice(-7);
+      setLaborRoiData(roiArr.length ? roiArr : [{ name: 'No Data', headcount: 0, output: 0 }]);
 
       // 4. AI Health
       let hMap: any = {};
@@ -411,14 +411,14 @@ export default function AgenticDashboard() {
           else if (d.agent_status === 'pending_manager_review') hMap[day].blocked++;
         });
       }
-      setAiHealthData(Object.values(hMap).length ? Object.values(hMap) : [{day: 'Recent Activity', autonomous: 1, blocked: 0}]);
+      setAiHealthData(Object.values(hMap).length ? Object.values(hMap) : [{ day: 'Recent Activity', autonomous: 1, blocked: 0 }]);
 
       // 5. Pricing Trends
       const { data: pricingData } = await supabase
         .from('mr_procurement')
         .select('materialName, unitPrice, created_at')
         .order('created_at', { ascending: true });
-        
+
       if (pricingData && pricingData.length > 0) {
         // Find the most frequently ordered material for the chart
         const materialCounts: Record<string, number> = {};
@@ -427,7 +427,7 @@ export default function AgenticDashboard() {
             materialCounts[p.materialName] = (materialCounts[p.materialName] || 0) + 1;
           }
         });
-        
+
         let topMaterial = '';
         let maxCount = 0;
         for (const [mat, count] of Object.entries(materialCounts)) {
@@ -456,7 +456,7 @@ export default function AgenticDashboard() {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10);
-    
+
     if (data && data.length > 0) {
       setReportHistory(data);
       setSupervisorReport(data[0]);
@@ -476,7 +476,7 @@ export default function AgenticDashboard() {
 
     // Set up Real-Time Dashboard Metrics
     const tablesToWatch = [
-      'petty_cash', 'mr_procurement', 'daily_manpower', 'work_output', 
+      'petty_cash', 'mr_procurement', 'daily_manpower', 'work_output',
       'camp_boss', 'tools_management', 'employee_onboarding'
     ];
 
@@ -508,7 +508,7 @@ export default function AgenticDashboard() {
         .from(sourceTable)
         .update({ agent_status: action })
         .eq('id', id);
-        
+
       if (!error) {
         setPendingApprovals(prev => prev.filter(p => p.id !== id || p.sourceTable !== sourceTable));
         setSelectedReviewItem(null);
@@ -533,15 +533,13 @@ export default function AgenticDashboard() {
   };
 
   const SidebarItem = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
-    <button 
+    <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
-        isSidebarCollapsed ? 'justify-center w-12 mx-auto px-0' : 'w-full'
-      } ${
-        activeTab === id 
-          ? 'bg-blue-400 text-black shadow-[0_0_15px_rgba(96,165,250,0.3)]' 
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${isSidebarCollapsed ? 'justify-center w-12 mx-auto px-0' : 'w-full'
+        } ${activeTab === id
+          ? 'bg-blue-400 text-black shadow-[0_0_15px_rgba(96,165,250,0.3)]'
           : 'text-gray-400 hover:text-white hover:bg-[#111]'
-      }`}
+        }`}
       title={isSidebarCollapsed ? label : undefined}
     >
       <Icon className="w-5 h-5 shrink-0" />
@@ -593,11 +591,10 @@ export default function AgenticDashboard() {
               statsScrollRef.current.scrollTo({ left: statsScrollRef.current.clientWidth * i, behavior: 'smooth' });
               setActiveStatCard(i);
             }}
-            className={`rounded-full transition-all duration-300 ${
-              activeStatCard === i
+            className={`rounded-full transition-all duration-300 ${activeStatCard === i
                 ? 'w-5 h-2 bg-blue-400'
                 : 'w-2 h-2 bg-gray-600 hover:bg-gray-500'
-            }`}
+              }`}
           />
         ))}
       </div>
@@ -605,11 +602,11 @@ export default function AgenticDashboard() {
 
       {/* ENTERPRISE COMMAND CENTER GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 relative z-10 mb-10">
-        
+
         {/* Left Half: MASTER SUPERVISOR INTELLIGENCE PANEL */}
         <div className="xl:col-span-2 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden group flex flex-col h-[600px]">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-1000"></div>
-          
+
           <div className="flex justify-between items-center mb-6 gap-4 border-b border-[#222] pb-4 relative z-10 shrink-0">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#111] rounded-xl border border-[#333]">
@@ -621,7 +618,7 @@ export default function AgenticDashboard() {
             </div>
             <div className="flex items-center gap-3">
               {reportHistory.length > 0 && (
-                <select 
+                <select
                   className="bg-[#111] border border-[#333] text-gray-300 text-[10px] uppercase tracking-widest font-bold rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer appearance-none"
                   value={supervisorReport?.id || ''}
                   onChange={(e) => {
@@ -640,7 +637,7 @@ export default function AgenticDashboard() {
                   })}
                 </select>
               )}
-              <button 
+              <button
                 onClick={runGlobalSweep}
                 disabled={isSweeping}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 disabled:bg-[#222] disabled:text-gray-500 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all"
@@ -713,62 +710,62 @@ export default function AgenticDashboard() {
 
         {/* Right Half: Stacked Panels (Human in Loop & Live Feed) */}
         <div className="xl:col-span-2 flex flex-col gap-6 h-[600px]">
-          
+
           {/* Top Panel: Approvals */}
           <div className="flex-1 min-h-0 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 relative overflow-hidden flex flex-col">
-          <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 shrink-0">
-            <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
-            Human-in-the-Loop
-          </h2>
-          <div className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent flex-1">
-            {pendingApprovals.length > 0 ? pendingApprovals.map((item, idx) => (
-              <div key={idx} className="bg-[#111] border border-[#222] rounded-xl p-4 relative overflow-hidden group">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500/50"></div>
-                <div className="flex justify-between items-start mb-2 pl-3">
-                  <span className={`text-[9px] font-bold tracking-widest uppercase text-orange-500 bg-orange-500/10 px-2 py-1 rounded`}>{item.agentName}</span>
-                  <Clock className="w-3 h-3 text-gray-500"/>
+            <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 shrink-0">
+              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
+              Human-in-the-Loop
+            </h2>
+            <div className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent flex-1">
+              {pendingApprovals.length > 0 ? pendingApprovals.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] rounded-xl p-4 relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500/50"></div>
+                  <div className="flex justify-between items-start mb-2 pl-3">
+                    <span className={`text-[9px] font-bold tracking-widest uppercase text-orange-500 bg-orange-500/10 px-2 py-1 rounded`}>{item.agentName}</span>
+                    <Clock className="w-3 h-3 text-gray-500" />
+                  </div>
+                  <p className="text-xs text-gray-200 font-medium mb-1 pl-3 line-clamp-2">{item.description}</p>
+                  <p className="text-[10px] text-gray-500 mb-3 pl-3 line-clamp-2">{item.details}</p>
+                  <div className="pl-3">
+                    <button onClick={() => setSelectedReviewItem(item)} className="inline-block bg-white hover:bg-gray-200 text-black text-[9px] uppercase tracking-widest font-bold py-1.5 px-3 rounded transition-colors text-center cursor-pointer">Review</button>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-200 font-medium mb-1 pl-3 line-clamp-2">{item.description}</p>
-                <p className="text-[10px] text-gray-500 mb-3 pl-3 line-clamp-2">{item.details}</p>
-                <div className="pl-3">
-                  <button onClick={() => setSelectedReviewItem(item)} className="inline-block bg-white hover:bg-gray-200 text-black text-[9px] uppercase tracking-widest font-bold py-1.5 px-3 rounded transition-colors text-center cursor-pointer">Review</button>
+              )) : (
+                <div className="text-center flex flex-col items-center justify-center h-full bg-[#111] rounded-xl border border-[#222] border-dashed">
+                  <CheckCircle className="w-6 h-6 text-emerald-500/50 mb-2" />
+                  <p className="text-gray-500 font-medium text-[10px] uppercase tracking-widest">No Active Threats</p>
                 </div>
-              </div>
-            )) : (
-              <div className="text-center flex flex-col items-center justify-center h-full bg-[#111] rounded-xl border border-[#222] border-dashed">
-                <CheckCircle className="w-6 h-6 text-emerald-500/50 mb-2" />
-                <p className="text-gray-500 font-medium text-[10px] uppercase tracking-widest">No Active Threats</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
           {/* Bottom Panel: Live Feed */}
           <div className="flex-1 min-h-0 bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 to-transparent opacity-50"></div>
-          <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 pl-3 shrink-0">
-            <Activity className="w-3.5 h-3.5 text-indigo-400" />
-            Live Telemetry
-          </h2>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-0 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
-            {recentLogs.map((log, idx) => (
-              <div key={`${log.id}-${idx}`} className="flex gap-2 text-[10px] border-b border-[#1a1a1a] py-3 last:border-0 pl-3 hover:bg-[#111] transition-colors">
-                <div className="mt-0.5 shrink-0">
-                  {log.type === 'success' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></div>}
-                  {log.type === 'warning' && <div className="w-1.5 h-1.5 rounded-full bg-rose-500/80"></div>}
-                  {log.type === 'info' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/80"></div>}
-                  {log.type === 'error' && <div className="w-1.5 h-1.5 rounded-full bg-orange-500/80 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-gray-600 font-mono text-[9px] shrink-0">[{log.time}]</span>
-                    <span className={`uppercase tracking-widest font-bold truncate ${log.type === 'warning' ? 'text-rose-400' : 'text-indigo-400'}`}>{log.agent}</span>
+            <div className="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 to-transparent opacity-50"></div>
+            <h2 className="text-[10px] font-medium tracking-widest text-gray-500 uppercase mb-4 flex items-center gap-2 pl-3 shrink-0">
+              <Activity className="w-3.5 h-3.5 text-indigo-400" />
+              Live Telemetry
+            </h2>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-0 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
+              {recentLogs.map((log, idx) => (
+                <div key={`${log.id}-${idx}`} className="flex gap-2 text-[10px] border-b border-[#1a1a1a] py-3 last:border-0 pl-3 hover:bg-[#111] transition-colors">
+                  <div className="mt-0.5 shrink-0">
+                    {log.type === 'success' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></div>}
+                    {log.type === 'warning' && <div className="w-1.5 h-1.5 rounded-full bg-rose-500/80"></div>}
+                    {log.type === 'info' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/80"></div>}
+                    {log.type === 'error' && <div className="w-1.5 h-1.5 rounded-full bg-orange-500/80 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>}
                   </div>
-                  <p className="text-gray-400 line-clamp-2 leading-relaxed">{log.action}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-gray-600 font-mono text-[9px] shrink-0">[{log.time}]</span>
+                      <span className={`uppercase tracking-widest font-bold truncate ${log.type === 'warning' ? 'text-rose-400' : 'text-indigo-400'}`}>{log.agent}</span>
+                    </div>
+                    <p className="text-gray-400 line-clamp-2 leading-relaxed">{log.action}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -777,8 +774,8 @@ export default function AgenticDashboard() {
   );
 
   const renderWorkers = () => {
-    const filteredWorkers = workersList.filter(w => 
-      w.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const filteredWorkers = workersList.filter(w =>
+      w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       w.role.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -789,7 +786,7 @@ export default function AgenticDashboard() {
             <h1 className="text-3xl font-black tracking-tighter text-white">Workers Directory</h1>
             <p className="text-gray-500 text-sm mt-1">{workersList.length} total workers registered</p>
           </div>
-          <button 
+          <button
             onClick={() => {
               setEditingWorkerId(null);
               setNewWorkerForm({ name: '', employee_id: '', trade: '', labor_type: 'Direct', assigned_project: 'Unassigned' });
@@ -805,9 +802,9 @@ export default function AgenticDashboard() {
           <div className="p-4 border-b border-[#222] flex items-center gap-4 bg-[#111]">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input 
-                type="text" 
-                placeholder="Search workers by name or skill..." 
+              <input
+                type="text"
+                placeholder="Search workers by name or skill..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#0a0a0a] border border-[#333] text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-400 transition-colors"
@@ -836,7 +833,7 @@ export default function AgenticDashboard() {
                       <span className="md:hidden text-gray-500 font-bold text-[9px] uppercase tracking-wider">Employee Name</span>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-xs font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
-                          {w.name.split(' ').map((n: string) => n[0]).join('').substring(0,2)}
+                          {w.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                         </div>
                         <p className="font-semibold text-gray-200">{w.name}</p>
                       </div>
@@ -871,12 +868,12 @@ export default function AgenticDashboard() {
                       <div className="flex items-center justify-end">
                         <button onClick={() => {
                           setEditingWorkerId(w.db_id);
-                          setNewWorkerForm({ 
-                            name: w.name, 
-                            employee_id: w.id, 
-                            trade: w.role, 
-                            labor_type: w.labor_type, 
-                            assigned_project: w.assigned_project 
+                          setNewWorkerForm({
+                            name: w.name,
+                            employee_id: w.id,
+                            trade: w.role,
+                            labor_type: w.labor_type,
+                            assigned_project: w.assigned_project
                           });
                           setIsAddWorkerModalOpen(true);
                         }} className="text-gray-500 hover:text-blue-400 mr-3 transition-colors p-1">
@@ -910,19 +907,19 @@ export default function AgenticDashboard() {
             <h1 className="text-3xl font-black tracking-tighter text-white">Master Data Admin</h1>
             <p className="text-gray-500 text-sm mt-1">Manage global system configurations</p>
           </div>
-          <button 
+          <button
             onClick={() => {
               setEditingMasterId(null);
               let defaultForm: any = {};
               if (masterDataList.length > 0) {
                 try {
-                  const idField = masterDataTab === 'projects' ? 'project_code' : 
-                                 masterDataTab === 'materials' ? 'material_code' : 
-                                 masterDataTab === 'sites' ? 'site_code' : 'camp_code';
-                  const prefix = masterDataTab === 'projects' ? 'PRJ-' : 
-                                masterDataTab === 'materials' ? 'MAT-' : 
-                                masterDataTab === 'sites' ? 'SIT-' : 'CMP-';
-                  
+                  const idField = masterDataTab === 'projects' ? 'project_code' :
+                    masterDataTab === 'materials' ? 'material_code' :
+                      masterDataTab === 'sites' ? 'site_code' : 'camp_code';
+                  const prefix = masterDataTab === 'projects' ? 'PRJ-' :
+                    masterDataTab === 'materials' ? 'MAT-' :
+                      masterDataTab === 'sites' ? 'SIT-' : 'CMP-';
+
                   const codes = masterDataList.map(item => item[idField]).filter(Boolean);
                   let maxNum = 0;
                   codes.forEach(code => {
@@ -951,8 +948,8 @@ export default function AgenticDashboard() {
 
         <div className="flex gap-2 mb-6 border-b border-[#222] pb-2 overflow-x-auto [scrollbar-width:none]">
           {['projects', 'materials', 'sites', 'camps'].map(tab => (
-            <button 
-              key={tab} 
+            <button
+              key={tab}
               onClick={() => setMasterDataTab(tab)}
               className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${masterDataTab === tab ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-500 hover:bg-[#111]'}`}
             >
@@ -1092,7 +1089,7 @@ export default function AgenticDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* Chart 1: Labor ROI */}
           <div className="bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 shadow-xl">
             <h3 className="text-xs font-bold tracking-widest text-indigo-400 uppercase mb-2">Labor ROI & Productivity</h3>
@@ -1102,8 +1099,8 @@ export default function AgenticDashboard() {
                 <AreaChart data={laborRoiData}>
                   <defs>
                     <linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
@@ -1158,7 +1155,7 @@ export default function AgenticDashboard() {
                     ))}
                   </Pie>
                   <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
-                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px', color: '#888' }}/>
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px', color: '#888' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -1196,11 +1193,11 @@ export default function AgenticDashboard() {
     return (
       <div className="fixed inset-0 z-[100] flex justify-end">
         {/* Backdrop */}
-        <div 
+        <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-fade-in"
           onClick={() => setSelectedReviewItem(null)}
         />
-        
+
         {/* Drawer */}
         <div className="relative w-full max-w-lg h-full bg-[#0a0a0a] border-l border-[#222] shadow-[0_0_50px_rgba(0,0,0,0.5)] transform transition-transform duration-300 flex flex-col animate-fade-in-up">
           <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#111]">
@@ -1212,13 +1209,13 @@ export default function AgenticDashboard() {
               <XCircle className="w-6 h-6" />
             </button>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[#333]">
             <div className="bg-[#111] border border-[#222] rounded-xl p-5">
               <p className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Issue Description</p>
               <p className="text-sm text-gray-200 leading-relaxed">{item.description}</p>
             </div>
-            
+
             <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl"></div>
               <div className="flex items-center gap-2 mb-3">
@@ -1236,7 +1233,7 @@ export default function AgenticDashboard() {
                 })}
               </div>
             </div>
-            
+
             <div className="bg-[#111] border border-[#222] rounded-xl p-5">
               <p className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Agent Context</p>
               <div className="flex items-center gap-3">
@@ -1245,39 +1242,39 @@ export default function AgenticDashboard() {
                 </span>
                 <span className="text-xs text-gray-400">
                   {item.sourceTable === 'petty_cash' ? 'Awaiting Finance Approval' :
-                   item.sourceTable === 'employee_onboarding' ? 'Awaiting HR Approval' :
-                   item.sourceTable === 'mr_procurement' ? 'Awaiting Procurement Approval' :
-                   item.sourceTable === 'work_output' ? 'Awaiting Operations Override' :
-                   item.sourceTable === 'daily_manpower' ? 'Awaiting Site Admin Override' :
-                   item.sourceTable === 'camp_boss' ? 'Awaiting Camp Manager Override' :
-                   item.sourceTable === 'tools_management' ? 'Awaiting Asset Manager Override' :
-                   'Awaiting Manager Override'}
+                    item.sourceTable === 'employee_onboarding' ? 'Awaiting HR Approval' :
+                      item.sourceTable === 'mr_procurement' ? 'Awaiting Procurement Approval' :
+                        item.sourceTable === 'work_output' ? 'Awaiting Operations Override' :
+                          item.sourceTable === 'daily_manpower' ? 'Awaiting Site Admin Override' :
+                            item.sourceTable === 'camp_boss' ? 'Awaiting Camp Manager Override' :
+                              item.sourceTable === 'tools_management' ? 'Awaiting Asset Manager Override' :
+                                'Awaiting Manager Override'}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div className="p-6 border-t border-[#222] bg-[#111] grid grid-cols-2 gap-4">
             {item.details?.includes('System Error') ? (
-              <button 
+              <button
                 onClick={() => {
                   // In a real scenario, this triggers the API route again
                   alert("Triggering AI Retry for " + item.sourceTable);
                   handleDrawerAction(item.id, item.sourceTable, 'processing');
-                }} 
+                }}
                 className="flex items-center justify-center gap-2 py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase col-span-2 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:shadow-[0_0_15px_rgba(249,115,22,0.2)]"
               >
                 <RefreshCw className="w-4 h-4" /> Retry AI Analysis
               </button>
             ) : null}
-            <button 
-              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'rejected')} 
+            <button
+              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'rejected')}
               className="flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]"
             >
               <XCircle className="w-4 h-4" /> Reject
             </button>
-            <button 
-              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'approved')} 
+            <button
+              onClick={() => handleDrawerAction(item.id, item.sourceTable, 'approved')}
               className="flex items-center justify-center gap-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-colors font-bold tracking-widest text-[10px] uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
             >
               <CheckCircle className="w-4 h-4" /> Approve
@@ -1292,27 +1289,27 @@ export default function AgenticDashboard() {
 
   return (
     <div className="flex h-screen bg-[#000000] text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30 relative">
-      
+
       {/* Sidebar (Desktop Only) */}
-      <aside 
+      <aside
         onMouseEnter={() => setIsSidebarCollapsed(false)}
         onMouseLeave={() => setIsSidebarCollapsed(true)}
         className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 bg-[#0a0a0a]/90 backdrop-blur-xl border border-[#222] flex-col z-50 fixed left-4 top-4 bottom-4 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden`}
       >
         <div className="p-6 border-b border-[#222] flex flex-col items-center">
-           <Link 
-             href="/" 
-             className={`inline-flex items-center gap-2 mb-4 group ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}
-             title={isSidebarCollapsed ? 'Back to Home' : undefined}
-           >
-             <ChevronRight className="rotate-180 w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
-             {!isSidebarCollapsed && <span className="text-xs font-bold text-gray-500 group-hover:text-white tracking-widest uppercase transition-colors whitespace-nowrap">Home</span>}
-           </Link>
-           
-           <h2 className={`text-xl font-black tracking-tight text-white flex items-center gap-2 ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}>
-             <Network className="text-blue-400 w-6 h-6 shrink-0" />
-             {!isSidebarCollapsed && "COMMAND"}
-           </h2>
+          <Link
+            href="/"
+            className={`inline-flex items-center gap-2 mb-4 group ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}
+            title={isSidebarCollapsed ? 'Back to Home' : undefined}
+          >
+            <ChevronRight className="rotate-180 w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
+            {!isSidebarCollapsed && <span className="text-xs font-bold text-gray-500 group-hover:text-white tracking-widest uppercase transition-colors whitespace-nowrap">Home</span>}
+          </Link>
+
+          <h2 className={`text-xl font-black tracking-tight text-white flex items-center gap-2 ${isSidebarCollapsed ? 'justify-center w-full' : 'self-start'}`}>
+            <Network className="text-blue-400 w-6 h-6 shrink-0" />
+            {!isSidebarCollapsed && "COMMAND"}
+          </h2>
         </div>
         <div className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] overflow-x-hidden">
           {!isSidebarCollapsed && <p className="text-[10px] font-bold tracking-widest text-gray-600 uppercase mb-4 ml-2 mt-2 whitespace-nowrap">Main Menu</p>}
@@ -1324,15 +1321,15 @@ export default function AgenticDashboard() {
         </div>
         <div className="p-4 border-t border-[#222]">
           <div className={`flex items-center gap-3 bg-[#111] border border-[#222] rounded-xl cursor-pointer hover:border-[#333] transition-colors ${isSidebarCollapsed ? 'p-2 justify-center' : 'p-3'}`}>
-             <div className="w-8 h-8 shrink-0 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center font-bold text-sm">
-               SA
-             </div>
-             {!isSidebarCollapsed && (
-               <div className="overflow-hidden">
-                 <p className="text-xs font-bold text-white truncate">Site Admin</p>
-                 <p className="text-[10px] text-gray-500 truncate">admin@10xworkforce.ai</p>
-               </div>
-             )}
+            <div className="w-8 h-8 shrink-0 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+              SA
+            </div>
+            {!isSidebarCollapsed && (
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-white truncate">Site Admin</p>
+                <p className="text-[10px] text-gray-500 truncate">admin@10xworkforce.ai</p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -1351,169 +1348,169 @@ export default function AgenticDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto relative bg-[#000000] ml-0 md:ml-[104px]">
-         {/* Background Mesh fixed behind scrollable content */}
-         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 fixed">
-           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px]"></div>
-           <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]"></div>
-         </div>
-         
-         <div className="p-6 md:p-10 pt-20 pb-24 md:pt-10 max-w-7xl mx-auto min-h-full transition-all duration-300">
-            {activeTab === 'dashboard' && renderDashboard()}
-            {activeTab === 'map' && renderMap()}
-            {activeTab === 'workers' && renderWorkers()}
-            {activeTab === 'reports' && renderReports()}
-            {activeTab === 'master-data' && renderMasterData()}
-         </div>
-         {renderSlideOutDrawer()}
+        {/* Background Mesh fixed behind scrollable content */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10 fixed">
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px]"></div>
+        </div>
 
-         {/* Add Worker Modal */}
-         {isAddWorkerModalOpen && (
-           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddWorkerModalOpen(false)} />
-             <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
-               <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-black text-white">{editingWorkerId ? 'Edit' : 'Add New'} Worker</h2>
-                 <button onClick={() => setIsAddWorkerModalOpen(false)} className="text-gray-500 hover:text-white">
-                   <XCircle className="w-6 h-6" />
-                 </button>
-               </div>
-               <form onSubmit={handleAddWorker} className="space-y-4">
-                 <div>
-                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee Name</label>
-                   <input required type="text" value={newWorkerForm.name} onChange={e => setNewWorkerForm({...newWorkerForm, name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Alex Mercer" />
-                 </div>
-                 <div>
-                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee ID</label>
-                   <input required type="text" value={newWorkerForm.employee_id} onChange={e => setNewWorkerForm({...newWorkerForm, employee_id: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. EMP-1042" />
-                 </div>
-                 <div>
-                   <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Trade / Skill</label>
-                   <input required type="text" value={newWorkerForm.trade} onChange={e => setNewWorkerForm({...newWorkerForm, trade: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Master Welder" />
-                 </div>
-                 <div>
-                    <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Labor Type</label>
-                    <select required value={newWorkerForm.labor_type} onChange={e => setNewWorkerForm({...newWorkerForm, labor_type: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                      <option value="Direct">Direct</option>
-                      <option value="Subcontractor">Subcontractor</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Default Assigned Project</label>
-                    <select required value={newWorkerForm.assigned_project} onChange={e => setNewWorkerForm({...newWorkerForm, assigned_project: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                      <option value="Unassigned">Unassigned</option>
-                      {projectListDropdown.map((p: any) => (
-                        <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                 <button disabled={isAddingWorker} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
-                   {isAddingWorker ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                   {isAddingWorker ? 'Saving...' : 'Save Worker to Database'}
-                 </button>
-               </form>
-             </div>
-           </div>
-         )}
+        <div className="p-6 md:p-10 pt-20 pb-24 md:pt-10 max-w-7xl mx-auto min-h-full transition-all duration-300">
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'map' && renderMap()}
+          {activeTab === 'workers' && renderWorkers()}
+          {activeTab === 'reports' && renderReports()}
+          {activeTab === 'master-data' && renderMasterData()}
+        </div>
+        {renderSlideOutDrawer()}
 
-         {/* Master Data Modal */}
-         {isMasterDataModalOpen && (
-           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMasterDataModalOpen(false)} />
-             <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
-               <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-xl font-black text-white capitalize">{editingMasterId ? 'Edit' : 'Add New'} {masterDataTab.slice(0, -1)}</h2>
-                 <button onClick={() => setIsMasterDataModalOpen(false)} className="text-gray-500 hover:text-white">
-                   <XCircle className="w-6 h-6" />
-                 </button>
-               </div>
-               <form onSubmit={handleSaveMasterData} className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] pr-2">
-                 
-                 {masterDataTab === 'projects' && (
-                   <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Code</label><input required type="text" value={masterDataForm.project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" value={masterDataForm.project_name || ''} onChange={e => setMasterDataForm({...masterDataForm, project_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Client Name</label><input type="text" value={masterDataForm.client_name || ''} onChange={e => setMasterDataForm({...masterDataForm, client_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({...masterDataForm, total_budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div>
-                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
-                       <select required value={masterDataForm.priority_level || ''} onChange={e => setMasterDataForm({...masterDataForm, priority_level: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                         <option value="">Select Priority</option>
-                         <option value="High">High</option>
-                         <option value="Medium">Medium</option>
-                         <option value="Low">Low</option>
-                       </select>
-                     </div>
-                   </>
-                 )}
-                 
-                 {masterDataTab === 'materials' && (
-                   <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Code</label><input required type="text" value={masterDataForm.material_code || ''} onChange={e => setMasterDataForm({...masterDataForm, material_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" value={masterDataForm.material_name || ''} onChange={e => setMasterDataForm({...masterDataForm, material_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div>
-                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Category</label>
-                       <select required value={masterDataForm.category || ''} onChange={e => setMasterDataForm({...masterDataForm, category: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                         <option value="">Select Category</option>
-                         <option value="Raw Material">Raw Material</option>
-                         <option value="Electrical">Electrical</option>
-                         <option value="Plumbing">Plumbing</option>
-                         <option value="PPE">PPE</option>
-                         <option value="Finishing">Finishing</option>
-                         <option value="Tools & Equipment">Tools & Equipment</option>
-                       </select>
-                     </div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Approved Vendor</label><input type="text" value={masterDataForm.approved_vendor || ''} onChange={e => setMasterDataForm({...masterDataForm, approved_vendor: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" step="0.01" value={masterDataForm.standard_price || ''} onChange={e => setMasterDataForm({...masterDataForm, standard_price: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                   </>
-                 )}
+        {/* Add Worker Modal */}
+        {isAddWorkerModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddWorkerModalOpen(false)} />
+            <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-black text-white">{editingWorkerId ? 'Edit' : 'Add New'} Worker</h2>
+                <button onClick={() => setIsAddWorkerModalOpen(false)} className="text-gray-500 hover:text-white">
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+              <form onSubmit={handleAddWorker} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee Name</label>
+                  <input required type="text" value={newWorkerForm.name} onChange={e => setNewWorkerForm({ ...newWorkerForm, name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Alex Mercer" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Employee ID</label>
+                  <input required type="text" value={newWorkerForm.employee_id} onChange={e => setNewWorkerForm({ ...newWorkerForm, employee_id: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. EMP-1042" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Trade / Skill</label>
+                  <input required type="text" value={newWorkerForm.trade} onChange={e => setNewWorkerForm({ ...newWorkerForm, trade: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Master Welder" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Labor Type</label>
+                  <select required value={newWorkerForm.labor_type} onChange={e => setNewWorkerForm({ ...newWorkerForm, labor_type: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <option value="Direct">Direct</option>
+                    <option value="Subcontractor">Subcontractor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Default Assigned Project</label>
+                  <select required value={newWorkerForm.assigned_project} onChange={e => setNewWorkerForm({ ...newWorkerForm, assigned_project: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <option value="Unassigned">Unassigned</option>
+                    {projectListDropdown.map((p: any) => (
+                      <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <button disabled={isAddingWorker} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
+                  {isAddingWorker ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isAddingWorker ? 'Saving...' : 'Save Worker to Database'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
-                 {masterDataTab === 'sites' && (
-                   <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Code</label><input required type="text" value={masterDataForm.site_code || ''} onChange={e => setMasterDataForm({...masterDataForm, site_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" value={masterDataForm.site_name || ''} onChange={e => setMasterDataForm({...masterDataForm, site_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({...masterDataForm, total_budget: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Required Manpower</label><input type="number" value={masterDataForm.required_manpower || ''} onChange={e => setMasterDataForm({...masterDataForm, required_manpower: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div>
-                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Status</label>
-                       <select required value={masterDataForm.status || ''} onChange={e => setMasterDataForm({...masterDataForm, status: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                         <option value="">Select Status</option>
-                         <option value="Active">Active</option>
-                         <option value="Completed">Completed</option>
-                         <option value="On Hold">On Hold</option>
-                       </select>
-                     </div>
-                     <div>
-                       <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Parent Project</label>
-                       <select required value={masterDataForm.parent_project_code || ''} onChange={e => setMasterDataForm({...masterDataForm, parent_project_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-                         <option value="">Select Parent Project</option>
-                         {projectListDropdown.map((p:any) => (
-                           <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
-                         ))}
-                       </select>
-                     </div>
-                   </>
-                 )}
+        {/* Master Data Modal */}
+        {isMasterDataModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMasterDataModalOpen(false)} />
+            <div className="relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-black text-white capitalize">{editingMasterId ? 'Edit' : 'Add New'} {masterDataTab.slice(0, -1)}</h2>
+                <button onClick={() => setIsMasterDataModalOpen(false)} className="text-gray-500 hover:text-white">
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+              <form onSubmit={handleSaveMasterData} className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] pr-2">
 
-                 {masterDataTab === 'camps' && (
-                   <>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Code</label><input required type="text" value={masterDataForm.camp_code || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_code: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Name</label><input required type="text" value={masterDataForm.camp_name || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input required type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({...masterDataForm, location: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Bed Capacity</label><input required type="number" value={masterDataForm.total_bed_capacity || ''} onChange={e => setMasterDataForm({...masterDataForm, total_bed_capacity: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Current Occupied Beds</label><input required type="number" value={masterDataForm.current_occupied_beds || ''} onChange={e => setMasterDataForm({...masterDataForm, current_occupied_beds: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                     <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Manager Name</label><input type="text" value={masterDataForm.camp_manager_name || ''} onChange={e => setMasterDataForm({...masterDataForm, camp_manager_name: e.target.value})} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
-                   </>
-                 )}
+                {masterDataTab === 'projects' && (
+                  <>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Code</label><input required type="text" value={masterDataForm.project_code || ''} onChange={e => setMasterDataForm({ ...masterDataForm, project_code: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Project Name</label><input required type="text" value={masterDataForm.project_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, project_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Client Name</label><input type="text" value={masterDataForm.client_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, client_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({ ...masterDataForm, total_budget: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Priority Level</label>
+                      <select required value={masterDataForm.priority_level || ''} onChange={e => setMasterDataForm({ ...masterDataForm, priority_level: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Select Priority</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                      </select>
+                    </div>
+                  </>
+                )}
 
-                 <button disabled={isAddingMasterData} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
-                   {isAddingMasterData ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                   {isAddingMasterData ? 'Saving...' : 'Save Record'}
-                 </button>
-               </form>
-             </div>
-           </div>
-         )}
+                {masterDataTab === 'materials' && (
+                  <>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Code</label><input required type="text" value={masterDataForm.material_code || ''} onChange={e => setMasterDataForm({ ...masterDataForm, material_code: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Material Name</label><input required type="text" value={masterDataForm.material_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, material_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Category</label>
+                      <select required value={masterDataForm.category || ''} onChange={e => setMasterDataForm({ ...masterDataForm, category: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Select Category</option>
+                        <option value="Raw Material">Raw Material</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="PPE">PPE</option>
+                        <option value="Finishing">Finishing</option>
+                        <option value="Tools & Equipment">Tools & Equipment</option>
+                      </select>
+                    </div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Approved Vendor</label><input type="text" value={masterDataForm.approved_vendor || ''} onChange={e => setMasterDataForm({ ...masterDataForm, approved_vendor: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Standard Price</label><input required type="number" step="0.01" value={masterDataForm.standard_price || ''} onChange={e => setMasterDataForm({ ...masterDataForm, standard_price: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                  </>
+                )}
+
+                {masterDataTab === 'sites' && (
+                  <>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Code</label><input required type="text" value={masterDataForm.site_code || ''} onChange={e => setMasterDataForm({ ...masterDataForm, site_code: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Site Name</label><input required type="text" value={masterDataForm.site_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, site_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({ ...masterDataForm, location: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Budget</label><input type="number" step="0.01" value={masterDataForm.total_budget || ''} onChange={e => setMasterDataForm({ ...masterDataForm, total_budget: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Required Manpower</label><input type="number" value={masterDataForm.required_manpower || ''} onChange={e => setMasterDataForm({ ...masterDataForm, required_manpower: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Status</label>
+                      <select required value={masterDataForm.status || ''} onChange={e => setMasterDataForm({ ...masterDataForm, status: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Parent Project</label>
+                      <select required value={masterDataForm.parent_project_code || ''} onChange={e => setMasterDataForm({ ...masterDataForm, parent_project_code: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Select Parent Project</option>
+                        {projectListDropdown.map((p: any) => (
+                          <option key={p.project_code} value={p.project_code}>{p.project_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {masterDataTab === 'camps' && (
+                  <>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Code</label><input required type="text" value={masterDataForm.camp_code || ''} onChange={e => setMasterDataForm({ ...masterDataForm, camp_code: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Name</label><input required type="text" value={masterDataForm.camp_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, camp_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Location</label><input required type="text" value={masterDataForm.location || ''} onChange={e => setMasterDataForm({ ...masterDataForm, location: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Total Bed Capacity</label><input required type="number" value={masterDataForm.total_bed_capacity || ''} onChange={e => setMasterDataForm({ ...masterDataForm, total_bed_capacity: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Current Occupied Beds</label><input required type="number" value={masterDataForm.current_occupied_beds || ''} onChange={e => setMasterDataForm({ ...masterDataForm, current_occupied_beds: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                    <div><label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Camp Manager Name</label><input type="text" value={masterDataForm.camp_manager_name || ''} onChange={e => setMasterDataForm({ ...masterDataForm, camp_manager_name: e.target.value })} className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500" /></div>
+                  </>
+                )}
+
+                <button disabled={isAddingMasterData} type="submit" className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors mt-6 flex items-center justify-center gap-2">
+                  {isAddingMasterData ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isAddingMasterData ? 'Saving...' : 'Save Record'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Mobile Bottom Navigation */}

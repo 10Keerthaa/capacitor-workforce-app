@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import FileUpload from "@/components/ui/FileUpload";
-import { Beaker } from "lucide-react";
+
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function ToolsManagementForm() {
@@ -22,26 +22,7 @@ export default function ToolsManagementForm() {
   const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
-  const handleQuickFill = (scenario: 'good' | 'damaged' | 'lost') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (activeStep === "checkout") {
-      if (scenario === 'good') {
-        setCheckoutData({ ...checkoutData, itemName: "Impact Drill", tagName: "TOOL-DR-01", quantity: "1", assignedTo: "John Safe", siteName: "Downtown Skyscraper Project", action: "Check-Out", condition: "Good", date: today, remarks: "Standard checkout." });
-      } else if (scenario === 'damaged') {
-        setCheckoutData({ ...checkoutData, itemName: "Rotary Hammer", tagName: "TOOL-DR-02", quantity: "1", assignedTo: "Tony Stark", siteName: "Marina Mall Expansion", action: "Check-Out", condition: "Damaged", date: today, remarks: "Tool dropped from scaffold." });
-      } else if (scenario === 'lost') {
-        setCheckoutData({ ...checkoutData, itemName: "Circular Saw", tagName: "TOOL-SA-01", quantity: "1", assignedTo: "Unknown", siteName: "Palm Jumeirah Villa 42", action: "Check-Out", condition: "Lost/Stolen", date: today, remarks: "Left on site overnight, missing in morning." });
-      }
-    } else {
-      if (scenario === 'good') {
-        setReturnData({ returnedQty: "1", condition: "Good" });
-      } else if (scenario === 'damaged') {
-        setReturnData({ returnedQty: "1", condition: "Damaged - Broken Handle" });
-      } else if (scenario === 'lost') {
-        setReturnData({ returnedQty: "0", condition: "Lost/Stolen - Could not find" });
-      }
-    }
-  };
+
   
   // Return State
   const [returnData, setReturnData] = useState({ returnedQty: "", condition: "" });
@@ -137,17 +118,6 @@ export default function ToolsManagementForm() {
           {showReturnTab && (
             <button onClick={() => setActiveStep("return")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activeStep === "return" ? "bg-indigo-500 text-white shadow" : "text-gray-400 hover:text-white"}`}>Return</button>
           )}
-        </div>
-        <div className="flex justify-end gap-2 flex-wrap">
-          <button type="button" onClick={() => handleQuickFill('good')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-            <Beaker className="w-3 h-3" /> Tool (Good)
-          </button>
-          <button type="button" onClick={() => handleQuickFill('damaged')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-            <Beaker className="w-3 h-3" /> Tool (Damaged)
-          </button>
-          <button type="button" onClick={() => handleQuickFill('lost')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-            <Beaker className="w-3 h-3" /> Tool (Lost)
-          </button>
         </div>
       </div>
 

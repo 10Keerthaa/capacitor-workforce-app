@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Beaker } from "lucide-react";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function WorkOutputForm() {
@@ -27,16 +26,7 @@ export default function WorkOutputForm() {
     fetchMasterData();
   }, []);
 
-  const handleQuickFill = (scenario: 'normal' | 'low_output' | 'delayed') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (scenario === 'normal') {
-      setFormData({ date: today, projectCode: "PRJ-003", projectName: "Desert Solar Plant", technicianId: "EMP-105", technicianName: "Bob Builder", trade: "Solar Technician", foremanId: "EMP-109", foremanName: "Tony Stark", workDescription: "Installing solar panels in sector 4.", unitOfMeasure: "Panels", outputPerDay: "120" });
-    } else if (scenario === 'low_output') {
-      setFormData({ date: today, projectCode: "PRJ-002", projectName: "Downtown Mall Project", technicianId: "EMP-106", technicianName: "John Safe", trade: "Concrete Mason", foremanId: "EMP-110", foremanName: "Bruce Wayne", workDescription: "Pouring concrete foundation. Extremely slow progress today.", unitOfMeasure: "Cubic Meters", outputPerDay: "2" });
-    } else if (scenario === 'delayed') {
-      setFormData({ date: today, projectCode: "PRJ-004", projectName: "Burj Skyline", technicianId: "EMP-107", technicianName: "Mike Ross", trade: "Electrician", foremanId: "EMP-111", foremanName: "Clark Kent", workDescription: "Cable laying. Halted due to missing materials.", unitOfMeasure: "Meters", outputPerDay: "0" });
-    }
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -71,17 +61,6 @@ export default function WorkOutputForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2 flex-wrap">
-        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Normal Output
-        </button>
-        <button type="button" onClick={() => handleQuickFill('low_output')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Low Productivity
-        </button>
-        <button type="button" onClick={() => handleQuickFill('delayed')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Zero Output (Delayed)
-        </button>
-      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-2 lg:col-span-3">

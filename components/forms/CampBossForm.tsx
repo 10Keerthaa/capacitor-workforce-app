@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Beaker } from "lucide-react";
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
 
 export default function CampBossForm() {
@@ -18,17 +17,6 @@ export default function CampBossForm() {
     };
     fetchEmployees();
   }, []);
-
-  const handleQuickFill = (scenario: 'normal' | 'sick' | 'absent') => {
-    const today = new Date().toISOString().split('T')[0];
-    if (scenario === 'normal') {
-      setFormData({ date: today, employeeId: "EMP-105", employeeName: "Mike Smith", campLocation: "Dubai Marina Camp", roomNumber: "C-10", status: "Present", remarks: "Ready for duty." });
-    } else if (scenario === 'sick') {
-      setFormData({ date: today, employeeId: "EMP-106", employeeName: "David Lee", campLocation: "Al Quoz Labour Camp", roomNumber: "A-22", status: "Sick Leave", remarks: "Complaining of high fever. Staying in camp." });
-    } else if (scenario === 'absent') {
-      setFormData({ date: today, employeeId: "EMP-107", employeeName: "Sarah Connor", campLocation: "Jebel Ali Camp", roomNumber: "D-05", status: "Absent", remarks: "Not in room during morning roll call. Unreachable." });
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -75,17 +63,6 @@ export default function CampBossForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2 flex-wrap">
-        <button type="button" onClick={() => handleQuickFill('normal')} className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Normal (Present)
-        </button>
-        <button type="button" onClick={() => handleQuickFill('sick')} className="flex items-center gap-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> Sick Leave
-        </button>
-        <button type="button" onClick={() => handleQuickFill('absent')} className="flex items-center gap-2 bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-colors shadow-lg">
-          <Beaker className="w-3 h-3" /> AWOL (Absent)
-        </button>
-      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2 md:col-span-2">
