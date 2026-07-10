@@ -23,7 +23,7 @@ export default function OnboardingForm() {
 
   const fillSlaMet = () => {
     setFormData({
-      employeeName: "Michael Smith",
+      employeeName: "Thomas Anderson",
       nationality: "Canada",
       countryCode: "+1",
       mobileNo: "5550199",
@@ -45,7 +45,7 @@ export default function OnboardingForm() {
 
   const fillSlaBreach = () => {
     setFormData({
-      employeeName: "John Miller",
+      employeeName: "Peter Parker",
       nationality: "United Kingdom",
       countryCode: "+44",
       mobileNo: "7700900077",
