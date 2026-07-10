@@ -234,7 +234,7 @@ export default function DailyManpowerForm() {
                 <input type="time" onClick={(e) => (e.target as any).showPicker?.()} style={{ colorScheme: "dark" }} required name="endTime" value={formData.endTime} onChange={handleChange} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-300">Remarks / Issues</label>
+                <label className="text-sm font-medium text-gray-300">Remarks</label>
                 <textarea rows={3} name="remarks" value={formData.remarks} onChange={(e: any) => handleChange(e)} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Describe what was done and any issues (e.g., 'Finished 80%, delayed by rain')" />
               </div>
             </>

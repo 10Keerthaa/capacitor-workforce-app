@@ -46,6 +46,16 @@ export default function ModuleHistory({ moduleId }: { moduleId: string }) {
     }
   };
 
+  const displayFieldsMap: Record<string, string[]> = {
+    "manpower": ["logType", "siteName", "taskTitle", "startTime", "endTime", "remarks", "engineer", "foreman"],
+    "petty-cash": ["amount", "category", "purpose", "remarks"],
+    "procurement": ["mrNo", "materialName", "quantity", "siteName", "remarks"],
+    "tools": ["itemName", "tagName", "quantity", "assignedTo", "condition"],
+    "camp-boss": ["workerName", "roomNo", "attendanceStatus"],
+    "onboarding": ["employeeName", "role", "dateOfJoining"],
+    "work-output": ["technicianName", "taskTitle", "quantityCompleted", "unit", "remarks"]
+  };
+
   if (!tableName) return null;
   if (loading) return <div className="text-gray-400 p-8 text-center">Loading history...</div>;
   if (items.length === 0) return <div className="text-gray-500 p-8 text-center">No history records found yet.</div>;
@@ -61,10 +71,20 @@ export default function ModuleHistory({ moduleId }: { moduleId: string }) {
               {getStatusBadge(item.agent_status)}
             </div>
             <div className="text-sm text-gray-300">
-               {Object.entries(item).slice(1, 5).map(([k, v]) => {
-                 if(k === 'agent_metadata' || k === 'agent_status' || typeof v === 'object' || v === null) return null;
-                 return <span key={k} className="mr-4 inline-block mb-1"><strong>{k}:</strong> {String(v)}</span>
-               })}
+               {(() => {
+                 const displayFields = displayFieldsMap[moduleId];
+                 if (displayFields) {
+                   return displayFields.map(k => {
+                     const v = item[k];
+                     if (v === null || v === undefined || v === "") return null;
+                     return <span key={k} className="mr-4 inline-block mb-1"><strong>{k}:</strong> {String(v)}</span>;
+                   });
+                 }
+                 return Object.entries(item).slice(1, 5).map(([k, v]) => {
+                   if(k === 'agent_metadata' || k === 'agent_status' || typeof v === 'object' || v === null) return null;
+                   return <span key={k} className="mr-4 inline-block mb-1"><strong>{k}:</strong> {String(v)}</span>;
+                 });
+               })()}
             </div>
           </div>
           <div className="text-xs text-gray-500 whitespace-nowrap">
