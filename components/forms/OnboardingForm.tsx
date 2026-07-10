@@ -15,9 +15,55 @@ export default function OnboardingForm() {
   const [consentFormUrisJson, setConsentFormUrisJson] = useState<string[]>([]);
   const [drivingLicenseUrisJson, setDrivingLicenseUrisJson] = useState<string[]>([]);
   const [certificatesJson, setCertificatesJson] = useState<{name: string; urls: string[]}[]>([]);
+  const getRelativeDate = (daysOffset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysOffset);
+    return d.toISOString().split('T')[0];
+  };
 
+  const fillSlaMet = () => {
+    setFormData({
+      employeeName: "Michael Smith",
+      nationality: "Canada",
+      countryCode: "+1",
+      mobileNo: "5550199",
+      trade: "Civil Engineer",
+      laborType: "Site Labor",
+      accommodation: "Camp A",
+      passportNo: "PP9876543",
+      visaStatus: "Active",
+      employeeStatus: "Pending",
+      onboardingStatus: "In Progress",
+      remarks: "Testing SLA Met Case",
+      dob: "1995-05-15",
+      dateOfJoining: getRelativeDate(0), // Today
+      passportExpiry: getRelativeDate(365 * 4), // 4 years in future
+      visaExpiry: getRelativeDate(365), // 1 year in future
+      passportInLocker: true
+    });
+  };
 
-
+  const fillSlaBreach = () => {
+    setFormData({
+      employeeName: "John Miller",
+      nationality: "United Kingdom",
+      countryCode: "+44",
+      mobileNo: "7700900077",
+      trade: "Electrician",
+      laborType: "Office Labor",
+      accommodation: "Downtown Staff House",
+      passportNo: "PP1234567",
+      visaStatus: "Expired",
+      employeeStatus: "Pending",
+      onboardingStatus: "In Progress",
+      remarks: "Testing SLA Breach Case",
+      dob: "1990-10-25",
+      dateOfJoining: getRelativeDate(-5), // 5 days ago (triggers SLA breach)
+      passportExpiry: getRelativeDate(365 * 4),
+      visaExpiry: getRelativeDate(2), // Expiring in 2 days (triggers compliance warning)
+      passportInLocker: false
+    });
+  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
     setFormData({ ...formData, [e.target.name]: value });
@@ -74,6 +120,14 @@ export default function OnboardingForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="flex gap-4 p-4 bg-gray-950 border border-gray-900 rounded-2xl">
+          <button type="button" onClick={fillSlaMet} className="flex-1 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 px-4 py-3 rounded-xl text-sm font-bold transition-all">
+            ⚡ Quick Fill (SLA Met)
+          </button>
+          <button type="button" onClick={fillSlaBreach} className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-xl text-sm font-bold transition-all">
+            ⚡ Quick Fill (SLA Breach)
+          </button>
+        </div>
         {/* Personal Details */}
         <div className="space-y-4">
         <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Personal Details</h3>
