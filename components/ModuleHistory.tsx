@@ -68,7 +68,19 @@ export default function ModuleHistory({ moduleId }: { moduleId: string }) {
             </div>
           </div>
           <div className="text-xs text-gray-500 whitespace-nowrap">
-            {new Date(item.created_at || Date.now()).toLocaleDateString()}
+            {(() => {
+              // Fallback map: map moduleId to the transaction date column name in that table
+              const dateColumnMap: Record<string, string> = {
+                "petty-cash": "date",
+                "manpower": "date",
+                "camp-boss": "date",
+                "work-output": "date",
+                "tools": "checkoutDate",
+                "onboarding": "dateOfJoining"
+              };
+              const fallbackDate = item[dateColumnMap[moduleId]] || Date.now();
+              return new Date(item.created_at || fallbackDate).toLocaleDateString();
+            })()}
           </div>
         </div>
       ))}
