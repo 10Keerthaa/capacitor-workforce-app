@@ -21,7 +21,7 @@ const responseSchema: Schema = {
     },
     ai_reasoning: {
       type: Type.STRING,
-      description: "A 1-2 sentence explanation of your analysis.",
+      description: "A 1-2 sentence explanation of your analysis. If everything is valid and compliant, end the sentence with 'Good to go for onboarding.'",
     },
     ai_email_draft: {
       type: Type.STRING,
@@ -44,7 +44,19 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Extract the raw onboarding data
-    const { id, employeeName, nationality, trade, passportExpiry, visaExpiry, passportScanUrisJson, date } = data;
+    const { 
+      id, 
+      employeeName, 
+      nationality, 
+      trade, 
+      passportExpiry, 
+      visaExpiry, 
+      passportScanUrisJson, 
+      employeePhotoUrisJson,
+      consentFormUrisJson,
+      drivingLicenseUrisJson,
+      date 
+    } = data;
     
     // Calculate current date for SLA
     const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
@@ -60,12 +72,23 @@ export async function POST(req: Request) {
       Application Date: ${date || 'Not provided'}
       Today's Date: ${currentDate}
 
+      --- UPLOADED DOCUMENTS CHECK ---
+      Passport Scan URIs: ${passportScanUrisJson || '[]'}
+      Employee Photo URIs: ${employeePhotoUrisJson || '[]'}
+      Consent Form URIs: ${consentFormUrisJson || '[]'}
+      Driving License URIs: ${drivingLicenseUrisJson || '[]'}
+
+      Verify if all critical documents (Passport Scan, Employee Photo, and Consent Form) are present.
+      If any of these critical files are missing, you MUST flag it in 'ai_compliance_gap' and set 'ai_document_validation' to 'Missing Documents'.
+
       Analyze the document expiry dates against the current date.
       Identify any compliance gaps (like missing expiry dates or upcoming expirations).
       If a passport scan is provided, visually verify if it looks valid.
       
       SLA RULE: The company allows a maximum of 3 days to complete onboarding. Compare the 'Application Date' to 'Today's Date'. If it has been more than 3 days, output 'SLA Breached'. Otherwise output 'SLA Met'.
       
+      REASONING RULE: If all documents (Passport Scan, Employee Photo, and Consent Form) are uploaded, valid, and expiries are good, you MUST end the 'ai_reasoning' with: "Good to go for onboarding."
+
       Recommend the next action for HR.
       Output ONLY a valid JSON object matching the exact schema provided.
     `;
@@ -134,6 +157,15 @@ export async function POST(req: Request) {
         recipient, 
         aiAnalysis.ai_email_subject || "HR Alert: Document Action Required", 
         aiAnalysis.ai_email_draft
+      );
+    }
+
+    // SLA Breach Alert to Telegram
+    if (aiAnalysis.ai_sla_status === 'SLA Breached') {
+      await sendTestTelegramMessage(
+        "HR Operations",
+        "SLA Breach Warning",
+        `⚠️ Onboarding for employee "${employeeName || 'Unknown'}" (ID: ${id}) has exceeded the 3-day SLA limit. Action required!`
       );
     }
 

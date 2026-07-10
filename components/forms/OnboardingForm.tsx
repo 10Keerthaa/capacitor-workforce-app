@@ -43,7 +43,16 @@ export default function OnboardingForm() {
         if (data && data.length > 0) {
           await fetch('/api/agents/onboarding', {
             method: 'POST',
-            body: JSON.stringify({ id: data[0].id, ...formData })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              id: data[0].id, 
+              ...formData,
+              passportScanUrisJson,
+              employeePhotoUrisJson,
+              consentFormUrisJson,
+              drivingLicenseUrisJson,
+              certificatesJson
+            })
           });
         }
       } catch (err) {

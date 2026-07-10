@@ -364,6 +364,10 @@ export default function DashboardPage() {
               passportExpiry: item.passportExpiry || null,
               visaExpiry: item.visaExpiry || null,
               passportScanUrisJson: item.passportScanUrisJson || null,
+              employeePhotoUrisJson: item.employeePhotoUrisJson || null,
+              consentFormUrisJson: item.consentFormUrisJson || null,
+              drivingLicenseUrisJson: item.drivingLicenseUrisJson || null,
+              certificatesJson: item.certificatesJson || null,
             }),
           });
           if (!res.ok) throw new Error("API returned " + res.status);
