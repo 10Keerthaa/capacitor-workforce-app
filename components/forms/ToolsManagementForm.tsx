@@ -10,23 +10,32 @@ export default function ToolsManagementForm() {
   const [showReturnTab, setShowReturnTab] = useState(false);
   const [siteList, setSiteList] = useState<{site_name: string, site_code: string}[]>([]);
 
-  useEffect(() => {
-    const fetchSites = async () => {
-      const { data } = await supabase.from('sites').select('site_name, site_code');
-      if (data) setSiteList(data);
-    };
-    fetchSites();
-  }, []);
+
   
   // Checkout State
   const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
-
+  const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
+  const [toolList, setToolList] = useState<{tool_name: string, tag_name: string}[]>([]);
   
   // Return State
   const [returnData, setReturnData] = useState({ returnedQty: "", condition: "" });
   const [returnPhotoUrisJson, setReturnPhotoUrisJson] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data: sites } = await supabase.from('sites').select('site_name, site_code');
+      if (sites) setSiteList(sites);
+
+      const { data: emps } = await supabase.from('master_employees').select('employee_name, employee_id');
+      if (emps) setEmployeeList(emps);
+
+      const { data: tools } = await supabase.from('master_tools').select('tool_name, tag_name');
+      if (tools) setToolList(tools);
+    };
+    fetchMasterData();
+  }, []);
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +73,7 @@ export default function ToolsManagementForm() {
         }).catch(err => console.error("Agent execution failed:", err));
       }
 
-      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" }); 
+      // Do NOT clear checkoutData entirely yet, so return flow has access to tagName and assignedTo
       setCheckoutPhotoUrisJson([]); 
       setShowReturnTab(true);
       setActiveStep("return");
@@ -124,8 +133,19 @@ export default function ToolsManagementForm() {
       {activeStep === "checkout" ? (
         <form onSubmit={handleCheckoutSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Item Name</label><input required value={checkoutData.itemName} onChange={(e) => setCheckoutData({...checkoutData, itemName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
-            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Tag ID</label><input required value={checkoutData.tagName} onChange={(e) => setCheckoutData({...checkoutData, tagName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Item Name</label>
+              <SearchableDropdown
+                name="itemName"
+                required
+                placeholder="Start typing tool name..."
+                value={checkoutData.itemName}
+                onChange={(val) => setCheckoutData(prev => ({ ...prev, itemName: val }))}
+                onSelect={(opt) => setCheckoutData(prev => ({ ...prev, itemName: opt.label, tagName: opt.value }))}
+                options={toolList.map(t => ({ label: t.tool_name, value: t.tag_name }))}
+              />
+            </div>
+            <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Tag ID</label><input required value={checkoutData.tagName} onChange={(e) => setCheckoutData({...checkoutData, tagName: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" placeholder="Auto-fills from tool selection..." /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-gray-300">Quantity</label><input type="number" required value={checkoutData.quantity} onChange={(e) => setCheckoutData({...checkoutData, quantity: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">Target Site</label>
@@ -139,7 +159,18 @@ export default function ToolsManagementForm() {
                 options={siteList.map(s => ({ label: s.site_name, value: s.site_code }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2"><label className="text-sm font-medium text-gray-300">Assigned To (Custodian)</label><input required value={checkoutData.assignedTo} onChange={(e) => setCheckoutData({...checkoutData, assignedTo: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white outline-none" /></div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium text-gray-300">Assigned To (Custodian)</label>
+              <SearchableDropdown
+                name="assignedTo"
+                required
+                placeholder="Start typing employee name..."
+                value={checkoutData.assignedTo}
+                onChange={(val) => setCheckoutData(prev => ({ ...prev, assignedTo: val }))}
+                onSelect={(opt) => setCheckoutData(prev => ({ ...prev, assignedTo: opt.label }))}
+                options={employeeList.map(e => ({ label: e.employee_name, value: e.employee_id }))}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Checkout Photo</label>
