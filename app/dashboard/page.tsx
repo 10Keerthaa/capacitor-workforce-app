@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  BrainCircuit, 
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  BrainCircuit,
   Sparkles,
   Receipt,
   User,
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
-    
+
     // Subscribe to realtime changes!
     const channel1 = supabase
       .channel('schema-db-changes1')
@@ -146,7 +146,7 @@ export default function DashboardPage() {
       })
       .subscribe();
 
-    return () => { 
+    return () => {
       supabase.removeChannel(channel1);
       supabase.removeChannel(channel2);
       supabase.removeChannel(channel3);
@@ -164,11 +164,22 @@ export default function DashboardPage() {
       .from(table)
       .update({ manager_status: decision })
       .eq("id", id);
-      
+
     if (error) {
       alert("Error saving decision.");
       console.error(error);
     } else {
+      if (table === 'mr_procurement' && decision === 'Approved') {
+        try {
+          await fetch("/api/procurement/approve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+        } catch (err) {
+          console.error("Failed to send RFQ notification:", err);
+        }
+      }
       fetchData();
     }
   };
@@ -177,7 +188,7 @@ export default function DashboardPage() {
   const runAgentOnPending = async () => {
     setIsAuditing(true);
     let hasAlerted = false; // Prevent multiple alerts in loops
-    
+
     if (activeTab === 'supervisor') {
       const highRiskFinances = claims.filter(c => c.ai_fraud_risk === 'High').length + " High Risk Claims";
       const criticalProcurements = procurements.filter(p => p.ai_priority === 'Critical').length + " Critical Material Shortages";
@@ -377,7 +388,7 @@ export default function DashboardPage() {
         }
       }
     }
-    
+
     await fetchData();
     setIsAuditing(false);
   };
@@ -389,7 +400,7 @@ export default function DashboardPage() {
         {/* Premium Header */}
         <div className="relative overflow-hidden border-b border-white/5 bg-black/40 backdrop-blur-3xl pt-12 pb-8">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full md:w-[800px] h-[300px] bg-teal-500/20 blur-[120px] rounded-full pointer-events-none" />
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-8 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div className="flex-1 w-full pt-4 md:pt-0">
               <div className="flex items-center gap-3 mb-2">
@@ -431,50 +442,50 @@ export default function DashboardPage() {
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-8">
           <div className="flex gap-4 border-b border-white/10 pb-4 overflow-x-auto custom-scrollbar">
-            <button 
+            <button
               onClick={() => setActiveTab('supervisor')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${activeTab === 'supervisor' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               <Network className="w-4 h-4" /> Command Center
             </button>
             <div className="w-px h-10 bg-white/10 mx-2 self-center rounded-full shrink-0" />
-            <button 
+            <button
               onClick={() => setActiveTab('petty_cash')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'petty_cash' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Finance (Petty Cash)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('procurement')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'procurement' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Operations (Procurement)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('work_output')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'work_output' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Operations (Work Output)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('tools')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'tools' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Assets (Tools)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('manpower')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'manpower' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Workforce (Manpower)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('camp_boss')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'camp_boss' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
               Camps (Camp Boss)
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('onboarding')}
               className={`px-6 py-3 rounded-full font-bold text-sm transition-all whitespace-nowrap shrink-0 ${activeTab === 'onboarding' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/50' : 'bg-white/5 text-slate-400 border border-transparent hover:bg-white/10'}`}
             >
@@ -504,7 +515,7 @@ export default function DashboardPage() {
                   {supervisorReports.map((report) => {
                     const isSelected = selectedReportId ? report.id === selectedReportId : supervisorReports[0].id === report.id;
                     return (
-                      <div 
+                      <div
                         key={report.id}
                         onClick={() => setSelectedReportId(report.id)}
                         className={`p-5 rounded-2xl cursor-pointer transition-all border ${isSelected ? 'bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
@@ -536,7 +547,7 @@ export default function DashboardPage() {
                           {/* Decorative */}
                           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
                           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                          
+
                           <div className="relative z-10 flex flex-col gap-8">
                             {/* Header */}
                             <div>
@@ -550,31 +561,31 @@ export default function DashboardPage() {
                             {/* Status & Impact */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="bg-black/40 rounded-xl p-4 border border-white/5">
-                                 <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Company Status</p>
-                                 <p className={`text-xl font-black ${currentReport.system_status === 'CRITICAL' ? 'text-rose-500' : currentReport.system_status === 'WARNING' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.system_status}</p>
+                                <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Company Status</p>
+                                <p className={`text-xl font-black ${currentReport.system_status === 'CRITICAL' ? 'text-rose-500' : currentReport.system_status === 'WARNING' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.system_status}</p>
                               </div>
                               <div className="bg-black/40 rounded-xl p-4 border border-white/5">
-                                 <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Financial Impact</p>
-                                 <p className={`text-xl font-black ${currentReport.financial_impact_risk === 'High Risk' ? 'text-rose-500' : currentReport.financial_impact_risk === 'Medium Risk' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.financial_impact_risk}</p>
+                                <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">Financial Impact</p>
+                                <p className={`text-xl font-black ${currentReport.financial_impact_risk === 'High Risk' ? 'text-rose-500' : currentReport.financial_impact_risk === 'Medium Risk' ? 'text-amber-500' : 'text-teal-500'}`}>{currentReport.financial_impact_risk}</p>
                               </div>
                             </div>
 
                             {/* AI Intelligence */}
                             <div className="space-y-6">
                               <div>
-                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Key Bottleneck</h3>
-                                 <p className="text-slate-300 text-lg leading-relaxed bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl">
-                                   {currentReport.key_bottleneck}
-                                 </p>
+                                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Key Bottleneck</h3>
+                                <p className="text-slate-300 text-lg leading-relaxed bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl">
+                                  {currentReport.key_bottleneck}
+                                </p>
                               </div>
 
                               <div>
-                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
-                                 <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
-                                   <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
-                                     {currentReport.orchestrated_action_plan?.replace(/(?:\r\n|\r|\n)?(\d+\.)/g, '\n\n$1').trim()}
-                                   </p>
-                                 </div>
+                                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-teal-500" /> Orchestrated Action Plan</h3>
+                                <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl">
+                                  <p className="text-slate-300 text-md leading-loose whitespace-pre-line">
+                                    {currentReport.orchestrated_action_plan?.replace(/(?:\r\n|\r|\n)?(\d+\.)/g, '\n\n$1').trim()}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -593,130 +604,127 @@ export default function DashboardPage() {
                 <p className="text-slate-500">Submit an expense from the Android app to see it here.</p>
               </div>
             )}
-            
-            {activeTab === 'petty_cash' && claims.map((claim) => (
-              <div 
-                  key={claim.id} 
-                  className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden"
-                >
-                  {/* Highlight glow for flagged items */}
-                  {claim.ai_recommendation === 'Reject' && (
-                    <div className="absolute left-0 top-0 w-1 h-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]" />
-                  )}
-                  {claim.ai_recommendation === 'Approve' && (
-                    <div className="absolute left-0 top-0 w-1 h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]" />
-                  )}
-                  {!claim.ai_recommendation && (
-                    <div className="absolute left-0 top-0 w-1 h-full bg-slate-700" />
-                  )}
 
-                  {/* Left: Raw Data */}
-                  <div className="flex-1 w-full space-y-4">
-                    <div className="flex flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0">
-                          <User className="w-5 h-5 text-slate-400" />
+            {activeTab === 'petty_cash' && claims.map((claim) => (
+              <div
+                key={claim.id}
+                className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden"
+              >
+                {/* Highlight glow for flagged items */}
+                {claim.ai_recommendation === 'Reject' && (
+                  <div className="absolute left-0 top-0 w-1 h-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]" />
+                )}
+                {claim.ai_recommendation === 'Approve' && (
+                  <div className="absolute left-0 top-0 w-1 h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]" />
+                )}
+                {!claim.ai_recommendation && (
+                  <div className="absolute left-0 top-0 w-1 h-full bg-slate-700" />
+                )}
+
+                {/* Left: Raw Data */}
+                <div className="flex-1 w-full space-y-4">
+                  <div className="flex flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0">
+                        <User className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white text-lg truncate">{claim.pettyCashHolder}</h3>
+                        <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
+                          <Activity className="w-3 h-3 shrink-0" /> <span className="truncate">{claim.projectName || 'Unassigned Site'}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-2xl font-bold text-white tracking-tight">${claim.amount}</p>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Requested</p>
+                    </div>
+                  </div>
+                  <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full">
+                    <p className="text-slate-300 text-sm leading-relaxed break-words">"{claim.description}"</p>
+                  </div>
+                </div>
+
+                {/* Right: AI Intelligence Block */}
+                <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
+                  {!claim.ai_recommendation ? (
+                    <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
+                      <Clock className="w-8 h-8 animate-pulse text-slate-600" />
+                      <p className="text-sm font-medium">Awaiting Autonomous Audit</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
+                        <div className="flex gap-2">
+                          {claim.ai_category && (
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                              {claim.ai_category}
+                            </span>
+                          )}
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${claim.ai_fraud_risk === 'High' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                              claim.ai_fraud_risk === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                            }`}>
+                            {claim.ai_fraud_risk} Risk
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-white text-lg truncate">{claim.pettyCashHolder}</h3>
-                          <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
-                            <Activity className="w-3 h-3 shrink-0" /> <span className="truncate">{claim.projectName || 'Unassigned Site'}</span>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        {claim.ai_recommendation === 'Approve' ? (
+                          <CheckCircle2 className="w-6 h-6 text-teal-500 shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
+                        )}
+                        <div>
+                          <p className={`font-bold text-lg leading-none mb-2 ${claim.ai_recommendation === 'Approve' ? 'text-teal-400' : 'text-rose-400'
+                            }`}>
+                            {claim.ai_recommendation}
+                          </p>
+                          <p className="text-slate-300 text-sm leading-relaxed">
+                            {claim.ai_reason}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-2xl font-bold text-white tracking-tight">${claim.amount}</p>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Requested</p>
-                      </div>
-                    </div>
-                    <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full">
-                      <p className="text-slate-300 text-sm leading-relaxed break-words">"{claim.description}"</p>
-                    </div>
-                  </div>
 
-                  {/* Right: AI Intelligence Block */}
-                  <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
-                    {!claim.ai_recommendation ? (
-                      <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
-                        <Clock className="w-8 h-8 animate-pulse text-slate-600" />
-                        <p className="text-sm font-medium">Awaiting Autonomous Audit</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
-                          <div className="flex gap-2">
-                            {claim.ai_category && (
-                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                                {claim.ai_category}
-                              </span>
-                            )}
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                              claim.ai_fraud_risk === 'High' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
-                              claim.ai_fraud_risk === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                              'bg-teal-500/10 text-teal-400 border-teal-500/20'
+                      {/* HUMAN IN THE LOOP BUTTONS */}
+                      {claim.manager_status ? (
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${claim.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'
                             }`}>
-                              {claim.ai_fraud_risk} Risk
-                            </span>
-                          </div>
+                            {claim.manager_status}
+                          </span>
                         </div>
-
-                        <div className="flex items-start gap-3">
-                          {claim.ai_recommendation === 'Approve' ? (
-                            <CheckCircle2 className="w-6 h-6 text-teal-500 shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
-                          )}
-                          <div>
-                            <p className={`font-bold text-lg leading-none mb-2 ${
-                              claim.ai_recommendation === 'Approve' ? 'text-teal-400' : 'text-rose-400'
-                            }`}>
-                              {claim.ai_recommendation}
-                            </p>
-                            <p className="text-slate-300 text-sm leading-relaxed">
-                              {claim.ai_reason}
-                            </p>
-                          </div>
+                      ) : (
+                        <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
+                          <button
+                            onClick={() => handleManagerDecision(claim.id, 'Approved', 'petty_cash')}
+                            className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleManagerDecision(claim.id, 'Rejected', 'petty_cash')}
+                            className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30"
+                          >
+                            Reject
+                          </button>
                         </div>
+                      )}
+                    </div>
+                  )}
 
-                        {/* HUMAN IN THE LOOP BUTTONS */}
-                        {claim.manager_status ? (
-                           <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                             <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                               claim.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'
-                             }`}>
-                               {claim.manager_status}
-                             </span>
-                           </div>
-                        ) : (
-                            <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
-                              <button 
-                                onClick={() => handleManagerDecision(claim.id, 'Approved', 'petty_cash')}
-                                className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={() => handleManagerDecision(claim.id, 'Rejected', 'petty_cash')}
-                                className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Subtle background glow based on decision */}
-                    {claim.ai_recommendation === 'Approve' && (
-                      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-teal-500/10 blur-3xl pointer-events-none" />
-                    )}
-                    {claim.ai_recommendation === 'Reject' && (
-                      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-rose-500/10 blur-3xl pointer-events-none" />
-                    )}
-                  </div>
+                  {/* Subtle background glow based on decision */}
+                  {claim.ai_recommendation === 'Approve' && (
+                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-teal-500/10 blur-3xl pointer-events-none" />
+                  )}
+                  {claim.ai_recommendation === 'Reject' && (
+                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-rose-500/10 blur-3xl pointer-events-none" />
+                  )}
                 </div>
+              </div>
             ))}
 
             {/* --- PROCUREMENT TAB --- */}
@@ -793,10 +801,10 @@ export default function DashboardPage() {
 
                       {/* HUMAN IN THE LOOP BUTTONS */}
                       {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                        </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'mr_procurement')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Approve</button>
@@ -877,10 +885,10 @@ export default function DashboardPage() {
 
                       {/* HUMAN IN THE LOOP BUTTONS */}
                       {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                        </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'work_output')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Acknowledge</button>
@@ -935,9 +943,9 @@ export default function DashboardPage() {
                   <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full flex justify-between">
                     <p className="text-slate-300 text-sm leading-relaxed break-words flex-1">Status: {item.status || "Unknown"}</p>
                     {item.checkout_photo_url && (
-                       <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded border border-blue-500/30 flex items-center gap-1">
-                          CV Active
-                       </span>
+                      <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded border border-blue-500/30 flex items-center gap-1">
+                        CV Active
+                      </span>
                     )}
                   </div>
                 </div>
@@ -971,10 +979,10 @@ export default function DashboardPage() {
 
                       {/* HUMAN IN THE LOOP BUTTONS */}
                       {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                        </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'tools_mgmt')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Acknowledge</button>
@@ -1057,10 +1065,10 @@ export default function DashboardPage() {
 
                       {/* HUMAN IN THE LOOP BUTTONS */}
                       {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                        </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'daily_manpower')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Approve Plan</button>
@@ -1113,7 +1121,7 @@ export default function DashboardPage() {
                     <p className="text-slate-300 text-sm">Room: <span className="text-white font-medium">{item.roomNumber}</span></p>
                   </div>
                   <div className="bg-white/[0.02] rounded-xl p-3 border border-white/5 w-full">
-                     <p className="text-slate-400 text-sm italic">"{item.remarks || 'No remarks provided'}"</p>
+                    <p className="text-slate-400 text-sm italic">"{item.remarks || 'No remarks provided'}"</p>
                   </div>
                 </div>
 
@@ -1146,10 +1154,10 @@ export default function DashboardPage() {
 
                       {/* HUMAN IN THE LOOP BUTTONS */}
                       {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                        </div>
                       ) : (
                         <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
                           <button onClick={() => handleManagerDecision(item.id, 'Approved', 'camp_boss')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Acknowledge</button>
@@ -1174,97 +1182,97 @@ export default function DashboardPage() {
             {activeTab === 'onboarding' && onboardingLogs.map((item) => {
               let parsedUris = [];
               if (item.passportScanUrisJson) {
-                try { parsedUris = JSON.parse(item.passportScanUrisJson); } catch(e){}
+                try { parsedUris = JSON.parse(item.passportScanUrisJson); } catch (e) { }
               }
               const hasDocUrl = parsedUris.length > 0;
 
               return (
-              <div key={item.id} className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden">
-                {/* Highlight glow */}
-                {item.ai_compliance_gap && item.ai_compliance_gap.includes('Fully Compliant') ? (
-                  <div className="absolute left-0 top-0 w-1 h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]" />
-                ) : item.ai_compliance_gap ? (
-                  <div className="absolute left-0 top-0 w-1 h-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]" />
-                ) : (
-                  <div className="absolute left-0 top-0 w-1 h-full bg-slate-700" />
-                )}
+                <div key={item.id} className="group relative flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 sm:p-6 gap-6 rounded-3xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent hover:bg-white/[0.05] transition-all duration-300 shadow-2xl overflow-hidden">
+                  {/* Highlight glow */}
+                  {item.ai_compliance_gap && item.ai_compliance_gap.includes('Fully Compliant') ? (
+                    <div className="absolute left-0 top-0 w-1 h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]" />
+                  ) : item.ai_compliance_gap ? (
+                    <div className="absolute left-0 top-0 w-1 h-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]" />
+                  ) : (
+                    <div className="absolute left-0 top-0 w-1 h-full bg-slate-700" />
+                  )}
 
-                {/* Left: Raw Data */}
-                <div className="flex-1 w-full space-y-4">
-                  <div className="flex flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0 overflow-hidden">
-                        {hasDocUrl ? (
-                          <img src={parsedUris[0]} alt="Doc" className="w-full h-full object-cover" />
-                        ) : (
-                          <UserCheck className="w-5 h-5 text-slate-400" />
-                        )}
+                  {/* Left: Raw Data */}
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="flex flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 shrink-0 overflow-hidden">
+                          {hasDocUrl ? (
+                            <img src={parsedUris[0]} alt="Doc" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserCheck className="w-5 h-5 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-white text-lg truncate">{item.employeeName}</h3>
+                          <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
+                            <Activity className="w-3 h-3 shrink-0" /> <span className="truncate">{item.trade || 'Unknown Trade'}</span>
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-white text-lg truncate">{item.employeeName}</h3>
-                        <p className="text-slate-400 text-sm flex items-center gap-1 truncate">
-                          <Activity className="w-3 h-3 shrink-0" /> <span className="truncate">{item.trade || 'Unknown Trade'}</span>
-                        </p>
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-bold text-white tracking-tight">{item.nationality || 'N/A'}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Nationality</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-lg font-bold text-white tracking-tight">{item.nationality || 'N/A'}</p>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Nationality</p>
+                    <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full flex justify-between items-center">
+                      <p className="text-slate-300 text-sm flex-1">Status: <span className="text-white font-medium">{item.onboardingStatus || 'Pending'}</span></p>
+                      {hasDocUrl && (
+                        <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded border border-blue-500/30 flex items-center gap-1">
+                          CV Active
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="bg-black/50 rounded-xl p-4 border border-white/5 w-full flex justify-between items-center">
-                    <p className="text-slate-300 text-sm flex-1">Status: <span className="text-white font-medium">{item.onboardingStatus || 'Pending'}</span></p>
-                    {hasDocUrl && (
-                       <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded border border-blue-500/30 flex items-center gap-1">
-                          CV Active
-                       </span>
+
+                  {/* Right: AI Intelligence Block */}
+                  <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
+                    {!item.ai_document_validation ? (
+                      <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
+                        <Clock className="w-8 h-8 animate-pulse text-slate-600" />
+                        <p className="text-sm font-medium">Awaiting HR Audit</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 relative z-10">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
+                          <div className="flex gap-2">
+                            {item.ai_hr_action?.includes('Warning') && <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Send Warning</span>}
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${!item.ai_compliance_gap?.includes('Fully Compliant') ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-teal-500/10 text-teal-400 border-teal-500/20'}`}>{item.ai_document_validation}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          {!item.ai_compliance_gap?.includes('Fully Compliant') ? <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" /> : <CheckCircle2 className="w-6 h-6 text-teal-500 shrink-0 mt-0.5" />}
+                          <div>
+                            <p className={`font-bold text-lg leading-none mb-2 ${!item.ai_compliance_gap?.includes('Fully Compliant') ? 'text-rose-400' : 'text-teal-400'}`}>
+                              {item.ai_compliance_gap}
+                            </p>
+                            <p className="text-slate-300 text-sm leading-relaxed">{item.ai_reasoning}</p>
+                          </div>
+                        </div>
+
+                        {/* HUMAN IN THE LOOP BUTTONS */}
+                        {item.manager_status ? (
+                          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                            <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
+                          </div>
+                        ) : (
+                          <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
+                            <button onClick={() => handleManagerDecision(item.id, 'Approved', 'employee_onboarding')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Approve</button>
+                            <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'employee_onboarding')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Reject / Warn</button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Right: AI Intelligence Block */}
-                <div className="w-full lg:w-[400px] shrink-0 border border-white/10 rounded-2xl p-5 bg-white/[0.02] relative overflow-hidden backdrop-blur-md">
-                  {!item.ai_document_validation ? (
-                    <div className="flex flex-col items-center justify-center h-full py-6 text-slate-500 space-y-3">
-                      <Clock className="w-8 h-8 animate-pulse text-slate-600" />
-                      <p className="text-sm font-medium">Awaiting HR Audit</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">AI Intelligence</span>
-                        <div className="flex gap-2">
-                          {item.ai_hr_action?.includes('Warning') && <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Send Warning</span>}
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${!item.ai_compliance_gap?.includes('Fully Compliant') ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-teal-500/10 text-teal-400 border-teal-500/20'}`}>{item.ai_document_validation}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        {!item.ai_compliance_gap?.includes('Fully Compliant') ? <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" /> : <CheckCircle2 className="w-6 h-6 text-teal-500 shrink-0 mt-0.5" />}
-                        <div>
-                          <p className={`font-bold text-lg leading-none mb-2 ${!item.ai_compliance_gap?.includes('Fully Compliant') ? 'text-rose-400' : 'text-teal-400'}`}>
-                            {item.ai_compliance_gap}
-                          </p>
-                          <p className="text-slate-300 text-sm leading-relaxed">{item.ai_reasoning}</p>
-                        </div>
-                      </div>
-
-                      {/* HUMAN IN THE LOOP BUTTONS */}
-                      {item.manager_status ? (
-                         <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                           <span className="text-xs font-bold text-slate-500 uppercase">Manager Decision</span>
-                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.manager_status === 'Approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-rose-500/20 text-rose-400'}`}>{item.manager_status}</span>
-                         </div>
-                      ) : (
-                        <div className="mt-4 pt-4 border-t border-white/10 flex gap-3 relative z-20">
-                          <button onClick={() => handleManagerDecision(item.id, 'Approved', 'employee_onboarding')} className="flex-1 bg-white/5 hover:bg-teal-500/20 hover:text-teal-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-teal-500/30">Approve</button>
-                          <button onClick={() => handleManagerDecision(item.id, 'Investigating', 'employee_onboarding')} className="flex-1 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white py-2 rounded-xl text-sm font-bold transition-all border border-white/5 hover:border-rose-500/30">Reject / Warn</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
               );
             })}
           </div>

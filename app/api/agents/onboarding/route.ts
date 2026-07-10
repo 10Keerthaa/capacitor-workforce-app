@@ -25,7 +25,7 @@ const responseSchema: Schema = {
     },
     ai_email_draft: {
       type: Type.STRING,
-      description: "If an action requires emailing the employee (e.g. for missing docs or visa expiry), draft the email message here. Otherwise, leave empty.",
+      description: "If an action requires emailing the employee (e.g. for missing docs or visa expiry), draft a professional, well-formatted email here. Start with a greeting (e.g., 'Dear [Name],'), use clean body paragraphs stating the issues clearly, and close with a professional sign-off (e.g., 'Sincerely, HR Operations Team'). Do not use markdown tags, keep it plain text but structured with newlines. Otherwise, leave empty.",
     },
     ai_email_subject: {
       type: Type.STRING,
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       consentFormUrisJson,
       drivingLicenseUrisJson,
       certificatesJson,
-      date 
+      dateOfJoining 
     } = data;
     
     // Calculate current date for SLA
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       Trade: ${trade || 'Unknown'}
       Passport Expiry (Epoch): ${passportExpiry || 'Not provided'}
       Visa Expiry (Epoch): ${visaExpiry || 'Not provided'}
-      Application Date: ${date || 'Not provided'}
+      Application Date: ${dateOfJoining || 'Not provided'}
       Today's Date: ${currentDate}
 
       --- UPLOADED DOCUMENTS CHECK ---
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       model: 'gemini-2.5-flash',
       contents: contents,
       config: { 
-        systemInstruction: AGENT_INSTRUCTIONS.workforce,
+        systemInstruction: AGENT_INSTRUCTIONS.onboarding,
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
       },

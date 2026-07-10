@@ -48,12 +48,12 @@ export default function ModuleHistory({ moduleId }: { moduleId: string }) {
 
   const displayFieldsMap: Record<string, string[]> = {
     "manpower": ["logType", "siteName", "taskTitle", "startTime", "endTime", "remarks", "engineer", "foreman"],
-    "petty-cash": ["amount", "category", "purpose", "remarks"],
+    "petty-cash": ["pettyCashHolder", "projectName", "amount", "description", "remarks"],
     "procurement": ["mrNo", "materialName", "quantity", "siteName", "remarks"],
     "tools": ["itemName", "tagName", "quantity", "assignedTo", "condition"],
-    "camp-boss": ["workerName", "roomNo", "attendanceStatus"],
-    "onboarding": ["employeeName", "role", "dateOfJoining"],
-    "work-output": ["technicianName", "taskTitle", "quantityCompleted", "unit", "remarks"]
+    "camp-boss": ["employeeId", "employeeName", "campLocation", "roomNumber", "status", "remarks"],
+    "onboarding": ["employeeName", "trade", "dateOfJoining"],
+    "work-output": ["technicianName", "trade", "workDescription", "outputPerDay", "unitOfMeasure", "remarks"]
   };
 
   if (!tableName) return null;

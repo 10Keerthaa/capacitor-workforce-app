@@ -57,12 +57,30 @@ export default function CampBossForm() {
         console.error(err);
       }
     }
-    
     setLoading(false);
+  };
+
+  const fillQuickData = () => {
+    setFormData({
+      employeeId: "EMP-103",
+      employeeName: "Carlos Ray",
+      campLocation: "South Zone Labor Camp",
+      roomNumber: "C-10",
+      status: "Sick Leave",
+      remarks: "high fever",
+      date: new Date().toISOString().split('T')[0]
+    });
   };
 
   return (
     <div className="space-y-6">
+      {/* Quick Fill Button */}
+      <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+        <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+          ⚡ Quick Fill (Carlos Ray - Sick Leave)
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2 md:col-span-2">

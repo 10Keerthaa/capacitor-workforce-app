@@ -119,8 +119,29 @@ export default function ToolsManagementForm() {
     setLoading(false);
   };
 
+  const fillQuickData = () => {
+    setCheckoutData(prev => ({
+      ...prev,
+      itemName: "Impact Drill",
+      tagName: "TOOL-DR-01",
+      quantity: "2",
+      assignedTo: "John Doe",
+      siteName: "Downtown Skyscraper",
+      condition: "Good"
+    }));
+  };
+
   return (
     <div className="space-y-8">
+      {/* Quick Fill Button */}
+      {activeStep === "checkout" && (
+        <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+          <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+            ⚡ Quick Fill (Drill Checkout)
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <div className="flex p-1 bg-gray-900 rounded-xl w-full max-w-sm">
           <button onClick={() => setActiveStep("checkout")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${activeStep === "checkout" ? "bg-indigo-500 text-white shadow" : "text-gray-400 hover:text-white"}`}>Check-Out</button>

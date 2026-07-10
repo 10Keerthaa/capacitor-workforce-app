@@ -59,8 +59,31 @@ export default function WorkOutputForm() {
     setLoading(false);
   };
 
+  const fillQuickData = () => {
+    setFormData({
+      projectCode: "PRJ-001",
+      projectName: "City Infrastructure Revamp",
+      technicianId: "EMP-101",
+      technicianName: "John Doe",
+      trade: "Electrician",
+      foremanId: "EMP-104",
+      foremanName: "Raj Patel",
+      workDescription: "Laid cable conduits for the entire ground floor.",
+      unitOfMeasure: "meters",
+      outputPerDay: "120",
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Quick Fill Button */}
+      <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+        <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+          ⚡ Quick Fill (Conduit Installation)
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-2 lg:col-span-3">

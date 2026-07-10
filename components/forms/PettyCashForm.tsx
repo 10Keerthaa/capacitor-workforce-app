@@ -126,6 +126,21 @@ export default function PettyCashForm() {
     setLoading(false);
   };
 
+  const fillQuickData = () => {
+    setFormData({
+      pettyCashHolder: "John Doe",
+      supplierName: "BuildCorp Supplies",
+      description: "Urgent purchase of concrete blocks for site office repair.",
+      projectName: "City Infrastructure Revamp",
+      projectCode: "PRJ-001",
+      currency: "AED",
+      amount: "150.00",
+      vat: "7.50",
+      totalAmount: "157.50",
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Smart Scan Hero Section */}
@@ -159,6 +174,12 @@ export default function PettyCashForm() {
         </div>
       </div>
 
+      {/* Quick Fill Button */}
+      <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+        <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+          ⚡ Quick Fill (BuildCorp Receipt)
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

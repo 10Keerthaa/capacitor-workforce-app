@@ -155,8 +155,36 @@ export default function DailyManpowerForm() {
     setLoading(false);
   };
 
+  const fillQuickData = () => {
+    setFormData({
+      logType: "Morning Check-In",
+      siteNo: "S-001",
+      siteName: "Downtown Skyscraper",
+      location: "City Center",
+      taskTitle: "Excavation and foundation concrete pouring.",
+      startTime: "07:00",
+      endTime: "",
+      engineer: "Sarah Connor",
+      foreman: "Raj Patel",
+      driver: "James Bond",
+      date: new Date().toISOString().split('T')[0],
+      remarks: "All workers equipped with PPE."
+    });
+    setOtherStaffList([
+      { name: "John Doe", trade: "Electrician" },
+      { name: "Ali Khan", trade: "Mason" },
+      { name: "Carlos Ray", trade: "Plumber" }
+    ]);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Quick Fill Button */}
+      <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+        <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+          ⚡ Quick Fill (Morning Check-In)
+        </button>
+      </div>
 
       <div className="flex items-center gap-4 bg-gray-900 p-2 rounded-xl border border-gray-800">
         <button 

@@ -85,8 +85,37 @@ export default function ProcurementForm() {
     setLoading(false);
   };
 
+  const fillQuickData = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+    const required = threeDaysLater.toISOString().split('T')[0];
+
+    setFormData({
+      mrNo: "Auto-Assigned on Save",
+      employeeId: "EMP-104",
+      requestedBy: "Raj Patel",
+      projectCode: "PRJ-001",
+      projectName: "City Infrastructure Revamp",
+      siteCode: "S-001",
+      siteName: "Downtown Skyscraper",
+      materialName: "Industrial Paint (20L)",
+      remarks: "Urgent requirement for finishing works.",
+      quantity: "50",
+      requestedDate: today,
+      requiredDate: required
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* Quick Fill Button */}
+      <div className="flex gap-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800/80">
+        <button type="button" onClick={fillQuickData} className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-sm transition-all border border-indigo-500/30">
+          ⚡ Quick Fill (Paint Requisition)
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-2">
