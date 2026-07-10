@@ -4,6 +4,32 @@ import FileUpload from "@/components/ui/FileUpload";
 import CertificateUpload from "@/components/ui/CertificateUpload";
 
 
+
+const NATIONALITY_TO_CODE: Record<string, string> = {
+  "india": "+91",
+  "indian": "+91",
+  "united arab emirates": "+971",
+  "uae": "+971",
+  "united kingdom": "+44",
+  "uk": "+44",
+  "british": "+44",
+  "canada": "+1",
+  "canadian": "+1",
+  "united states": "+1",
+  "us": "+1",
+  "american": "+1",
+  "pakistan": "+92",
+  "pakistani": "+92",
+  "bangladesh": "+880",
+  "bangladeshi": "+880",
+  "philippines": "+63",
+  "filipino": "+63",
+  "nepal": "+977",
+  "nepalese": "+977",
+  "egypt": "+20",
+  "egyptian": "+20"
+};
+
 export default function OnboardingForm() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -45,7 +71,7 @@ export default function OnboardingForm() {
 
   const fillSlaBreach = () => {
     setFormData({
-      employeeName: "Peter Parker",
+      employeeName: "Peter Mathew",
       nationality: "United Kingdom",
       countryCode: "+44",
       mobileNo: "7700900077",
@@ -66,7 +92,20 @@ export default function OnboardingForm() {
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    
+    if (e.target.name === 'nationality') {
+      const nationalityValue = value as string;
+      const cleanKey = nationalityValue.toLowerCase().trim();
+      const matchedCode = NATIONALITY_TO_CODE[cleanKey] || formData.countryCode;
+      
+      setFormData({ 
+        ...formData, 
+        nationality: nationalityValue, 
+        countryCode: matchedCode 
+      });
+    } else {
+      setFormData({ ...formData, [e.target.name]: value });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
