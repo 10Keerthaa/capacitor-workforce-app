@@ -13,7 +13,7 @@ export default function ToolsManagementForm() {
 
   
   // Checkout State
-  const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
+  const [checkoutData, setCheckoutData] = useState({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "Good", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
   const [checkoutPhotoUrisJson, setCheckoutPhotoUrisJson] = useState<string[]>([]);
   
   const [employeeList, setEmployeeList] = useState<{employee_name: string, employee_id: string}[]>([]);
@@ -114,7 +114,7 @@ export default function ToolsManagementForm() {
       setReturnPhotoUrisJson([]);
       setShowReturnTab(false);
       setActiveStep("checkout");
-      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
+      setCheckoutData({ itemName: "", tagName: "", quantity: "", assignedTo: "", action: "", condition: "Good", date: "", workerName: "", workerId: "", toolId: "", toolName: "", remarks: "", siteName: "" });
     }
     setLoading(false);
   };
