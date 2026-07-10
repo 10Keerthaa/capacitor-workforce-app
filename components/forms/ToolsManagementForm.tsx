@@ -62,15 +62,30 @@ export default function ToolsManagementForm() {
     
     if (error) alert("Error: " + error.message);
     else { 
-      alert("Checked out! AI is verifying custody limits..."); 
-      
       // Trigger the AI agent for checkout analysis
       if (data && data[0]) {
-        fetch('/api/agents/tools', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data[0])
-        }).catch(err => console.error("Agent execution failed:", err));
+        try {
+          const res = await fetch('/api/agents/tools', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data[0])
+          });
+          if (!res.ok) {
+            await supabase.from('tools_management').update({
+              agent_status: 'pending_manager_review',
+              agent_metadata: { error: true, reason: 'System Error: AI Overloaded. Rerouted to Manual Review.' }
+            }).eq('id', data[0].id);
+            alert("Record Saved.\n\nThe AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+          } else {
+            alert("Checked out! AI is verifying custody limits..."); 
+          }
+        } catch (err) {
+          console.error("Agent execution failed:", err);
+          await supabase.from('tools_management').update({
+            agent_status: 'pending_manager_review',
+            agent_metadata: { error: true, reason: 'System Error: AI Connection Failed. Rerouted to Manual Review.' }
+          }).eq('id', data[0].id);
+        }
       }
 
       // Do NOT clear checkoutData entirely yet, so return flow has access to tagName and assignedTo
@@ -99,15 +114,30 @@ export default function ToolsManagementForm() {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      alert("Return Logged! AI is analyzing the return...");
-      
       // Trigger the AI agent for the return analysis
       if (data && data[0]) {
-        fetch('/api/agents/tools', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data[0])
-        }).catch(err => console.error("Agent execution failed:", err));
+        try {
+          const res = await fetch('/api/agents/tools', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data[0])
+          });
+          if (!res.ok) {
+            await supabase.from('tools_management').update({
+              agent_status: 'pending_manager_review',
+              agent_metadata: { error: true, reason: 'System Error: AI Overloaded. Rerouted to Manual Review.' }
+            }).eq('id', data[0].id);
+            alert("Record Saved.\n\nThe AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+          } else {
+            alert("Return Logged! AI is analyzing the return...");
+          }
+        } catch (err) {
+          console.error("Agent execution failed:", err);
+          await supabase.from('tools_management').update({
+            agent_status: 'pending_manager_review',
+            agent_metadata: { error: true, reason: 'System Error: AI Connection Failed. Rerouted to Manual Review.' }
+          }).eq('id', data[0].id);
+        }
       }
       
       setReturnData({ returnedQty: "", condition: "" });

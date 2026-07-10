@@ -126,7 +126,7 @@ export default function OnboardingForm() {
     } else { 
       try {
         if (data && data.length > 0) {
-          await fetch('/api/agents/onboarding', {
+          const res = await fetch('/api/agents/onboarding', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -139,11 +139,25 @@ export default function OnboardingForm() {
               certificatesJson
             })
           });
+          if (!res.ok) {
+            await supabase.from('employee_onboarding').update({
+              agent_status: 'pending_manager_review',
+              agent_metadata: { error: true, reason: 'System Error: AI Overloaded. Rerouted to Manual Review.' }
+            }).eq('id', data[0].id);
+            alert("Record Saved.\n\nThe AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+          } else {
+            alert("Record saved! Sent to AI for compliance check.");
+          }
         }
       } catch (err) {
         console.error("Agent execution failed:", err);
+        if (data && data.length > 0) {
+          await supabase.from('employee_onboarding').update({
+            agent_status: 'pending_manager_review',
+            agent_metadata: { error: true, reason: 'System Error: AI Connection Failed. Rerouted to Manual Review.' }
+          }).eq('id', data[0].id);
+        }
       }
-      alert("Record saved! Sent to AI for compliance check."); 
       setFormData({
         employeeName: "", nationality: "", countryCode: "", mobileNo: "", trade: "", laborType: "", accommodation: "", passportNo: "", visaStatus: "", employeeStatus: "", onboardingStatus: "", remarks: "", dob: "", dateOfJoining: "", passportExpiry: "", visaExpiry: "", passportInLocker: false
       });

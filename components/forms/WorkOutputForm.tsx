@@ -44,16 +44,28 @@ export default function WorkOutputForm() {
     } else { 
        // 2. Trigger the AI Operations Agent invisibly in the background
        try {
-         fetch('/api/agents/work-output', {
+         const res = await fetch('/api/agents/work-output', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({ ...formData, id: newRecord.id })
          });
-         alert("Record saved and submitted to Operations AI for analysis!"); 
-         setFormData({ projectCode: "", projectName: "", technicianId: "", technicianName: "", trade: "", foremanId: "", foremanName: "", workDescription: "", unitOfMeasure: "", outputPerDay: "", date: "" });
+         if (!res.ok) {
+           await supabase.from('work_output').update({
+             agent_status: 'pending_manager_review',
+             agent_metadata: { error: true, reason: 'System Error: AI Overloaded. Rerouted to Manual Review.' }
+           }).eq('id', newRecord.id);
+           alert("Record Saved.\n\nThe AI Assistant is currently experiencing high traffic. Your request has been securely routed directly to the Manager for manual approval.");
+         } else {
+           alert("Record saved and submitted to Operations AI for analysis!"); 
+         }
        } catch (err) {
          console.error(err);
+         await supabase.from('work_output').update({
+           agent_status: 'pending_manager_review',
+           agent_metadata: { error: true, reason: 'System Error: AI Connection Failed. Rerouted to Manual Review.' }
+         }).eq('id', newRecord.id);
        }
+       setFormData({ projectCode: "", projectName: "", technicianId: "", technicianName: "", trade: "", foremanId: "", foremanName: "", workDescription: "", unitOfMeasure: "", outputPerDay: "", date: "" });
     }
     
     setLoading(false);
